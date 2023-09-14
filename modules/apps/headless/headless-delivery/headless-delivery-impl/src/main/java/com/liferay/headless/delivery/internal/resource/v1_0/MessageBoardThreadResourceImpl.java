@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
@@ -18,7 +9,7 @@ import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.resource.SPIRatingResource;
-import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardThread;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
 import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
@@ -85,8 +76,6 @@ import com.liferay.portal.vulcan.util.UriInfoUtil;
 import com.liferay.ratings.kernel.model.RatingsStats;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
-
-import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -282,6 +271,9 @@ public class MessageBoardThreadResourceImpl
 
 				if (fieldName.equals("modified")) {
 					fieldName = "modifiedDate";
+				}
+				else if (fieldName.equals("ratingsStatTotalScore")) {
+					fieldName = "totalScore";
 				}
 
 				if (sort.isReverse()) {
@@ -555,13 +547,19 @@ public class MessageBoardThreadResourceImpl
 	private ServiceContext _createServiceContext(
 		long groupId, MessageBoardThread messageBoardThread) {
 
-		ServiceContext serviceContext =
-			ServiceContextRequestUtil.createServiceContext(
-				messageBoardThread.getTaxonomyCategoryIds(),
-				GetterUtil.getStringValues(messageBoardThread.getKeywords()),
-				_getExpandoBridgeAttributes(messageBoardThread), groupId,
-				contextHttpServletRequest,
-				messageBoardThread.getViewableByAsString());
+		ServiceContext serviceContext = ServiceContextBuilder.create(
+			groupId, contextHttpServletRequest,
+			messageBoardThread.getViewableByAsString()
+		).assetCategoryIds(
+			messageBoardThread.getTaxonomyCategoryIds()
+		).assetTagNames(
+			GetterUtil.getStringValues(messageBoardThread.getKeywords())
+		).expandoBridgeAttributes(
+			CustomFieldsUtil.toMap(
+				MBMessage.class.getName(), contextCompany.getCompanyId(),
+				messageBoardThread.getCustomFields(),
+				contextAcceptLanguage.getPreferredLocale())
+		).build();
 
 		String link = contextHttpServletRequest.getHeader("Link");
 
@@ -625,15 +623,6 @@ public class MessageBoardThreadResourceImpl
 		dynamicQuery.add(RestrictionsFactoryUtil.sqlRestriction(sql));
 
 		return dynamicQuery;
-	}
-
-	private Map<String, Serializable> _getExpandoBridgeAttributes(
-		MessageBoardThread messageBoardThread) {
-
-		return CustomFieldsUtil.toMap(
-			MBMessage.class.getName(), contextCompany.getCompanyId(),
-			messageBoardThread.getCustomFields(),
-			contextAcceptLanguage.getPreferredLocale());
 	}
 
 	private Page<MessageBoardThread> _getSiteMessageBoardThreadsPage(

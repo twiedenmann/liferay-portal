@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.vulcan.openapi.contributor;
@@ -19,6 +10,7 @@ import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.rest.internal.vulcan.openapi.contributor.util.OpenAPIContributorUtil;
 import com.liferay.object.rest.openapi.v1_0.ObjectEntryOpenAPIResource;
 import com.liferay.object.rest.openapi.v1_0.ObjectEntryOpenAPIResourceProvider;
@@ -649,20 +641,6 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 		return parameters;
 	}
 
-	private ObjectDefinition _getRelatedObjectDefinition(
-		ObjectRelationship objectRelationship) {
-
-		if (_objectDefinition.getObjectDefinitionId() ==
-				objectRelationship.getObjectDefinitionId2()) {
-
-			return _objectDefinitionLocalService.fetchObjectDefinition(
-				objectRelationship.getObjectDefinitionId1());
-		}
-
-		return _objectDefinitionLocalService.fetchObjectDefinition(
-			objectRelationship.getObjectDefinitionId2());
-	}
-
 	private Map<ObjectRelationship, ObjectDefinition>
 			_getRelatedObjectDefinitionsMap()
 		throws Exception {
@@ -677,7 +655,8 @@ public class ObjectEntryOpenAPIContributor extends BaseOpenAPIContributor {
 		for (ObjectRelationship objectRelationship : objectRelationships) {
 			relatedObjectDefinitionsMap.put(
 				objectRelationship,
-				_getRelatedObjectDefinition(objectRelationship));
+				ObjectRelationshipUtil.getRelatedObjectDefinition(
+					_objectDefinition, objectRelationship));
 		}
 
 		return relatedObjectDefinitionsMap;

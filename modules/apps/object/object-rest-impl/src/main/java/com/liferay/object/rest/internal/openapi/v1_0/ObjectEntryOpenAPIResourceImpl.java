@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.openapi.v1_0;
@@ -48,6 +39,7 @@ import com.liferay.portal.vulcan.resource.OpenAPIResource;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Schema;
 
 import java.util.ArrayList;
@@ -126,6 +118,7 @@ public class ObjectEntryOpenAPIResourceImpl
 				Field.of(
 					propertySchema.getDescription(), propertyName,
 					GetterUtil.getBoolean(propertySchema.getReadOnly()),
+					_getRef(propertySchema),
 					requiredPropertySchemaNames.contains(propertyName),
 					propertySchema.getType(),
 					GetterUtil.getBoolean(propertySchema.getWriteOnly())));
@@ -356,6 +349,16 @@ public class ObjectEntryOpenAPIResourceImpl
 			).build());
 
 		return openAPISchemaFilter;
+	}
+
+	private String _getRef(Schema schema) {
+		if (schema instanceof ArraySchema) {
+			Schema itemsSchema = ((ArraySchema)schema).getItems();
+
+			return itemsSchema.get$ref();
+		}
+
+		return schema.get$ref();
 	}
 
 	private List<String> _getRequiredPropertySchemaNames(Schema schema) {

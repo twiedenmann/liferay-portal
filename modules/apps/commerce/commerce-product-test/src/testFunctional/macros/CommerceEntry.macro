@@ -62,16 +62,10 @@ definition {
 		}
 
 		if (isSet(userRole)) {
-			ApplicationsMenu.gotoPortlet(
-				category = "Accounts",
-				panel = "Control Panel",
-				portlet = "Accounts");
-
-			LexiconEntry.gotoEntry(rowEntry = ${accountName});
-
-			Account.addAssigneeToRoleViaUsersTab(
-				accountRoleTitle = ${userRole},
-				accountUserName = ${userEmailAddress});
+			JSONAccountRole.associateUser(
+				accountEntryName = ${accountName},
+				accountRole = ${userRole},
+				userEmailAddress = ${userEmailAddress});
 		}
 	}
 
@@ -220,6 +214,8 @@ definition {
 		Check.checkToggleSwitch(locator1 = "CommerceEntry#SUBJECT_TO_VAT_CHECKBOX");
 
 		Check.checkToggleSwitch(locator1 = "CommerceEntry#ACTIVE_CHECKBOX");
+
+		Button.clickSave();
 	}
 
 	macro addNewCurrenciesEntry {
@@ -430,6 +426,8 @@ definition {
 			value1 = ${code});
 
 		Check.checkToggleSwitch(locator1 = "CommerceEntry#ACTIVE_CHECKBOX");
+
+		Button.clickSave();
 	}
 
 	macro addNewWarehousesEntry {
@@ -788,6 +786,15 @@ definition {
 			key_entryName = ${entryName},
 			key_layout = ${layout},
 			locator1 = "CommerceEntry#OVERRIDE_DEFAULT_DISPLAY_PAGE");
+	}
+
+	macro assertTableRowSpecificColumnValue {
+		AssertTextEquals(
+			key_column = ${column},
+			key_entryName = ${entryName},
+			key_row = ${row},
+			locator1 = "CommerceEntry#TABLE_ASSERT_SPECIFIC_ROW_ANY_COLUMN_VALUE",
+			value1 = ${value});
 	}
 
 	macro assertUniqueTaxCategoryErc {
@@ -1297,11 +1304,9 @@ definition {
 		}
 		else {
 			if (${noOption} != "true") {
-				Click(locator1 = "CommerceEntry#OPTION_SELECT");
-
-				Click(
-					key_selectValue = ${optionValue},
-					locator1 = "CommerceEntry#OPTIONS_SELECT_LIST");
+				Select(
+					locator1 = "Select#SELECT",
+					value1 = ${optionValue});
 			}
 		}
 	}
@@ -1522,7 +1527,7 @@ definition {
 			}
 		}
 
-		if (isSet(shippingOption)) {
+		if (isSet(shippingOption) && !(isSet(unpublish))) {
 			Click(locator1 = "Icon#CLOSE");
 
 			SelectFrame.selectFrameTop();

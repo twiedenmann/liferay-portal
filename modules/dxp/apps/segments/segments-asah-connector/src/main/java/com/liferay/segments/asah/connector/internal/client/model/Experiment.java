@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.segments.asah.connector.internal.client.model;
@@ -108,6 +99,11 @@ public final class Experiment {
 		return _id;
 	}
 
+	@JsonProperty("metrics")
+	public List<Metric> getMetrics() {
+		return _metrics;
+	}
+
 	@JsonFormat(
 		pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
 		shape = JsonFormat.Shape.STRING, timezone = "UTC"
@@ -134,6 +130,10 @@ public final class Experiment {
 
 	public String getPageURL() {
 		return _pageURL;
+	}
+
+	public Boolean getPublishable() {
+		return _publishable;
 	}
 
 	public String getPublishedDXPVariantId() {
@@ -218,6 +218,10 @@ public final class Experiment {
 		_id = id;
 	}
 
+	public void setMetrics(List<Metric> metrics) {
+		_metrics = metrics;
+	}
+
 	public void setModifiedDate(Date modifiedDate) {
 		if (modifiedDate != null) {
 			_modifiedDate = new Date(modifiedDate.getTime());
@@ -238,6 +242,10 @@ public final class Experiment {
 
 	public void setPageURL(String pageURL) {
 		_pageURL = pageURL;
+	}
+
+	public void setPublishable(Boolean publishable) {
+		_publishable = publishable;
 	}
 
 	public void setPublishedDXPVariantId(String publishedDXPVariantId) {
@@ -266,11 +274,13 @@ public final class Experiment {
 	private ExperimentType _experimentType = ExperimentType.AB;
 	private Goal _goal;
 	private String _id;
+	private List<Metric> _metrics;
 	private Date _modifiedDate;
 	private String _name;
 	private String _pageRelativePath;
 	private String _pageTitle;
 	private String _pageURL;
+	private Boolean _publishable;
 	private String _publishedDXPVariantId;
 	private Date _startedDate;
 

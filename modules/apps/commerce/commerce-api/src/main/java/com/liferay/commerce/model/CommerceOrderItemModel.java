@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.commerce.model;
@@ -243,18 +234,19 @@ public interface CommerceOrderItemModel
 	public void setModifiedDate(Date modifiedDate);
 
 	/**
-	 * Returns the booked quantity ID of this commerce order item.
+	 * Returns the commerce inventory booked quantity ID of this commerce order item.
 	 *
-	 * @return the booked quantity ID of this commerce order item
+	 * @return the commerce inventory booked quantity ID of this commerce order item
 	 */
-	public long getBookedQuantityId();
+	public long getCommerceInventoryBookedQuantityId();
 
 	/**
-	 * Sets the booked quantity ID of this commerce order item.
+	 * Sets the commerce inventory booked quantity ID of this commerce order item.
 	 *
-	 * @param bookedQuantityId the booked quantity ID of this commerce order item
+	 * @param commerceInventoryBookedQuantityId the commerce inventory booked quantity ID of this commerce order item
 	 */
-	public void setBookedQuantityId(long bookedQuantityId);
+	public void setCommerceInventoryBookedQuantityId(
+		long commerceInventoryBookedQuantityId);
 
 	/**
 	 * Returns the commerce order ID of this commerce order item.
@@ -368,20 +360,6 @@ public interface CommerceOrderItemModel
 	 * @param shippingAddressId the shipping address ID of this commerce order item
 	 */
 	public void setShippingAddressId(long shippingAddressId);
-
-	/**
-	 * Returns the decimal quantity of this commerce order item.
-	 *
-	 * @return the decimal quantity of this commerce order item
-	 */
-	public BigDecimal getDecimalQuantity();
-
-	/**
-	 * Sets the decimal quantity of this commerce order item.
-	 *
-	 * @param decimalQuantity the decimal quantity of this commerce order item
-	 */
-	public void setDecimalQuantity(BigDecimal decimalQuantity);
 
 	/**
 	 * Returns the delivery group of this commerce order item.
@@ -943,14 +921,14 @@ public interface CommerceOrderItemModel
 	 *
 	 * @return the quantity of this commerce order item
 	 */
-	public int getQuantity();
+	public BigDecimal getQuantity();
 
 	/**
 	 * Sets the quantity of this commerce order item.
 	 *
 	 * @param quantity the quantity of this commerce order item
 	 */
-	public void setQuantity(int quantity);
+	public void setQuantity(BigDecimal quantity);
 
 	/**
 	 * Returns the replaced cp instance ID of this commerce order item.
@@ -1042,14 +1020,14 @@ public interface CommerceOrderItemModel
 	 *
 	 * @return the shipped quantity of this commerce order item
 	 */
-	public int getShippedQuantity();
+	public BigDecimal getShippedQuantity();
 
 	/**
 	 * Sets the shipped quantity of this commerce order item.
 	 *
 	 * @param shippedQuantity the shipped quantity of this commerce order item
 	 */
-	public void setShippedQuantity(int shippedQuantity);
+	public void setShippedQuantity(BigDecimal shippedQuantity);
 
 	/**
 	 * Returns the shipping extra price of this commerce order item.
@@ -1144,6 +1122,21 @@ public interface CommerceOrderItemModel
 	 * @param subscriptionTypeSettings the subscription type settings of this commerce order item
 	 */
 	public void setSubscriptionTypeSettings(String subscriptionTypeSettings);
+
+	/**
+	 * Returns the unit of measure incremental order quantity of this commerce order item.
+	 *
+	 * @return the unit of measure incremental order quantity of this commerce order item
+	 */
+	public BigDecimal getUnitOfMeasureIncrementalOrderQuantity();
+
+	/**
+	 * Sets the unit of measure incremental order quantity of this commerce order item.
+	 *
+	 * @param unitOfMeasureIncrementalOrderQuantity the unit of measure incremental order quantity of this commerce order item
+	 */
+	public void setUnitOfMeasureIncrementalOrderQuantity(
+		BigDecimal unitOfMeasureIncrementalOrderQuantity);
 
 	/**
 	 * Returns the unit of measure key of this commerce order item.

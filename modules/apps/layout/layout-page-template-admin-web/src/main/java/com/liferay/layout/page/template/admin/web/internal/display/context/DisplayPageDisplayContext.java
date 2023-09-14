@@ -1,32 +1,30 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.layout.page.template.admin.web.internal.display.context;
 
 import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
 import com.liferay.layout.page.template.admin.web.internal.util.LayoutPageTemplatePortletUtil;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
+import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateCollectionLayoutPageTemplateEntryCreateDateComparator;
+import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateCollectionLayoutPageTemplateEntryNameComparator;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.util.Objects;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -51,26 +49,82 @@ public class DisplayPageDisplayContext {
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public SearchContainer<LayoutPageTemplateEntry>
-		getDisplayPagesSearchContainer() {
-
+	public SearchContainer<?> getDisplayPagesSearchContainer() {
 		if (_displayPagesSearchContainer != null) {
 			return _displayPagesSearchContainer;
 		}
 
-		SearchContainer<LayoutPageTemplateEntry> displayPagesSearchContainer =
-			new SearchContainer(
-				_renderRequest, getPortletURL(), null,
-				"there-are-no-display-page-templates");
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-189856")) {
+			SearchContainer<LayoutPageTemplateEntry>
+				displayPagesSearchContainer = new SearchContainer<>(
+					_renderRequest, getPortletURL(), null,
+					"there-are-no-display-page-templates");
 
-		displayPagesSearchContainer.setOrderByCol(getOrderByCol());
-		displayPagesSearchContainer.setOrderByComparator(
-			LayoutPageTemplatePortletUtil.
-				getLayoutPageTemplateEntryOrderByComparator(
-					getOrderByCol(), getOrderByType()));
-		displayPagesSearchContainer.setOrderByType(getOrderByType());
+			displayPagesSearchContainer.setOrderByCol(getOrderByCol());
+			displayPagesSearchContainer.setOrderByComparator(
+				LayoutPageTemplatePortletUtil.
+					getLayoutPageTemplateEntryOrderByComparator(
+						getOrderByCol(), getOrderByType()));
+			displayPagesSearchContainer.setOrderByType(getOrderByType());
+
+			if (isSearch()) {
+				displayPagesSearchContainer.setResultsAndTotal(
+					() ->
+						LayoutPageTemplateEntryServiceUtil.
+							getLayoutPageTemplateEntries(
+								_themeDisplay.getScopeGroupId(), getKeywords(),
+								LayoutPageTemplateEntryTypeConstants.
+									TYPE_DISPLAY_PAGE,
+								displayPagesSearchContainer.getStart(),
+								displayPagesSearchContainer.getEnd(),
+								displayPagesSearchContainer.
+									getOrderByComparator()),
+					LayoutPageTemplateEntryServiceUtil.
+						getLayoutPageTemplateEntriesCount(
+							_themeDisplay.getScopeGroupId(), getKeywords(),
+							LayoutPageTemplateEntryTypeConstants.
+								TYPE_DISPLAY_PAGE));
+			}
+			else {
+				displayPagesSearchContainer.setResultsAndTotal(
+					() ->
+						LayoutPageTemplateEntryServiceUtil.
+							getLayoutPageTemplateEntries(
+								_themeDisplay.getScopeGroupId(),
+								LayoutPageTemplateEntryTypeConstants.
+									TYPE_DISPLAY_PAGE,
+								displayPagesSearchContainer.getStart(),
+								displayPagesSearchContainer.getEnd(),
+								displayPagesSearchContainer.
+									getOrderByComparator()),
+					LayoutPageTemplateEntryServiceUtil.
+						getLayoutPageTemplateEntriesCount(
+							_themeDisplay.getScopeGroupId(),
+							LayoutPageTemplateEntryTypeConstants.
+								TYPE_DISPLAY_PAGE));
+			}
+
+			displayPagesSearchContainer.setRowChecker(
+				new EmptyOnClickRowChecker(_renderResponse));
+
+			_displayPagesSearchContainer = displayPagesSearchContainer;
+
+			return _displayPagesSearchContainer;
+		}
 
 		if (isSearch()) {
+			SearchContainer<LayoutPageTemplateEntry>
+				displayPagesSearchContainer = new SearchContainer<>(
+					_renderRequest, getPortletURL(), null,
+					"there-are-no-display-page-templates");
+
+			displayPagesSearchContainer.setOrderByCol(getOrderByCol());
+			displayPagesSearchContainer.setOrderByComparator(
+				LayoutPageTemplatePortletUtil.
+					getLayoutPageTemplateEntryOrderByComparator(
+						getOrderByCol(), getOrderByType()));
+			displayPagesSearchContainer.setOrderByType(getOrderByType());
+
 			displayPagesSearchContainer.setResultsAndTotal(
 				() ->
 					LayoutPageTemplateEntryServiceUtil.
@@ -86,24 +140,40 @@ public class DisplayPageDisplayContext {
 						_themeDisplay.getScopeGroupId(), getKeywords(),
 						LayoutPageTemplateEntryTypeConstants.
 							TYPE_DISPLAY_PAGE));
+
+			displayPagesSearchContainer.setRowChecker(
+				new EmptyOnClickRowChecker(_renderResponse));
+
+			_displayPagesSearchContainer = displayPagesSearchContainer;
+
+			return _displayPagesSearchContainer;
 		}
-		else {
-			displayPagesSearchContainer.setResultsAndTotal(
-				() ->
-					LayoutPageTemplateEntryServiceUtil.
-						getLayoutPageTemplateEntries(
-							_themeDisplay.getScopeGroupId(),
-							LayoutPageTemplateEntryTypeConstants.
-								TYPE_DISPLAY_PAGE,
-							displayPagesSearchContainer.getStart(),
-							displayPagesSearchContainer.getEnd(),
-							displayPagesSearchContainer.getOrderByComparator()),
+
+		SearchContainer<Object> displayPagesSearchContainer =
+			new SearchContainer<>(
+				_renderRequest, getPortletURL(), null,
+				"there-are-no-display-page-templates");
+
+		displayPagesSearchContainer.setOrderByCol(getOrderByCol());
+		displayPagesSearchContainer.setOrderByComparator(
+			_getOrderByComparator());
+		displayPagesSearchContainer.setOrderByType(getOrderByType());
+
+		displayPagesSearchContainer.setResultsAndTotal(
+			() ->
 				LayoutPageTemplateEntryServiceUtil.
-					getLayoutPageTemplateEntriesCount(
+					getLayoutPageCollectionsAndLayoutPageTemplateEntries(
 						_themeDisplay.getScopeGroupId(),
-						LayoutPageTemplateEntryTypeConstants.
-							TYPE_DISPLAY_PAGE));
-		}
+						_getLayoutPageTemplateCollectionId(),
+						LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE,
+						displayPagesSearchContainer.getStart(),
+						displayPagesSearchContainer.getEnd(),
+						displayPagesSearchContainer.getOrderByComparator()),
+			LayoutPageTemplateEntryServiceUtil.
+				getLayoutPageCollectionsAndLayoutPageTemplateEntriesCount(
+					_themeDisplay.getScopeGroupId(),
+					_getLayoutPageTemplateCollectionId(),
+					LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE));
 
 		displayPagesSearchContainer.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
@@ -212,10 +282,42 @@ public class DisplayPageDisplayContext {
 		return false;
 	}
 
-	private SearchContainer<LayoutPageTemplateEntry>
-		_displayPagesSearchContainer;
+	private long _getLayoutPageTemplateCollectionId() {
+		if (_layoutPageTemplateCollectionId != null) {
+			return _layoutPageTemplateCollectionId;
+		}
+
+		_layoutPageTemplateCollectionId = ParamUtil.getLong(
+			_httpServletRequest, "layoutPageTemplateCollectionId",
+			LayoutPageTemplateConstants.
+				PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT);
+
+		return _layoutPageTemplateCollectionId;
+	}
+
+	private OrderByComparator<Object> _getOrderByComparator() {
+		boolean orderByAsc = false;
+
+		if (Objects.equals(getOrderByType(), "asc")) {
+			orderByAsc = true;
+		}
+
+		if (Objects.equals(getOrderByCol(), "create-date")) {
+			return new LayoutPageTemplateCollectionLayoutPageTemplateEntryCreateDateComparator(
+				orderByAsc);
+		}
+		else if (Objects.equals(getOrderByCol(), "name")) {
+			return new LayoutPageTemplateCollectionLayoutPageTemplateEntryNameComparator(
+				orderByAsc);
+		}
+
+		return null;
+	}
+
+	private SearchContainer<?> _displayPagesSearchContainer;
 	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
+	private Long _layoutPageTemplateCollectionId;
 	private Long _layoutPageTemplateEntryId;
 	private String _orderByCol;
 	private String _orderByType;

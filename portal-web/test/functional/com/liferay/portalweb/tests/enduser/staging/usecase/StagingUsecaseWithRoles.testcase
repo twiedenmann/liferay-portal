@@ -40,6 +40,7 @@ definition {
 	@priority = 4
 	test StagingDemoLocalLive1 {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONStaging.enableLocalStaging(groupName = "Site Name");
 
@@ -109,6 +110,10 @@ definition {
 
 		DMDocument.enableActionsMenuOnPortlet();
 
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Test Page",
+			siteName = "Site Name");
+
 		DMDocument.addPG(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentFile = "Document_1.doc",
@@ -150,6 +155,7 @@ definition {
 	@priority = 4
 	test StagingDemoLocalLive2 {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONStaging.enableLocalStaging(
 			branchingPrivate = "true",
@@ -217,6 +223,7 @@ definition {
 	@priority = 4
 	test StagingDemoLocalLive3 {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -389,6 +396,7 @@ definition {
 	@priority = 5
 	test StagingDemoLocalLive4 {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property testray.component.names = "Training";
 
 		JSONLayout.addPublicLayout(
@@ -475,6 +483,7 @@ definition {
 	@priority = 4
 	test StagingLocalLiveWebContent {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONStaging.enableLocalStaging(groupName = "Site Name");
 
@@ -593,6 +602,7 @@ definition {
 	@priority = 4
 	test StagingLocalLiveWorkflow {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONStaging.enableLocalStaging(
 			branchingPrivate = "true",
@@ -850,6 +860,7 @@ definition {
 	@priority = 5
 	test StagingPublishPage {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 		property testray.component.names = "Training";
 
 		JSONLayout.addPublicLayout(
@@ -923,6 +934,7 @@ definition {
 	@priority = 3
 	test UpdateAndDeleteWebContentCommentOnLiveSite {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONStaging.enableLocalStaging(groupName = "Site Name");
 

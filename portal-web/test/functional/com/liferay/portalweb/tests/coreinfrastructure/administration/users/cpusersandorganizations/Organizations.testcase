@@ -1,4 +1,4 @@
-@component-name = "portal-security"
+@component-name = "portal-user-management"
 definition {
 
 	property portal.release = "true";
@@ -283,7 +283,10 @@ definition {
 
 	@priority = 5
 	test AddOrganizationTeam {
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property portal.acceptance = "true";
+		property test.liferay.virtual.instance = "false";
 		property testray.component.names = "Training";
 
 		JSONOrganization.addOrganization(organizationName = "Organization Name");
@@ -1222,6 +1225,7 @@ definition {
 	test OrganizationUserManagement {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SearchAdministration.executeReindex();
 
@@ -1432,6 +1436,7 @@ definition {
 	test ViewContentInCustomOrganizationTypeSite {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 		var siteName = TestCase.getSiteName(siteName = ${siteName});

@@ -1,4 +1,4 @@
-@component-name = "portal-security"
+@component-name = "portal-user-management"
 definition {
 
 	property portal.release = "true";
@@ -50,6 +50,10 @@ definition {
 	@description = "This test asserts that a newly created site will have default account type settings even after changing settings on original site."
 	@priority = 5
 	test AllowedAccountTypeIsSiteWide {
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property test.liferay.virtual.instance = "false";
+
 		task ("Given that the allowed account type is set to Person") {
 			Account.setAllowedAccountTypeInSiteSettings(allowedType = "Person");
 		}
@@ -251,6 +255,7 @@ definition {
 	@priority = 4
 	test CanOnlyViewBusinessAccountsWhenAllowedAccountTypeIsBusiness {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given there is a Business account and a Person account the non admin user is a member of") {
 			JSONAccountEntry.addAccountEntry(

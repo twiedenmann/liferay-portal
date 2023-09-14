@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.document.library.service.test;
@@ -52,9 +43,11 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.ByteArrayInputStream;
 
@@ -62,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -80,7 +74,9 @@ public class DLFileEntryMetadataLocalServiceTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -233,17 +229,26 @@ public class DLFileEntryMetadataLocalServiceTest {
 					_ddmStructure.getStructureId(),
 					dlFileVersion.getFileVersionId());
 
-			_ddmStructureLocalService.deleteDDMStructure(_ddmStructure);
-
 			List<DLFileEntryMetadata> dlFileEntryMetadatas =
 				_dlFileEntryMetadataLocalService.
 					getNoStructuresFileEntryMetadatas();
 
+			_ddmStructureLocalService.deleteDDMStructure(_ddmStructure);
+
+			List<DLFileEntryMetadata> currentDLFileEntryMetadatas =
+				_dlFileEntryMetadataLocalService.
+					getNoStructuresFileEntryMetadatas();
+
 			Assert.assertEquals(
-				dlFileEntryMetadatas.toString(), 1,
-				dlFileEntryMetadatas.size());
-			Assert.assertEquals(
-				dlFileEntryMetadata, dlFileEntryMetadatas.get(0));
+				currentDLFileEntryMetadatas.toString(),
+				dlFileEntryMetadatas.size() + 1,
+				currentDLFileEntryMetadatas.size());
+
+			Assert.assertTrue(
+				ListUtil.exists(
+					currentDLFileEntryMetadatas,
+					dlFileEntryMetadata1 -> Objects.equals(
+						dlFileEntryMetadata1, dlFileEntryMetadata)));
 		}
 		finally {
 			if (_ddmStructure != null) {

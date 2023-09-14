@@ -1,33 +1,31 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayModal, {useModal} from '@clayui/modal';
 import {openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useContext, useReducer} from 'react';
+import React, {useContext, useEffect, useReducer} from 'react';
 
 import SegmentsExperimentsContext from '../context.es';
 import {
 	addSegmentsExperiment,
 	addVariant,
-	archiveExperiment,
 	closeCreationModal,
+	closeDeletionModal,
 	closeEditionModal,
-	deleteArchivedExperiment,
+	closeTerminateModal,
 	editSegmentsExperiment,
 	openCreationModal,
+	openDeletionModal,
 	openEditionModal,
+	openTerminateModal,
+	reviewAndRunExperiment,
 	reviewClickTargetElement,
 	updateSegmentsExperimentStatus,
 	updateSegmentsExperimentTarget,
+	updateVariants,
 } from '../state/actions.es';
 import {
 	DispatchContext,
@@ -40,15 +38,22 @@ import {
 	SegmentsExperimentType,
 	SegmentsVariantType,
 } from '../types.es';
-import {navigateToExperience} from '../util/navigation.es';
-import {STATUS_COMPLETED, STATUS_TERMINATED} from '../util/statuses.es';
+import {
+	getSegmentsExperimentAction,
+	navigateToExperience,
+} from '../util/navigation.es';
+import {
+	STATUS_DRAFT,
+	STATUS_RUNNING,
+	STATUS_TERMINATED,
+} from '../util/statuses.es';
 import {openErrorToast, openSuccessToast} from '../util/toasts.es';
+import {ConfirmModal} from './ConfirmModal';
 import SegmentsExperiments from './SegmentsExperiments.es';
 import SegmentsExperimentsModal from './SegmentsExperimentsModal.es';
 import UnsupportedSegmentsExperiments from './UnsupportedSegmentsExperiments.es';
 
 function SegmentsExperimentsSidebar({
-	initialExperimentHistory,
 	initialGoals,
 	initialSegmentsExperiment,
 	initialSegmentsVariants,
@@ -59,7 +64,6 @@ function SegmentsExperimentsSidebar({
 	const [state, dispatch] = useReducer(
 		reducer,
 		{
-			initialExperimentHistory,
 			initialSegmentsExperiment,
 			initialSegmentsVariants,
 			initialSelectedSegmentsExperienceId,
@@ -68,7 +72,13 @@ function SegmentsExperimentsSidebar({
 		getInitialState
 	);
 
-	const {createExperimentModal, editExperimentModal, experiment} = state;
+	const {
+		createExperimentModal,
+		deleteExperimentModal,
+		editExperimentModal,
+		experiment,
+		terminateExperimentModal,
+	} = state;
 
 	const {
 		observer: creationModalObserver,
@@ -82,6 +92,41 @@ function SegmentsExperimentsSidebar({
 	} = useModal({
 		onClose: () => dispatch(closeEditionModal()),
 	});
+	const {
+		observer: deletionModalObserver,
+		onClose: onDeletionModalClose,
+	} = useModal({
+		onClose: () => dispatch(closeDeletionModal()),
+	});
+	const {
+		observer: terminateModalObserver,
+		onClose: onTerminateModalClose,
+	} = useModal({
+		onClose: () => dispatch(closeTerminateModal()),
+	});
+
+	useEffect(() => {
+		const segmentsExperimentAction = getSegmentsExperimentAction();
+
+		if (!segmentsExperimentAction || !experiment) {
+			return;
+		}
+
+		if (experiment.status.value === STATUS_DRAFT) {
+			if (segmentsExperimentAction === 'reviewAndRun') {
+				dispatch(reviewAndRunExperiment());
+			}
+			else if (segmentsExperimentAction === 'delete') {
+				dispatch(openDeletionModal());
+			}
+		}
+		else if (
+			experiment.status.value === STATUS_RUNNING &&
+			segmentsExperimentAction === 'terminate'
+		) {
+			dispatch(openTerminateModal());
+		}
+	}, [dispatch, experiment, terminateExperimentModal]);
 
 	return page.type === 'content' ? (
 		<DispatchContext.Provider value={dispatch}>
@@ -138,6 +183,57 @@ function SegmentsExperimentsSidebar({
 							/>
 						</ClayModal>
 					)}
+
+					{deleteExperimentModal.active && (
+						<ConfirmModal
+							modalObserver={deletionModalObserver}
+							onCancel={onDeletionModalClose}
+							onConfirm={() => {
+								_handleDeleteSegmentsExperiment(
+									experiment.segmentsExperimentId
+								);
+
+								onDeletionModalClose();
+							}}
+							submitTitle={Liferay.Language.get('delete')}
+							title={Liferay.Language.get('delete-test')}
+						>
+							<p className="font-weight-bold text-secondary">
+								{Liferay.Language.get(
+									'are-you-sure-you-want-to-delete-this'
+								)}
+							</p>
+
+							<p className="text-secondary">
+								{Liferay.Language.get(
+									'you-will-lose-all-data-relate-to-it.-you-will-not-be-able-to-undo-this-operation'
+								)}
+							</p>
+						</ConfirmModal>
+					)}
+
+					{terminateExperimentModal.active && (
+						<ConfirmModal
+							modalObserver={terminateModalObserver}
+							onCancel={onTerminateModalClose}
+							onConfirm={() => {
+								_handleEditSegmentExperimentStatus(
+									experiment,
+									STATUS_TERMINATED
+								);
+
+								onTerminateModalClose();
+							}}
+							submitTitle={Liferay.Language.get('terminate')}
+							title={Liferay.Language.get('terminate-test')}
+						>
+							<p className="font-weight-bold text-secondary">
+								{Liferay.Language.get(
+									'are-you-sure-you-want-to-terminate-this-test'
+								)}
+							</p>
+						</ConfirmModal>
+					)}
 				</div>
 			</StateContext.Provider>
 		</DispatchContext.Provider>
@@ -163,9 +259,6 @@ function SegmentsExperimentsSidebar({
 					experiment.segmentsExperimentId === experimentId
 				) {
 					navigateToExperience(experiment.segmentsExperienceId);
-				}
-				else {
-					dispatch(deleteArchivedExperiment(experimentId));
 				}
 			})
 			.catch((_error) => {
@@ -213,6 +306,8 @@ function SegmentsExperimentsSidebar({
 
 				openSuccessToast();
 
+				dispatch(updateVariants([]));
+
 				dispatch(addVariant(segmentsExperimentRel));
 
 				dispatch(closeCreationModal());
@@ -254,24 +349,12 @@ function SegmentsExperimentsSidebar({
 			.then(function _successCallback(objectResponse) {
 				const {editable, status} = objectResponse.segmentsExperiment;
 
-				if (
-					status.value === STATUS_TERMINATED ||
-					status.value === STATUS_COMPLETED
-				) {
-					dispatch(
-						archiveExperiment({
-							status,
-						})
-					);
-				}
-				else {
-					dispatch(
-						updateSegmentsExperimentStatus({
-							editable,
-							status,
-						})
-					);
-				}
+				dispatch(
+					updateSegmentsExperimentStatus({
+						editable,
+						status,
+					})
+				);
 			})
 			.catch(function _errorCallback() {
 				openToast({
@@ -379,8 +462,6 @@ function SegmentsExperimentsSidebar({
 }
 
 SegmentsExperimentsSidebar.propTypes = {
-	initialExperimentHistory: PropTypes.arrayOf(SegmentsExperimentType)
-		.isRequired,
 	initialGoals: PropTypes.arrayOf(SegmentsExperimentGoal),
 	initialSegmentsExperiment: SegmentsExperimentType,
 	initialSegmentsVariants: PropTypes.arrayOf(SegmentsVariantType).isRequired,

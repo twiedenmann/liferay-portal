@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0;
@@ -17,7 +8,10 @@ package com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.DDMOption;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.Sku;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.SkuOption;
+import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.headless.commerce.delivery.catalog.client.json.BaseJSONParser;
+
+import java.math.BigDecimal;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -113,6 +107,16 @@ public class SkuSerDes {
 			sb.append("\"availability\": ");
 
 			sb.append(String.valueOf(sku.getAvailability()));
+		}
+
+		if (sku.getBackOrderAllowed() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"backOrderAllowed\": ");
+
+			sb.append(sku.getBackOrderAllowed());
 		}
 
 		if (sku.getDepth() != null) {
@@ -310,6 +314,16 @@ public class SkuSerDes {
 			sb.append(sku.getPurchasable());
 		}
 
+		if (sku.getReplacementSku() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacementSku\": ");
+
+			sb.append(String.valueOf(sku.getReplacementSku()));
+		}
+
 		if (sku.getReplacementSkuExternalReferenceCode() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -361,6 +375,26 @@ public class SkuSerDes {
 				sb.append(String.valueOf(sku.getSkuOptions()[i]));
 
 				if ((i + 1) < sku.getSkuOptions().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (sku.getSkuUnitOfMeasures() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuUnitOfMeasures\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < sku.getSkuUnitOfMeasures().length; i++) {
+				sb.append(String.valueOf(sku.getSkuUnitOfMeasures()[i]));
+
+				if ((i + 1) < sku.getSkuUnitOfMeasures().length) {
 					sb.append(", ");
 				}
 			}
@@ -430,6 +464,14 @@ public class SkuSerDes {
 		}
 		else {
 			map.put("availability", String.valueOf(sku.getAvailability()));
+		}
+
+		if (sku.getBackOrderAllowed() == null) {
+			map.put("backOrderAllowed", null);
+		}
+		else {
+			map.put(
+				"backOrderAllowed", String.valueOf(sku.getBackOrderAllowed()));
 		}
 
 		if (sku.getDepth() == null) {
@@ -565,6 +607,13 @@ public class SkuSerDes {
 			map.put("purchasable", String.valueOf(sku.getPurchasable()));
 		}
 
+		if (sku.getReplacementSku() == null) {
+			map.put("replacementSku", null);
+		}
+		else {
+			map.put("replacementSku", String.valueOf(sku.getReplacementSku()));
+		}
+
 		if (sku.getReplacementSkuExternalReferenceCode() == null) {
 			map.put("replacementSkuExternalReferenceCode", null);
 		}
@@ -594,6 +643,15 @@ public class SkuSerDes {
 		}
 		else {
 			map.put("skuOptions", String.valueOf(sku.getSkuOptions()));
+		}
+
+		if (sku.getSkuUnitOfMeasures() == null) {
+			map.put("skuUnitOfMeasures", null);
+		}
+		else {
+			map.put(
+				"skuUnitOfMeasures",
+				String.valueOf(sku.getSkuUnitOfMeasures()));
 		}
 
 		if (sku.getWeight() == null) {
@@ -657,6 +715,11 @@ public class SkuSerDes {
 				if (jsonParserFieldValue != null) {
 					sku.setAvailability(
 						AvailabilitySerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "backOrderAllowed")) {
+				if (jsonParserFieldValue != null) {
+					sku.setBackOrderAllowed((Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "depth")) {
@@ -724,13 +787,13 @@ public class SkuSerDes {
 			else if (Objects.equals(jsonParserFieldName, "maxOrderQuantity")) {
 				if (jsonParserFieldValue != null) {
 					sku.setMaxOrderQuantity(
-						Integer.valueOf((String)jsonParserFieldValue));
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "minOrderQuantity")) {
 				if (jsonParserFieldValue != null) {
 					sku.setMinOrderQuantity(
-						Integer.valueOf((String)jsonParserFieldValue));
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "neverExpire")) {
@@ -752,6 +815,13 @@ public class SkuSerDes {
 			else if (Objects.equals(jsonParserFieldName, "purchasable")) {
 				if (jsonParserFieldValue != null) {
 					sku.setPurchasable((Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "replacementSku")) {
+				if (jsonParserFieldValue != null) {
+					sku.setReplacementSku(
+						ReplacementSkuSerDes.toDTO(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(
@@ -788,6 +858,23 @@ public class SkuSerDes {
 					}
 
 					sku.setSkuOptions(skuOptionsArray);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "skuUnitOfMeasures")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					SkuUnitOfMeasure[] skuUnitOfMeasuresArray =
+						new SkuUnitOfMeasure[jsonParserFieldValues.length];
+
+					for (int i = 0; i < skuUnitOfMeasuresArray.length; i++) {
+						skuUnitOfMeasuresArray[i] =
+							SkuUnitOfMeasureSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
+					sku.setSkuUnitOfMeasures(skuUnitOfMeasuresArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "weight")) {

@@ -80,7 +80,9 @@ definition {
 
 		CommerceAcceleratorsInitializer.createNewOrderFromAccountSelectorDropdown();
 
-		Alert.viewErrorMessage(errorMessage = "Unable to create a new order as the open order limit has been reached.");
+		AssertTextEquals.assertText(
+			locator1 = "Message#ERROR",
+			value1 = "Close Error:Unable to create a new order as the open order limit has been reached.");
 	}
 
 	@description = "Verify users can add a minimum order amount rule that applies to order subtotals. Orders that have a subtotal less than the minimum cannot be checked out"
@@ -612,7 +614,9 @@ definition {
 		}
 
 		task ("Then an error message is shown which states a default billing address has not been set") {
-			Alert.viewErrorMessage(errorMessage = "No default billing address has been created for this account. Please contact the system administrator to create an order.");
+			AssertTextEquals.assertText(
+				locator1 = "Message#ERROR",
+				value1 = "Close Error:No default billing address has been created for this account. Please contact the system administrator to create an order.");
 		}
 	}
 
@@ -976,6 +980,7 @@ definition {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 		property portal.acceptance = "false";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given a Minium site with an Account is created") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -2845,6 +2850,89 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-11815. Admin can view an order's quote label border is grey"
+	@priority = 3
+	test CanViewOrderQuoteLabelBorderIsGrey {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11028=true";
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site with a buyer user") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And 'Allow Request a Quote on a Fully Priced Cart' is enabled for the site") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Request a Quote",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+			Button.clickSave();
+		}
+
+		task ("And the buyer requests a quote for an order") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "U-Joint",
+				productQuantity = 1);
+
+			var orderId = selenium.getText("CommerceEntry#ACTIVE_ORDER_ID");
+
+			CommerceNavigator.gotoMiniCart();
+
+			CommerceOrders.createQuoteRequest(
+				quoteRequestValue = "I kindly request a quote for this product.",
+				requestAQuoteInMiniCart = "true",
+				requestAQuoteInOpenOrdersPage = "true");
+		}
+
+		task ("When the admin clicks 'Quote Processed' in the order details") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Quote Requested");
+
+			Click(
+				key_index = "Quote Processed",
+				locator1 = "WorkflowMetrics#SEARCH_FIELD_MAPPINGS_METRICS_INDEXES");
+		}
+
+		task ("Then the admin can view the order status 'Quote Processed' field is grey border on Orders admin page") {
+			CommerceOrders.openOrdersAdmin();
+
+			AssertCssValue(
+				key_productName = ${orderId},
+				key_status = "Quote Processed",
+				locator1 = "CommerceEntry#PRODUCT_STATUS_BASED_ON_PRODUCT_NAME",
+				locator2 = "border-color",
+				value1 = "rgb(205, 206, 217)");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-10750. User can see if a SKU is on order and can search for Order Id or Account Name the orders under Order Tab in Inventory"
 	@priority = 5
 	test CanViewOrderSKUAndSearchForSpecificOrderIdAndAccountName {
@@ -2960,6 +3048,228 @@ definition {
 				key_orderQuantity = 0,
 				key_reference = "Commerce Account",
 				locator1 = "CommerceEntry#ON_ORDER_QUANTITY");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-12025. If given a user with permissions that only view orders, then the user can just view the order, cannot add or edit order fields"
+	@priority = 5
+	test CanViewOrdersOnlyWhenGivenViewPermissions {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property portal.acceptance = "true";
+
+		task ("Given a Minium site with a business account and Money Order enabled is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			CommerceChannels.editPaymentMethod(
+				active = "true",
+				paymentMethod = "Money Order");
+
+			CommerceJSONAccountsAPI._addCommerceAccount(
+				accountName = "Commerce Account",
+				accountType = "Business");
+
+			CommerceJSONAccountsAPI._addCommerceAccountAddress(
+				accountEntryName = "Commerce Account",
+				city = "Test City",
+				countryISOCode = "US",
+				name = "Test Address",
+				street1 = "Test Street",
+				zip = "Test Zip Code");
+		}
+
+		task ("And a user with permissions that can view order and channel is created") {
+			JSONRole.addRegularRole(
+				roleKey = "View Order Role",
+				roleTitle = "View Order Role");
+
+			JSONUser.addUserWithRole(
+				roleTitle = "View Order Role",
+				userEmailAddress = "userea@liferay.com",
+				userFirstName = "userfn",
+				userLastName = "userln",
+				userScreenName = "usersn");
+
+			for (var resourceLists : list "com.liferay.commerce.order:VIEW_COMMERCE_ORDERS,com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel:VIEW,com.liferay.commerce.model.CommerceOrder:VIEW,com.liferay.commerce.model.CommerceOrderType:VIEW,com.liferay.commerce.product.model.CommerceChannel:VIEW,com.liferay.commerce.notification.model.CommerceNotificationTemplate:VIEW,90:VIEW_CONTROL_PANEL,com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet:ACCESS_IN_CONTROL_PANEL,com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet:VIEW,com.liferay.commerce.channel:VIEW_COMMERCE_CHANNELS") {
+				var resourceName = StringUtil.extractFirst(${resourceLists}, ":");
+				var resourceAction = StringUtil.extractLast(${resourceLists}, ":");
+
+				Permissions.definePermissionViaJSONAPI(
+					resourceAction = ${resourceAction},
+					resourceName = ${resourceName},
+					roleTitle = "View Order Role");
+			}
+		}
+
+		task ("When an order is placed") {
+			CommerceJSONOrdersAPI._addCommerceOrder(
+				accountEntryName = "Commerce Account",
+				billingAddressName = "Test Address",
+				orderItems = "MIN55861:1",
+				orderStatus = 1,
+				paymentMethod = "money-order",
+				paymentStatus = 2,
+				shippingAddressName = "Test Address",
+				shippingOption = "Standard Delivery");
+		}
+
+		task ("Then the admin can view the order fields with 'Add' or 'Edit' button") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+
+			for (var titleName : list "Purchase Order Number,Payment Terms,Delivery Terms,Requested Delivery Date,Printed Note") {
+				AssertElementPresent(
+					key_buttonName = "Add",
+					key_titleName = ${titleName},
+					locator1 = "CommerceOrders#ORDER_GENERAL_DETAILS_ADD_EDIT_BUTTON");
+			}
+
+			for (var titleName : list "Billing Address,Shipping Address") {
+				AssertElementPresent(
+					key_buttonName = "Edit",
+					key_titleName = ${titleName},
+					locator1 = "CommerceOrders#ORDER_GENERAL_DETAILS_ADD_EDIT_BUTTON");
+			}
+
+			AssertElementPresent(locator1 = "CommerceOrders#ORDER_EDIT_SUMMARY_BUTTON");
+
+			AssertElementPresent(
+				key_value = "MIN55861",
+				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Payments");
+
+			for (var titleName : list "Payment Method,Payment Status") {
+				AssertElementPresent(
+					key_buttonName = "Edit",
+					key_titleName = ${titleName},
+					locator1 = "CommerceOrders#ORDER_DETAILS_EDIT_BUTTON");
+			}
+		}
+
+		task ("But the user that with only view order role cannot view the order fields with 'Add' or 'Edit' button") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "userea@liferay.com",
+				userLoginFullName = "userfn userln");
+
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+
+			for (var titleName : list "Purchase Order Number,Payment Terms,Delivery Terms,Requested Delivery Date,Printed Note") {
+				AssertElementNotPresent(
+					key_buttonName = "Add",
+					key_titleName = ${titleName},
+					locator1 = "CommerceOrders#ORDER_GENERAL_DETAILS_ADD_EDIT_BUTTON");
+			}
+
+			for (var titleName : list "Billing Address,Shipping Address") {
+				AssertElementNotPresent(
+					key_buttonName = "Edit",
+					key_titleName = ${titleName},
+					locator1 = "CommerceOrders#ORDER_GENERAL_DETAILS_ADD_EDIT_BUTTON");
+			}
+
+			AssertElementNotPresent(locator1 = "CommerceOrders#ORDER_EDIT_SUMMARY_BUTTON");
+
+			AssertElementNotPresent(
+				key_value = "MIN55861",
+				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Payments");
+
+			for (var titleName : list "Payment Method,Payment Status") {
+				AssertElementNotPresent(
+					key_buttonName = "Edit",
+					key_titleName = ${titleName},
+					locator1 = "CommerceOrders#ORDER_DETAILS_EDIT_BUTTON");
+			}
+		}
+	}
+
+	@description = "This is a test for COMMERCE-11737. If admin adds a product to the cart with a printed note, then the printed note still can be viewed after the cart checkout via headless API"
+	@priority = 5
+	test CanViewPrintedNoteAfterCartCheckoutViaHeadlessAPI {
+		property portal.acceptance = "true";
+
+		task ("Given a Minium site with a business account is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceJSONAccountsAPI._addCommerceAccount(
+				accountName = "Commerce Account",
+				accountType = "Business");
+
+			CommerceJSONAccountsAPI._addCommerceAccountAddress(
+				accountEntryName = "Commerce Account",
+				city = "Test City",
+				countryISOCode = "US",
+				name = "Test Address",
+				street1 = "Test Street",
+				zip = "Test Zip Code");
+		}
+
+		task ("When the product 'ABS Sensor' with a printed note is added to the cart via API") {
+			CommerceJSONDeliveryCart._addCommerceCart(
+				accountEntryName = "Commerce Account",
+				billingAddressName = "Test Address",
+				cartItems = "MIN93015:10",
+				printedNote = "Test Print Note Content",
+				shippingAddressName = "Test Address",
+				shippingOption = "Standard Delivery");
+
+			var orderId = CommerceJSONOrdersAPI._getCommerceOrder();
+		}
+
+		task ("Then the admin can view the printed note is added in the open order via API") {
+			var printedNote = CommerceJSONOrdersAPI.getOrderField(
+				email = "test@liferay.com",
+				jsonPath = "$.printedNote",
+				orderId = ${orderId},
+				parameter = "fields",
+				parameterValue = "printedNote",
+				password = "test");
+
+			TestUtils.assertEquals(
+				actual = ${printedNote},
+				expected = "Test Print Note Content");
+		}
+
+		task ("And the admin can view the printed note is added in the open order via UI") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Open");
+
+			CommerceOrders.viewOrdersEntry(printedNote = "Test Print Note Content");
+		}
+
+		task ("When the cart checkout is patched") {
+			CommerceJSONDeliveryCart._postCommerceCartCheckout(cartId = ${orderId});
+		}
+
+		task ("Then the admin can view the printed note is added in the placed order via API") {
+			var printedNote = CommerceJSONOrdersAPI.getOrderField(
+				email = "test@liferay.com",
+				jsonPath = "$.printedNote",
+				orderId = ${orderId},
+				parameter = "fields",
+				parameterValue = "printedNote",
+				password = "test");
+
+			TestUtils.assertEquals(
+				actual = ${printedNote},
+				expected = "Test Print Note Content");
+		}
+
+		task ("And the admin can view the printed note is added in the placed order via UI") {
+			CommerceOrders.openOrdersAdmin();
+
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+
+			CommerceOrders.viewOrdersEntry(printedNote = "Test Print Note Content");
 		}
 	}
 

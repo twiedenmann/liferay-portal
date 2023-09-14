@@ -194,9 +194,7 @@ definition {
 			content = "Web Content Content",
 			fieldLabel = "Content");
 
-		AssertClick(
-			locator1 = "Button#PUBLISH",
-			value1 = "Publish");
+		Button.clickPublish();
 
 		AssertElementPresent(locator1 = "Icon#ASTERISK");
 
@@ -255,9 +253,7 @@ definition {
 				fieldLabel = "Content");
 		}
 
-		AssertClick(
-			locator1 = "Button#PUBLISH",
-			value1 = "Publish");
+		Button.clickPublish();
 
 		AssertElementPresent(locator1 = "TextInput#REQUIRED_ALERT");
 
@@ -271,9 +267,7 @@ definition {
 			webContentContent = ${webContentContent},
 			webContentTitle = ${webContentTitle});
 
-		AssertClickNoError(
-			locator1 = "Button#PUBLISH",
-			value1 = "Publish");
+		PortletEntry.publish();
 
 		WaitForPageLoad();
 
@@ -301,9 +295,7 @@ definition {
 			webContentContent = ${webContentContent},
 			webContentTitle = ${webContentTitle});
 
-		AssertClickNoError(
-			locator1 = "Button#PUBLISH",
-			value1 = "Publish");
+		Button.clickPublish();
 
 		WaitForPageLoad();
 	}
@@ -1358,9 +1350,7 @@ definition {
 				fieldLabel = "Content");
 		}
 
-		AssertClick(
-			locator1 = "Button#PUBLISH",
-			value1 = "Publish");
+		Button.clickPublish();
 
 		AssertElementPresent(locator1 = "TextInput#REQUIRED_ALERT");
 	}
@@ -1538,12 +1528,14 @@ definition {
 		var displayDateMinute = selenium.getAttribute("//input[contains(@id,'displayDateMinute')]@value");
 
 		var displayDateMinuteFuture = ${displayDateMinute} + ${minuteIncrease};
-
+		var currentTime = "${displayDateHour}:${displayDateMinute} ${displayDateAmpm}";
 		var displayTime = "${displayDateHour}:${displayDateMinuteFuture} ${displayDateAmpm}";
 
 		WebContent.editDisplayDate(
 			displayDate = ${displayDate},
 			displayTime = ${displayTime});
+
+		echo("Web Content display time increased ${minuteIncrease} minutes from: ${currentTime} to: ${displayTime}");
 	}
 
 	macro moveArticlesToFolderCP {
@@ -2898,9 +2890,7 @@ definition {
 
 				var actual = TestUtils.getElementTextContent(element = "//label[normalize-space(text())='${webContentTextFieldLabel}']//..//textarea");
 
-				TestUtils.assertEquals(
-					actual = ${actual},
-					expected = ${webContentText});
+				StringUtil.assertEquals(${webContentText}, ${actual});
 			}
 			else {
 				AssertTextEquals.assertValue(

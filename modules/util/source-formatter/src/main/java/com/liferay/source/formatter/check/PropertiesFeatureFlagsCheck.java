@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.source.formatter.check;
@@ -28,9 +19,12 @@ import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,7 +47,37 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 			return content;
 		}
 
+		_checkUnnecessaryFeatureFlags(fileName, content);
+
 		return _generateFeatureFlags(content);
+	}
+
+	private void _checkUnnecessaryFeatureFlags(String fileName, String content)
+		throws IOException {
+
+		Properties properties = new Properties();
+
+		properties.load(new StringReader(content));
+
+		Enumeration<String> enumeration =
+			(Enumeration<String>)properties.propertyNames();
+
+		while (enumeration.hasMoreElements()) {
+			String key = enumeration.nextElement();
+
+			if (!key.startsWith("feature.flag.") || !key.endsWith(".type")) {
+				continue;
+			}
+
+			String value = properties.getProperty(key);
+
+			if (StringUtil.equals(value, "dev")) {
+				addMessage(
+					fileName,
+					"Remove unnecessary property '" + key +
+						"', since 'dev' is the default value");
+			}
+		}
 	}
 
 	private String _generateFeatureFlags(String content) throws IOException {
@@ -116,13 +140,23 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 				return content;
 			}
 
+			List<String> deprecationFeatureFlags = new ArrayList<>();
+
+			Matcher deprecationFeatureFlagMatcher =
+				_deprecationFeatureFlagPattern.matcher(content);
+
+			while (deprecationFeatureFlagMatcher.find()) {
+				deprecationFeatureFlags.add(
+					deprecationFeatureFlagMatcher.group(1));
+			}
+
 			StringBundler sb = new StringBundler(featureFlags.size() * 14);
 
 			for (String featureFlag : featureFlags) {
-				featureFlag = "feature.flag." + featureFlag;
+				String featureFlagPropertyKey = "feature.flag." + featureFlag;
 
 				String environmentVariable =
-					ToolsUtil.encodeEnvironmentProperty(featureFlag);
+					ToolsUtil.encodeEnvironmentProperty(featureFlagPropertyKey);
 
 				sb.append(StringPool.NEW_LINE);
 				sb.append(StringPool.NEW_LINE);
@@ -136,8 +170,15 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 				sb.append(StringPool.POUND);
 				sb.append(StringPool.NEW_LINE);
 				sb.append(StringPool.FOUR_SPACES);
-				sb.append(featureFlag);
-				sb.append("=false");
+				sb.append(featureFlagPropertyKey);
+				sb.append(StringPool.EQUAL);
+
+				if (deprecationFeatureFlags.contains(featureFlag)) {
+					sb.append(true);
+				}
+				else {
+					sb.append(false);
+				}
 			}
 
 			if (matchedFeatureFlags.contains("feature.flag.")) {
@@ -198,6 +239,8 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 		return featureFlags;
 	}
 
+	private static final Pattern _deprecationFeatureFlagPattern =
+		Pattern.compile("feature\\.flag\\.([A-Z]+-\\d+)\\.type=deprecation");
 	private static final Pattern _featureFlagPattern1 = Pattern.compile(
 		"feature\\.flag[.=]([A-Z]+-\\d+)");
 	private static final Pattern _featureFlagPattern2 = Pattern.compile(

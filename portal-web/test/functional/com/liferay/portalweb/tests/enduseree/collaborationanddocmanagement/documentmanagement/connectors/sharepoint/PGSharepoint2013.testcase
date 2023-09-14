@@ -68,7 +68,6 @@ definition {
 
 		DMRepository.addSharepoint(
 			dmRepositoryLibraryName = "Documents",
-			dmRepositoryLibraryPath = "Shared Documents",
 			dmRepositoryName = "Sharepoint",
 			dmRepositorySiteURL = "http://${sharepointVmHostName}",
 			dmServerVersion = 2013);
@@ -118,6 +117,7 @@ definition {
 	@refactorneeded
 	test ViewDocumentAsGuest {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 

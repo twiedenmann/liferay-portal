@@ -1,21 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.kernel.test.rule;
 
 import com.liferay.petra.lang.SafeCloseable;
-import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -26,11 +16,11 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.BaseDestination;
 import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.DestinationNames;
-import com.liferay.portal.kernel.messaging.InvokerMessageListener;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
 import com.liferay.portal.kernel.messaging.MessageListener;
 import com.liferay.portal.kernel.messaging.MessageListenerException;
+import com.liferay.portal.kernel.messaging.MessageListenerRegistry;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule.SyncHandler;
@@ -41,7 +31,6 @@ import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 import org.junit.runner.Description;
 
@@ -119,12 +108,16 @@ public class SynchronousDestinationTestRule
 				testSynchronousDestination = new TestSynchronousDestination();
 			}
 
+			testSynchronousDestination.setMessageListenerRegistry(
+				_serviceTracker.getService());
 			testSynchronousDestination.setName(destinationName);
 
 			return testSynchronousDestination;
 		}
 
 		public void enableSync() {
+			_serviceTracker.open();
+
 			Filter audioProcessorFilter = _registerDestinationFilter(
 				DestinationNames.DOCUMENT_LIBRARY_AUDIO_PROCESSOR);
 			Filter asyncFilter = _registerDestinationFilter(
@@ -145,6 +138,8 @@ public class SynchronousDestinationTestRule
 				DestinationNames.COMMERCE_SUBSCRIPTION_STATUS);
 			Filter ddmStructureReindexFilter = _registerDestinationFilter(
 				"liferay/ddm_structure_reindex");
+			Filter deletionProcessorFilter = _registerDestinationFilter(
+				DestinationNames.DOCUMENT_LIBRARY_DELETION);
 			Filter mailFilter = _registerDestinationFilter(
 				DestinationNames.MAIL);
 			Filter pdfProcessorFilter = _registerDestinationFilter(
@@ -165,10 +160,10 @@ public class SynchronousDestinationTestRule
 				backgroundTaskStatusFilter, commerceBasePriceListFilter,
 				commerceOrderFilter, commercePaymentFilter,
 				commerceShipmentFilter, commerceSubscriptionFilter,
-				ddmStructureReindexFilter, mailFilter, pdfProcessorFilter,
-				rawMetaDataProcessorFilter, segmentsEntryReindexFilter,
-				subscrpitionSenderFilter, tensorflowModelDownloadFilter,
-				videoProcessorFilter);
+				ddmStructureReindexFilter, deletionProcessorFilter, mailFilter,
+				pdfProcessorFilter, rawMetaDataProcessorFilter,
+				segmentsEntryReindexFilter, subscrpitionSenderFilter,
+				tensorflowModelDownloadFilter, videoProcessorFilter);
 
 			_destinations = ReflectionTestUtil.getFieldValue(
 				MessageBusUtil.getMessageBus(), "_destinations");
@@ -186,11 +181,10 @@ public class SynchronousDestinationTestRule
 			replaceDestination(DestinationNames.COMMERCE_SUBSCRIPTION_STATUS);
 			replaceDestination(
 				DestinationNames.DOCUMENT_LIBRARY_AUDIO_PROCESSOR);
+			replaceDestination(DestinationNames.DOCUMENT_LIBRARY_DELETION);
 			replaceDestination(DestinationNames.DOCUMENT_LIBRARY_PDF_PROCESSOR);
 			replaceDestination(
 				DestinationNames.DOCUMENT_LIBRARY_RAW_METADATA_PROCESSOR);
-			replaceDestination(
-				DestinationNames.DOCUMENT_LIBRARY_SYNC_EVENT_PROCESSOR);
 			replaceDestination(
 				DestinationNames.DOCUMENT_LIBRARY_VIDEO_PROCESSOR);
 			replaceDestination(DestinationNames.MAIL);
@@ -209,66 +203,24 @@ public class SynchronousDestinationTestRule
 				}
 			}
 
-			Destination schedulerDestination = _destinations.get(
+			_schedulerDestination = _destinations.get(
 				DestinationNames.SCHEDULER_DISPATCH);
 
-			if (schedulerDestination == null) {
+			if (_schedulerDestination == null) {
 				return;
 			}
 
-			for (MessageListener messageListener :
-					schedulerDestination.getMessageListeners()) {
+			Destination dummySchedulerDestination =
+				new TestSynchronousDestination() {
 
-				InvokerMessageListener invokerMessageListener =
-					(InvokerMessageListener)messageListener;
-
-				MessageListener schedulerMessageListener =
-					invokerMessageListener.getMessageListener();
-
-				schedulerDestination.unregister(schedulerMessageListener);
-
-				_schedulerInvokerMessageListeners.add(invokerMessageListener);
-			}
-
-			int workersMaxSize = ReflectionTestUtil.getFieldValue(
-				schedulerDestination, "_workersMaxSize");
-
-			CountDownLatch startCountDownLatch = new CountDownLatch(
-				workersMaxSize);
-
-			CountDownLatch endCountDownLatch = new CountDownLatch(1);
-
-			Message countDownMessage = new Message();
-
-			MessageListener messageListener = message -> {
-				if (countDownMessage == message) {
-					startCountDownLatch.countDown();
-
-					try {
-						endCountDownLatch.await();
+					@Override
+					public void send(Message message) {
 					}
-					catch (InterruptedException interruptedException) {
-						ReflectionUtil.throwException(interruptedException);
-					}
-				}
-			};
 
-			schedulerDestination.register(messageListener);
+				};
 
-			for (int i = 0; i < workersMaxSize; i++) {
-				schedulerDestination.send(countDownMessage);
-			}
-
-			try {
-				startCountDownLatch.await();
-			}
-			catch (InterruptedException interruptedException) {
-				ReflectionUtil.throwException(interruptedException);
-			}
-
-			schedulerDestination.unregister(messageListener);
-
-			endCountDownLatch.countDown();
+			_destinations.put(
+				DestinationNames.SCHEDULER_DISPATCH, dummySchedulerDestination);
 		}
 
 		public void replaceDestination(String destinationName) {
@@ -294,10 +246,6 @@ public class SynchronousDestinationTestRule
 				Destination synchronousDestination =
 					createSynchronousDestination(destinationName);
 
-				destination.copyDestinationEventListeners(
-					synchronousDestination);
-				destination.copyMessageListeners(synchronousDestination);
-
 				_destinations.put(destinationName, synchronousDestination);
 			}
 
@@ -315,6 +263,11 @@ public class SynchronousDestinationTestRule
 				_bufferedIncrementForceSyncSafeCloseable.close();
 			}
 
+			if (_schedulerDestination != null) {
+				_destinations.put(
+					DestinationNames.SCHEDULER_DISPATCH, _schedulerDestination);
+			}
+
 			for (Destination destination : _asyncServiceDestinations) {
 				_destinations.put(destination.getName(), destination);
 			}
@@ -325,20 +278,7 @@ public class SynchronousDestinationTestRule
 				_destinations.remove(absentDestinationName);
 			}
 
-			Destination destination = _destinations.get(
-				DestinationNames.SCHEDULER_DISPATCH);
-
-			if (destination == null) {
-				return;
-			}
-
-			for (InvokerMessageListener invokerMessageListener :
-					_schedulerInvokerMessageListeners) {
-
-				destination.register(
-					invokerMessageListener.getMessageListener(),
-					invokerMessageListener.getClassLoader());
-			}
+			_serviceTracker.close();
 		}
 
 		/**
@@ -397,8 +337,12 @@ public class SynchronousDestinationTestRule
 			new ArrayList<>();
 		private SafeCloseable _bufferedIncrementForceSyncSafeCloseable;
 		private Map<String, Destination> _destinations;
-		private final List<InvokerMessageListener>
-			_schedulerInvokerMessageListeners = new ArrayList<>();
+		private Destination _schedulerDestination;
+		private final ServiceTracker
+			<MessageListenerRegistry, MessageListenerRegistry> _serviceTracker =
+				new ServiceTracker<>(
+					SystemBundleUtil.getBundleContext(),
+					MessageListenerRegistry.class, null);
 		private Sync _sync;
 
 	}
@@ -407,7 +351,9 @@ public class SynchronousDestinationTestRule
 
 		@Override
 		public void send(Message message) {
-			for (MessageListener messageListener : messageListeners) {
+			for (MessageListener messageListener :
+					messageListenerRegistry.getMessageListeners(name)) {
+
 				try {
 					messageListener.receive(message);
 				}

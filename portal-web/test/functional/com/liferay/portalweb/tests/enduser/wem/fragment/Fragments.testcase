@@ -56,20 +56,20 @@ definition {
 				entry = "Fragment Name",
 				item = "Edit");
 
-			var htmlSnippet = '''
-<div class="test">
-CSS
+			var htmlSnippet = '''<div class="test">
+	CSS
 </div>
 <div>
-NO CSS
-</div>
-		''';
-			var cssSnippet = '''
-.test
-{ font-size: 40px; }
-		''';
+	NO CSS
+</div>''';
+			var cssSnippet = '''.test
+{
+	font-size: 40px;
+}''';
 
 			FragmentsEditor.typeHtmlEditor(content = ${htmlSnippet});
+
+			FragmentsEditor.waitForAutoSave();
 
 			FragmentsEditor.typeCssEditor(content = ${cssSnippet});
 

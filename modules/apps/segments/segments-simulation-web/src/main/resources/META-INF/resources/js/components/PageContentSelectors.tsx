@@ -1,27 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
-import ClayButton from '@clayui/button';
-import ClayDropDown, {Align} from '@clayui/drop-down';
 import ClayLink from '@clayui/link';
-import {fetch, openSelectionModal, sub} from 'frontend-js-web';
+import {
+	ExperienceSelector,
+	SegmentExperience,
+} from '@liferay/layout-js-components-web';
+import {fetch, sub} from 'frontend-js-web';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
 import SegmentEntry from '../../types/SegmentEntry';
-import SegmentExperience from '../../types/SegmentExperience';
-import ExperienceSelector from './ExperienceSelector';
+import PreviewSelector from './PreviewSelector';
 import SegmentSelector from './SegmentSelector';
 
 interface Props {
@@ -32,8 +24,6 @@ interface Props {
 	segmentsCompanyConfigurationURL: string;
 	segmentsEntries: SegmentEntry[];
 	segmentsExperiences: SegmentExperience[];
-	selectSegmentsEntryURL: string;
-	selectSegmentsExperienceURL: string;
 	simulateSegmentsEntriesURL: string;
 }
 
@@ -51,24 +41,15 @@ const PREVIEW_OPTIONS = [
 
 const SEGMENT_SIMULATION_EVENT = 'SegmentSimulation:changeSegment';
 
-const MAXIMUM_DROPDOWN_ENTRIES = 8;
-
 function PageContentSelectors({
 	deactivateSimulationURL,
 	namespace,
-	portletNamespace,
 	segmentationEnabled,
 	segmentsCompanyConfigurationURL,
 	segmentsEntries,
 	segmentsExperiences,
-	selectSegmentsEntryURL,
-	selectSegmentsExperienceURL,
 	simulateSegmentsEntriesURL,
 }: Props) {
-	const [
-		isSegmentOrExperienceSelectorActive,
-		setIsSegmentOrExperienceSelectorActive,
-	] = useState(false);
 	const [alertVisible, setAlertVisible] = useState(!segmentationEnabled);
 	const [selectedPreviewOption, setSelectedPreviewOption] = useState(
 		DEFAULT_PREVIEW_OPTION
@@ -143,70 +124,44 @@ function PageContentSelectors({
 		[selectedSegmentsExperience]
 	);
 
-	const handleMoreSegmentEntriesButtonClick = () => {
-		openSelectionModal({
-			onSelect: (selectedItem: {value: string}) => {
-				const valueJSON = JSON.parse(selectedItem.value);
-				setSelectedSegmentEntry({
-					id: valueJSON.segmentsEntryId,
-					name: valueJSON.segmentsEntryName,
-				});
-			},
-			selectEventName: `${portletNamespace}selectSegmentsEntry`,
-			title: sub(
-				Liferay.Language.get('select-x'),
-				Liferay.Language.get('segment')
-			),
-			url: selectSegmentsEntryURL,
-		});
-	};
-
-	const handleMoreSegmentExperiencesButtonClick = () => {
-		openSelectionModal({
-			onSelect: (selectedItem: {value: string}) => {
-				const valueJSON = JSON.parse(selectedItem.value);
-				const selectedExperience:
-					| SegmentExperience
-					| undefined = segmentsExperiences.find(
-					(exp) =>
-						exp.segmentsExperienceId ===
-						valueJSON.segmentsExperienceId
-				);
-
-				if (!selectedExperience) {
-					return;
-				}
-				setSelectedSegmentsExperience(selectedExperience);
-			},
-			selectEventName: `${portletNamespace}selectSegmentsExperience`,
-			title: Liferay.Language.get('select-experience'),
-			url: selectSegmentsExperienceURL,
-		});
-	};
-
 	useEffect(() => {
-		const deactivateSimulationEventHandler = Liferay.on(
-			'SimulationMenu:closeSimulationPanel',
-			fetchDeactivateSimulation
+		const simulationToggle = document.querySelector(
+			'.product-menu-toggle.lfr-has-simulation-panel'
 		);
 
-		const openSimulationPanelEventHandler = Liferay.on(
-			'SimulationMenu:openSimulationPanel',
-			() => {
-				firstRenderRef.current = false;
+		if (!simulationToggle) {
+			return;
+		}
+
+		// @ts-ignore
+
+		const sidenavInstance = Liferay.SideNavigation.initialize(
+			simulationToggle
+		);
+
+		sidenavInstance.on('open.lexicon.sidenav', () => {
+			if (!firstRenderRef.current) {
 				simulateSegmentsEntries();
 			}
-		);
+		});
+
+		sidenavInstance.on('closed.lexicon.sidenav', () => {
+			fetchDeactivateSimulation();
+		});
+
+		if (firstRenderRef.current) {
+			if (sidenavInstance && sidenavInstance.visible()) {
+				firstRenderRef.current = false;
+
+				simulateSegmentsEntries();
+			}
+		}
 
 		return () => {
 
 			// @ts-ignore
 
-			deactivateSimulationEventHandler.detach();
-
-			// @ts-ignore
-
-			openSimulationPanelEventHandler.detach();
+			Liferay.SideNavigation.destroy(simulationToggle);
 		};
 	}, [fetchDeactivateSimulation, simulateSegmentsEntries]);
 
@@ -289,84 +244,64 @@ function PageContentSelectors({
 				</ClayAlert>
 			)}
 
-			<div className="form-group">
-				<label htmlFor={`${namespace}segmentsOrExperiences`}>
-					{Liferay.Language.get('preview-by')}
-				</label>
+			<PreviewSelector
+				namespace={namespace}
+				onSelectPreviewOption={(key: React.Key) => {
+					const selectedOption = PREVIEW_OPTIONS.find(
+						({value}) => value === key
+					);
 
-				<input
-					id={`${namespace}segmentsOrExperiences`}
-					name={`${namespace}segmentsOrExperiences`}
-					type="hidden"
-					value={selectedPreviewOption.value}
-				/>
-
-				<ClayDropDown
-					active={isSegmentOrExperienceSelectorActive}
-					alignmentPosition={Align.BottomLeft}
-					menuElementAttrs={{
-						containerProps: {
-							className: 'cadmin',
-						},
-					}}
-					onActiveChange={setIsSegmentOrExperienceSelectorActive}
-					trigger={
-						<ClayButton
-							className="form-control-select text-left w-100"
-							displayType="secondary"
-							size="sm"
-							type="button"
-						>
-							{selectedPreviewOption.label}
-						</ClayButton>
+					if (selectedOption) {
+						setSelectedPreviewOption(selectedOption);
 					}
-				>
-					<ClayDropDown.ItemList>
-						{PREVIEW_OPTIONS.map((option) => (
-							<ClayDropDown.Item
-								active={
-									option.value === selectedPreviewOption.value
-								}
-								key={option.value}
-								onClick={() => {
-									setIsSegmentOrExperienceSelectorActive(
-										false
-									);
-									setSelectedPreviewOption(option);
-								}}
-							>
-								{option.label}
-							</ClayDropDown.Item>
-						))}
-					</ClayDropDown.ItemList>
-				</ClayDropDown>
-			</div>
+				}}
+				previewOptions={PREVIEW_OPTIONS}
+				selectedPreviewOption={selectedPreviewOption}
+			/>
 
 			{selectedPreviewOption.value === 'segments' && (
 				<SegmentSelector
-					maximumDropdownEntries={MAXIMUM_DROPDOWN_ENTRIES}
 					namespace={namespace}
-					onMoreSegmentEntriesButtonClick={
-						handleMoreSegmentEntriesButtonClick
-					}
-					onSelectSegmentEntry={setSelectedSegmentEntry}
+					onSelectSegmentEntry={(key: React.Key) => {
+						const selectedSegment = segmentsEntries.find(
+							({id}) => id.toString() === key
+						);
+
+						if (selectedSegment) {
+							setSelectedSegmentEntry(selectedSegment);
+						}
+					}}
 					segmentsEntries={segmentsEntries}
 					selectedSegmentEntry={selectedSegmentEntry}
 				/>
 			)}
 
-			{selectedPreviewOption.value === 'experiences' && (
-				<ExperienceSelector
-					maximumDropdownEntries={MAXIMUM_DROPDOWN_ENTRIES}
-					namespace={namespace}
-					onMoreSegmentExperiencesButtonClick={
-						handleMoreSegmentExperiencesButtonClick
-					}
-					onSelectSegmentExperience={setSelectedSegmentsExperience}
-					segmentsExperiences={segmentsExperiences}
-					selectedSegmentsExperience={selectedSegmentsExperience}
-				/>
-			)}
+			{selectedPreviewOption.value === 'experiences' &&
+				(segmentsExperiences.length < 2 ? (
+					<p>
+						{Liferay.Language.get(
+							'no-experiences-have-been-added-yet'
+						)}
+					</p>
+				) : (
+					<ExperienceSelector
+						label={Liferay.Language.get('experience')}
+						onChangeExperience={(key: React.Key) => {
+							const selectedExperience = segmentsExperiences.find(
+								({segmentsExperienceId}) =>
+									segmentsExperienceId === key
+							);
+
+							if (selectedExperience) {
+								setSelectedSegmentsExperience(
+									selectedExperience
+								);
+							}
+						}}
+						segmentsExperiences={segmentsExperiences}
+						selectedSegmentsExperience={selectedSegmentsExperience}
+					/>
+				))}
 		</form>
 	);
 }

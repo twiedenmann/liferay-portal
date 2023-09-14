@@ -30,6 +30,7 @@ definition {
 	@priority = 4
 	test CanLimitMultipleMimeTypesSize {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.updateMimeTypeSizeLimit(
 			maximumFileSizeValue = 40960,
@@ -68,6 +69,7 @@ definition {
 	@priority = 4
 	test CanLimitSizeOnlyInCurrentSite {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		HeadlessSite.addSite(siteName = "Site Name");
 
@@ -112,6 +114,9 @@ definition {
 	@description = "This test ensures that uploaded files will be limited in size in a depot when setting the limit of a mimetype using the type and a wildcard."
 	@priority = 4
 	test CanLimitSizeUsingWildcardInDepot {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		OSGiConfig.copyOSGiConfigFile(
 			osgiConfigFileBaseDir = "test/functional/com/liferay/portalweb/tests/enduser/documentmanagement/documentsadministration/dependencies",
 			osgiConfigFileName = "com.liferay.document.library.internal.configuration.DLSizeLimitConfiguration.config");
@@ -143,6 +148,9 @@ definition {
 	@description = "This test ensures that uploaded files will be limited in size in a site when setting the limit of a mimetype using the type and a wildcard."
 	@priority = 4
 	test CanLimitSizeUsingWildcardInSite {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
 		OSGiConfig.copyOSGiConfigFile(
 			osgiConfigFileBaseDir = "test/functional/com/liferay/portalweb/tests/enduser/documentmanagement/documentsadministration/dependencies",
 			osgiConfigFileName = "com.liferay.document.library.internal.configuration.DLSizeLimitConfiguration.config");
@@ -171,6 +179,7 @@ definition {
 	@priority = 3
 	test CannotSaveFileSizeLimitsWithEmptyValue {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.updateMimeTypeSizeLimit(
 			instanceSettings = "true",
@@ -205,6 +214,7 @@ definition {
 	@priority = 3
 	test CannotSaveFileSizeLimitsWithInvalidValue {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.updateMimeTypeSizeLimit(
 			maximumFileSizeValue = 10240,
@@ -238,6 +248,7 @@ definition {
 	@priority = 3
 	test CannotUpdateFileSizeLimitsWithInvalidValue {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.updateMimeTypeSizeLimit(
 			instanceSettings = "true",
@@ -284,6 +295,7 @@ definition {
 	@priority = 3
 	test CanRemoveConfiguredFileSizeLimits {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.updateMimeTypeSizeLimit(
 			maximumFileSizeValue = 10240,
@@ -306,6 +318,7 @@ definition {
 	@priority = 4
 	test InstanceTakesEffectOverSystemLimit {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.updateMimeTypeSizeLimit(
 			maximumFileSizeValue = 30720,
@@ -338,6 +351,7 @@ definition {
 	@priority = 3
 	test SiteSizeLimitTakesEffectOverInstanceSettingsWithMultipleLimits {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.updateMimeTypeSizeLimit(
 			instanceSettings = "true",
@@ -380,6 +394,7 @@ definition {
 	@priority = 4
 	test SiteSizeLimitTakesEffectOverSystemAndInstanceSettings {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		DMDocument.updateMimeTypeSizeLimit(
 			maximumFileSizeValue = 51200,

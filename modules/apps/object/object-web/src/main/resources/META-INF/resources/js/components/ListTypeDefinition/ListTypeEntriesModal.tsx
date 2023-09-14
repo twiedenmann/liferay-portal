@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayAlert from '@clayui/alert';
@@ -18,10 +9,10 @@ import ClayModal, {useModal} from '@clayui/modal';
 import {
 	API,
 	Input,
-	InputLocalized,
 	REQUIRED_MSG,
 	invalidateRequired,
 } from '@liferay/object-js-components-web';
+import {InputLocalized} from 'frontend-js-components-web';
 import {openToast} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
@@ -29,6 +20,7 @@ import {defaultLanguageId} from '../../utils/constants';
 import {specialCharactersInString, toCamelCase} from '../../utils/string';
 import {ObjectValidationErrors} from './ListTypeFormBase';
 import {fixLocaleKeys} from './utils';
+
 export interface IModalState extends Partial<PickListItem> {
 	header?: string;
 	itemExternalReferenceCode?: string;
@@ -38,6 +30,7 @@ export interface IModalState extends Partial<PickListItem> {
 	pickListId?: number;
 	readOnly?: boolean;
 	reloadIframeWindow?: () => void;
+	system?: boolean;
 }
 
 function ListTypeEntriesModal() {
@@ -52,6 +45,7 @@ function ListTypeEntriesModal() {
 			pickListId,
 			readOnly,
 			reloadIframeWindow,
+			system,
 		},
 		setState,
 	] = useState<IModalState>({});
@@ -250,6 +244,7 @@ function ListTypeEntriesModal() {
 
 				{modalType === 'edit' && (
 					<Input
+						disabled={system}
 						error={errors.externalReferenceCode}
 						label={Liferay.Language.get('external-reference-code')}
 						name="externalReferenceCode"

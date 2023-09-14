@@ -206,6 +206,11 @@ components:
                     format: bigdecimal
                     minimum: 0
                     type: number
+                modifiedDate:
+                    example: 2017-07-21
+                    format: date
+                    readOnly: true
+                    type: string
                 neverExpire:
                     example: true
                     type: boolean
@@ -757,6 +762,9 @@ components:
                     items:
                         $ref: "#/components/schemas/TierPrice"
                     type: array
+                unitOfMeasureKey:
+                    example: m
+                    type: string
             required:
                 - price
                 - priceListId
@@ -1422,10 +1430,10 @@ components:
                     minimum: 0
                     type: integer
                 minimumQuantity:
-                    example: 5
-                    format: int32
+                    example: 10.1
+                    format: bigdecimal
                     minimum: 0
-                    type: integer
+                    type: number
                 neverExpire:
                     example: true
                     type: boolean
@@ -1441,6 +1449,9 @@ components:
                     minimum: 0
                     type: integer
                 priceFormatted:
+                    type: string
+                unitOfMeasureKey:
+                    example: m
                     type: string
             required:
                 - minimumQuantity
@@ -1470,7 +1481,7 @@ info:
         name: Commerce Team
     description:
         "Liferay Commerce Admin Pricing API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.admin.pricing.client', and version '4.0.25'."
+        artifact ID 'com.liferay.headless.commerce.admin.pricing.client', and version '4.0.27'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"

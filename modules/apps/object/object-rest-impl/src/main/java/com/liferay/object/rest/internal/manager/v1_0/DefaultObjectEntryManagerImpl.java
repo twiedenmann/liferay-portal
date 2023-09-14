@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.rest.internal.manager.v1_0;
@@ -31,8 +22,12 @@ import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.related.models.ManyToOneObjectRelatedModelsProvider;
 import com.liferay.object.related.models.ObjectRelatedModelsProvider;
 import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
+import com.liferay.object.relationship.util.ObjectRelationshipUtil;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.object.rest.dto.v1_0.Status;
+import com.liferay.object.rest.filter.factory.FilterFactory;
+import com.liferay.object.rest.filter.parser.ObjectDefinitionFilterParser;
 import com.liferay.object.rest.internal.petra.sql.dsl.expression.OrderByExpressionUtil;
 import com.liferay.object.rest.internal.resource.v1_0.ObjectEntryRelatedObjectsResourceImpl;
 import com.liferay.object.rest.internal.resource.v1_0.ObjectEntryResourceImpl;
@@ -43,7 +38,6 @@ import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.rest.manager.v1_0.ObjectRelationshipElementsParser;
 import com.liferay.object.rest.manager.v1_0.ObjectRelationshipElementsParserRegistry;
-import com.liferay.object.rest.petra.sql.dsl.expression.FilterPredicateFactory;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryService;
@@ -85,6 +79,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.odata.filter.expression.Expression;
 import com.liferay.portal.search.aggregation.Aggregations;
 import com.liferay.portal.search.aggregation.bucket.FilterAggregation;
 import com.liferay.portal.search.aggregation.bucket.NestedAggregation;
@@ -390,87 +385,12 @@ public class DefaultObjectEntryManagerImpl
 	public Page<ObjectEntry> getObjectEntries(
 			long companyId, ObjectDefinition objectDefinition, String scopeKey,
 			Aggregation aggregation, DTOConverterContext dtoConverterContext,
-			Filter filter, Pagination pagination, String search, Sort[] sorts)
-		throws Exception {
-
-		long groupId = getGroupId(objectDefinition, scopeKey);
-
-		return SearchUtil.search(
-			HashMapBuilder.put(
-				"create",
-				ActionUtil.addAction(
-					"ADD_OBJECT_ENTRY", ObjectEntryResourceImpl.class, 0L,
-					"postObjectEntry", null, objectDefinition.getUserId(),
-					_getObjectEntriesPermissionName(
-						objectDefinition.getObjectDefinitionId()),
-					groupId, dtoConverterContext.getUriInfo())
-			).put(
-				"get",
-				ActionUtil.addAction(
-					ActionKeys.VIEW, ObjectEntryResourceImpl.class, 0L,
-					"getObjectEntriesPage", null, objectDefinition.getUserId(),
-					_getObjectEntriesPermissionName(
-						objectDefinition.getObjectDefinitionId()),
-					groupId, dtoConverterContext.getUriInfo())
-			).build(),
-			booleanQuery -> {
-				BooleanFilter booleanFilter =
-					booleanQuery.getPreBooleanFilter();
-
-				booleanFilter.add(
-					new TermFilter(
-						"objectDefinitionId",
-						String.valueOf(
-							objectDefinition.getObjectDefinitionId())),
-					BooleanClauseOccur.MUST);
-			},
-			filter, objectDefinition.getClassName(), search, pagination,
-			queryConfig -> queryConfig.setSelectedFieldNames(
-				Field.ENTRY_CLASS_PK),
-			searchContext -> {
-				searchContext.addVulcanAggregation(aggregation);
-				searchContext.setAttribute(
-					Field.STATUS, WorkflowConstants.STATUS_ANY);
-				searchContext.setAttribute(
-					"objectDefinitionId",
-					objectDefinition.getObjectDefinitionId());
-
-				UriInfo uriInfo = dtoConverterContext.getUriInfo();
-
-				if (uriInfo != null) {
-					MultivaluedMap<String, String> queryParameters =
-						uriInfo.getQueryParameters();
-
-					searchContext.setAttribute(
-						"searchByObjectView",
-						queryParameters.containsKey("searchByObjectView"));
-				}
-
-				searchContext.setCompanyId(companyId);
-				searchContext.setGroupIds(new long[] {groupId});
-
-				SearchRequestBuilder searchRequestBuilder =
-					_searchRequestBuilderFactory.builder(searchContext);
-
-				_processVulcanAggregation(
-					_aggregations, _queries, searchRequestBuilder, aggregation);
-			},
-			sorts,
-			document -> getObjectEntry(
-				dtoConverterContext, objectDefinition,
-				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
-	}
-
-	@Override
-	public Page<ObjectEntry> getObjectEntries(
-			long companyId, ObjectDefinition objectDefinition, String scopeKey,
-			Aggregation aggregation, DTOConverterContext dtoConverterContext,
-			String filterString, Pagination pagination, String search,
+			Expression filterExpression, Pagination pagination, String search,
 			Sort[] sorts)
 		throws Exception {
 
-		Predicate predicate = _filterPredicateFactory.create(
-			filterString, objectDefinition.getObjectDefinitionId());
+		Predicate predicate = _filterFactory.create(
+			filterExpression, objectDefinition);
 
 		long groupId = getGroupId(objectDefinition, scopeKey);
 
@@ -567,6 +487,96 @@ public class DefaultObjectEntryManagerImpl
 			objectEntryLocalService.getValuesListCount(
 				groupId, companyId, dtoConverterContext.getUserId(),
 				objectDefinition.getObjectDefinitionId(), predicate, search));
+	}
+
+	@Override
+	public Page<ObjectEntry> getObjectEntries(
+			long companyId, ObjectDefinition objectDefinition, String scopeKey,
+			Aggregation aggregation, DTOConverterContext dtoConverterContext,
+			Filter filter, Pagination pagination, String search, Sort[] sorts)
+		throws Exception {
+
+		long groupId = getGroupId(objectDefinition, scopeKey);
+
+		return SearchUtil.search(
+			HashMapBuilder.put(
+				"create",
+				ActionUtil.addAction(
+					"ADD_OBJECT_ENTRY", ObjectEntryResourceImpl.class, 0L,
+					"postObjectEntry", null, objectDefinition.getUserId(),
+					_getObjectEntriesPermissionName(
+						objectDefinition.getObjectDefinitionId()),
+					groupId, dtoConverterContext.getUriInfo())
+			).put(
+				"get",
+				ActionUtil.addAction(
+					ActionKeys.VIEW, ObjectEntryResourceImpl.class, 0L,
+					"getObjectEntriesPage", null, objectDefinition.getUserId(),
+					_getObjectEntriesPermissionName(
+						objectDefinition.getObjectDefinitionId()),
+					groupId, dtoConverterContext.getUriInfo())
+			).build(),
+			booleanQuery -> {
+				BooleanFilter booleanFilter =
+					booleanQuery.getPreBooleanFilter();
+
+				booleanFilter.add(
+					new TermFilter(
+						"objectDefinitionId",
+						String.valueOf(
+							objectDefinition.getObjectDefinitionId())),
+					BooleanClauseOccur.MUST);
+			},
+			filter, objectDefinition.getClassName(), search, pagination,
+			queryConfig -> queryConfig.setSelectedFieldNames(
+				Field.ENTRY_CLASS_PK),
+			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
+				searchContext.setAttribute(
+					Field.STATUS, WorkflowConstants.STATUS_ANY);
+				searchContext.setAttribute(
+					"objectDefinitionId",
+					objectDefinition.getObjectDefinitionId());
+
+				UriInfo uriInfo = dtoConverterContext.getUriInfo();
+
+				if (uriInfo != null) {
+					MultivaluedMap<String, String> queryParameters =
+						uriInfo.getQueryParameters();
+
+					searchContext.setAttribute(
+						"searchByObjectView",
+						queryParameters.containsKey("searchByObjectView"));
+				}
+
+				searchContext.setCompanyId(companyId);
+				searchContext.setGroupIds(new long[] {groupId});
+
+				SearchRequestBuilder searchRequestBuilder =
+					_searchRequestBuilderFactory.builder(searchContext);
+
+				_processVulcanAggregation(
+					_aggregations, _queries, searchRequestBuilder, aggregation);
+			},
+			sorts,
+			document -> getObjectEntry(
+				dtoConverterContext, objectDefinition,
+				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
+	}
+
+	@Override
+	public Page<ObjectEntry> getObjectEntries(
+			long companyId, ObjectDefinition objectDefinition, String scopeKey,
+			Aggregation aggregation, DTOConverterContext dtoConverterContext,
+			String filterString, Pagination pagination, String search,
+			Sort[] sorts)
+		throws Exception {
+
+		return getObjectEntries(
+			companyId, objectDefinition, scopeKey, aggregation,
+			dtoConverterContext,
+			_objectDefinitionFilterParser.parse(filterString, objectDefinition),
+			pagination, search, sorts);
 	}
 
 	@Override
@@ -745,6 +755,51 @@ public class DefaultObjectEntryManagerImpl
 
 		return objectEntryLocalService.getSystemModelAttributes(
 			objectDefinition, primaryKey);
+	}
+
+	@Override
+	public ObjectEntry partialUpdateObjectEntry(
+			DTOConverterContext dtoConverterContext,
+			ObjectDefinition objectDefinition, long objectEntryId,
+			ObjectEntry objectEntry)
+		throws Exception {
+
+		ObjectEntry existingObjectEntry = getObjectEntry(
+			dtoConverterContext, objectDefinition, objectEntryId);
+
+		if (objectEntry.getDateCreated() != null) {
+			existingObjectEntry.setDateCreated(objectEntry.getDateCreated());
+		}
+
+		if (objectEntry.getDateModified() != null) {
+			existingObjectEntry.setDateModified(objectEntry.getDateModified());
+		}
+
+		if (objectEntry.getKeywords() != null) {
+			existingObjectEntry.setKeywords(objectEntry.getKeywords());
+		}
+
+		if (objectEntry.getProperties() != null) {
+			Map<String, Object> properties =
+				existingObjectEntry.getProperties();
+
+			properties.putAll(objectEntry.getProperties());
+
+			existingObjectEntry.setProperties(properties);
+		}
+
+		if (objectEntry.getStatus() != null) {
+			existingObjectEntry.setStatus(objectEntry.getStatus());
+		}
+
+		if (objectEntry.getTaxonomyCategoryIds() != null) {
+			existingObjectEntry.setTaxonomyCategoryIds(
+				objectEntry.getTaxonomyCategoryIds());
+		}
+
+		return updateObjectEntry(
+			dtoConverterContext, objectDefinition, objectEntryId,
+			existingObjectEntry);
 	}
 
 	@Override
@@ -996,6 +1051,11 @@ public class DefaultObjectEntryManagerImpl
 
 		serviceContext.setUserId(userId);
 
+		if (_isObjectEntryDraft(objectEntry.getStatus())) {
+			serviceContext.setWorkflowAction(
+				WorkflowConstants.ACTION_SAVE_DRAFT);
+		}
+
 		return serviceContext;
 	}
 
@@ -1141,22 +1201,9 @@ public class DefaultObjectEntryManagerImpl
 			ObjectRelationship objectRelationship)
 		throws Exception {
 
-		long relatedObjectDefinitionId = 0;
-
-		if (objectRelationship.getObjectDefinitionId1() ==
-				objectDefinition.getObjectDefinitionId()) {
-
-			relatedObjectDefinitionId =
-				objectRelationship.getObjectDefinitionId2();
-		}
-		else {
-			relatedObjectDefinitionId =
-				objectRelationship.getObjectDefinitionId1();
-		}
-
 		ObjectDefinition relatedObjectDefinition =
-			_objectDefinitionLocalService.getObjectDefinition(
-				relatedObjectDefinitionId);
+			ObjectRelationshipUtil.getRelatedObjectDefinition(
+				objectDefinition, objectRelationship);
 
 		if (!relatedObjectDefinition.isActive()) {
 			throw new BadRequestException(
@@ -1285,6 +1332,16 @@ public class DefaultObjectEntryManagerImpl
 				objectDefinition.getObjectDefinitionId()) &&
 			(objectRelationship.getObjectDefinitionId2() ==
 				relatedObjectDefinition.getObjectDefinitionId())) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isObjectEntryDraft(Status status) {
+		if ((status != null) &&
+			(status.getCode() == WorkflowConstants.STATUS_DRAFT)) {
 
 			return true;
 		}
@@ -1530,7 +1587,10 @@ public class DefaultObjectEntryManagerImpl
 				continue;
 			}
 
-			if ((value == null) && !objectField.isRequired()) {
+			if ((value == null) &&
+				(!objectField.isRequired() ||
+				 _isObjectEntryDraft(objectEntry.getStatus()))) {
+
 				continue;
 			}
 
@@ -1574,8 +1634,10 @@ public class DefaultObjectEntryManagerImpl
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	@Reference
-	private FilterPredicateFactory _filterPredicateFactory;
+	@Reference(
+		target = "(filter.factory.key=" + ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT + ")"
+	)
+	private FilterFactory<Predicate> _filterFactory;
 
 	@Reference
 	private JSONFactory _jsonFactory;
@@ -1585,6 +1647,9 @@ public class DefaultObjectEntryManagerImpl
 
 	@Reference
 	private ObjectActionLocalService _objectActionLocalService;
+
+	@Reference
+	private ObjectDefinitionFilterParser _objectDefinitionFilterParser;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;

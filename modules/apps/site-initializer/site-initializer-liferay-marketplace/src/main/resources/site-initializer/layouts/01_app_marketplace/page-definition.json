@@ -10,17 +10,6 @@
 					},
 					"indexed": true,
 					"layout": {
-						"borderWidth": 0,
-						"marginBottom": 0,
-						"marginLeft": 0,
-						"marginRight": 0,
-						"marginTop": 0,
-						"opacity": 100,
-						"paddingBottom": 0,
-						"paddingLeft": 0,
-						"paddingRight": 0,
-						"paddingTop": 0,
-						"widthType": "Fluid"
 					}
 				},
 				"pageElements": [
@@ -79,14 +68,8 @@
 							],
 							"indexed": true,
 							"layout": {
-								"borderWidth": 0,
-								"marginTop": 0,
-								"opacity": 100,
 								"paddingBottom": 6,
-								"paddingLeft": 0,
-								"paddingRight": 0,
-								"paddingTop": 6,
-								"widthType": "Fluid"
+								"paddingTop": 6
 							}
 						},
 						"pageElements": [
@@ -134,8 +117,6 @@
 									],
 									"indexed": true,
 									"layout": {
-										"borderWidth": 0,
-										"opacity": 100,
 										"paddingLeft": 2,
 										"paddingRight": 2,
 										"widthType": "Fixed"
@@ -359,17 +340,6 @@
 											},
 											"indexed": true,
 											"layout": {
-												"borderWidth": 0,
-												"marginBottom": 0,
-												"marginLeft": 0,
-												"marginRight": 0,
-												"marginTop": 0,
-												"opacity": 100,
-												"paddingBottom": 0,
-												"paddingLeft": 0,
-												"paddingRight": 0,
-												"paddingTop": 0,
-												"widthType": "Fluid"
 											}
 										},
 										"pageElements": [
@@ -418,17 +388,6 @@
 							},
 							"indexed": true,
 							"layout": {
-								"borderWidth": 0,
-								"marginBottom": 0,
-								"marginLeft": 0,
-								"marginRight": 0,
-								"marginTop": 0,
-								"opacity": 100,
-								"paddingBottom": 0,
-								"paddingLeft": 0,
-								"paddingRight": 0,
-								"paddingTop": 0,
-								"widthType": "Fluid"
 							}
 						},
 						"pageElements": [
@@ -442,16 +401,8 @@
 									},
 									"indexed": true,
 									"layout": {
-										"borderWidth": 0,
-										"marginBottom": 0,
-										"marginLeft": 0,
-										"marginRight": 0,
-										"marginTop": 0,
-										"opacity": 100,
-										"paddingBottom": 0,
 										"paddingLeft": 10,
 										"paddingRight": 10,
-										"paddingTop": 0,
 										"widthType": "Fixed"
 									}
 								},
@@ -551,20 +502,6 @@
 													},
 													{
 														"definition": {
-															"customCSS": ".portlet-content .pull-right button {\nwidth: 185px;\nfont-size: 14px;\npadding: 15px 8px;\n}\n\n.portlet-content .pull-right p {\nwidth: 95px;\n}",
-															"fragmentStyle": {
-																"fontSize": "13px"
-															},
-															"widgetInstance": {
-																"widgetConfig": {
-																},
-																"widgetName": "com_liferay_commerce_product_content_search_web_internal_portlet_CPSortPortlet"
-															}
-														},
-														"type": "Widget"
-													},
-													{
-														"definition": {
 															"fragmentStyle": {
 																"hidden": true
 															},
@@ -600,8 +537,7 @@
 													{
 														"definition": {
 															"fragmentStyle": {
-																"backgroundColor": "whiteColor",
-																"hidden": false
+																"backgroundColor": "whiteColor"
 															},
 															"widgetInstance": {
 																"widgetConfig": {
@@ -622,8 +558,7 @@
 													{
 														"definition": {
 															"fragmentStyle": {
-																"backgroundColor": "whiteColor",
-																"hidden": false
+																"backgroundColor": "whiteColor"
 															},
 															"widgetInstance": {
 																"widgetConfig": {
@@ -650,6 +585,12 @@
 																"widgetPermissions": [
 																	{
 																		"actionKeys": [
+																			"VIEW"
+																		],
+																		"roleKey": "Site Member"
+																	},
+																	{
+																		"actionKeys": [
 																			"ADD_PORTLET_DISPLAY_TEMPLATE",
 																			"PERMISSIONS",
 																			"PREFERENCES",
@@ -658,12 +599,6 @@
 																			"ADD_TO_PAGE"
 																		],
 																		"roleKey": "Owner"
-																	},
-																	{
-																		"actionKeys": [
-																			"VIEW"
-																		],
-																		"roleKey": "Site Member"
 																	},
 																	{
 																		"actionKeys": [
@@ -679,8 +614,7 @@
 													{
 														"definition": {
 															"fragmentStyle": {
-																"backgroundColor": "whiteColor",
-																"hidden": false
+																"backgroundColor": "whiteColor"
 															},
 															"widgetInstance": {
 																"widgetConfig": {
@@ -740,7 +674,7 @@
 																	"lfrIgoogleShowAddAppLink": "false",
 																	"lfrNetvibesShowAddAppLink": "false",
 																	"lfrWidgetShowAddAppLink": "false",
-																	"paginate": "true",
+																	"paginate": "false",
 																	"paginationDelta": "15",
 																	"selectionStyle": "adt",
 																	"simple--cpTypeListEntryRendererKey": "list-entry-default",

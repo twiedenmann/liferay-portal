@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
- *
- *
- *
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.workflow.kaleo.forms.web.internal.portlet;
@@ -17,7 +8,7 @@ package com.liferay.portal.workflow.kaleo.forms.web.internal.portlet;
 import com.liferay.dynamic.data.lists.exporter.DDLExporter;
 import com.liferay.dynamic.data.lists.exporter.DDLExporterFactory;
 import com.liferay.dynamic.data.lists.service.DDLRecordLocalService;
-import com.liferay.dynamic.data.mapping.storage.StorageEngine;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
 import com.liferay.dynamic.data.mapping.util.DDMDisplayRegistry;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -230,9 +221,6 @@ public class KaleoFormsAdminPortlet extends MVCPortlet {
 		}
 	}
 
-	@Reference
-	protected StorageEngine storageEngine;
-
 	/**
 	 * Stores the Kaleo process, workflow instance, and workflow task as
 	 * attributes in the request if the Kaleo process ID, workflow instance ID,
@@ -422,10 +410,10 @@ public class KaleoFormsAdminPortlet extends MVCPortlet {
 
 		KaleoFormsAdminDisplayContext kaleoFormsAdminDisplayContext =
 			new KaleoFormsAdminDisplayContext(
-				_ddlRecordLocalService, _ddmDisplayRegistry, _htmlParser,
+				_ddlRecordLocalService, _ddmDisplayRegistry,
+				_ddmStorageEngineManager, _htmlParser,
 				_kaleoDefinitionVersionLocalService,
-				_kaleoFormsWebConfiguration, renderRequest, renderResponse,
-				storageEngine);
+				_kaleoFormsWebConfiguration, renderRequest, renderResponse);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, kaleoFormsAdminDisplayContext);
@@ -439,6 +427,9 @@ public class KaleoFormsAdminPortlet extends MVCPortlet {
 
 	@Reference
 	private DDMDisplayRegistry _ddmDisplayRegistry;
+
+	@Reference
+	private DDMStorageEngineManager _ddmStorageEngineManager;
 
 	@Reference
 	private HtmlParser _htmlParser;

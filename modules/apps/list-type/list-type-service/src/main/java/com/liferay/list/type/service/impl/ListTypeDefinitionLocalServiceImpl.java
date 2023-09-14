@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.list.type.service.impl;
@@ -68,14 +59,16 @@ public class ListTypeDefinitionLocalServiceImpl
 		return _addListTypeDefinition(
 			listTypeDefinition, externalReferenceCode, userId,
 			Collections.singletonMap(
-				LocaleUtil.getDefault(), externalReferenceCode));
+				LocaleUtil.getDefault(), externalReferenceCode),
+			false);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public ListTypeDefinition addListTypeDefinition(
 			String externalReferenceCode, long userId,
-			Map<Locale, String> nameMap, List<ListTypeEntry> listTypeEntries)
+			Map<Locale, String> nameMap, boolean system,
+			List<ListTypeEntry> listTypeEntries)
 		throws PortalException {
 
 		_validateName(nameMap, LocaleUtil.getSiteDefault());
@@ -85,7 +78,7 @@ public class ListTypeDefinitionLocalServiceImpl
 				counterLocalService.increment());
 
 		listTypeDefinition = _addListTypeDefinition(
-			listTypeDefinition, externalReferenceCode, userId, nameMap);
+			listTypeDefinition, externalReferenceCode, userId, nameMap, system);
 
 		_addOrUpdateListTypeEntries(
 			userId, listTypeDefinition.getListTypeDefinitionId(),
@@ -162,7 +155,7 @@ public class ListTypeDefinitionLocalServiceImpl
 
 	private ListTypeDefinition _addListTypeDefinition(
 			ListTypeDefinition listTypeDefinition, String externalReferenceCode,
-			long userId, Map<Locale, String> nameMap)
+			long userId, Map<Locale, String> nameMap, boolean system)
 		throws PortalException {
 
 		listTypeDefinition.setExternalReferenceCode(externalReferenceCode);
@@ -174,6 +167,7 @@ public class ListTypeDefinitionLocalServiceImpl
 		listTypeDefinition.setUserName(user.getFullName());
 
 		listTypeDefinition.setNameMap(nameMap);
+		listTypeDefinition.setSystem(system);
 
 		listTypeDefinition = listTypeDefinitionPersistence.update(
 			listTypeDefinition);

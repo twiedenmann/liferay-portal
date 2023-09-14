@@ -103,6 +103,7 @@ definition {
 	test AdminCanNotAddASubpageOfAChildPageLinkedToSiteTemplatePage {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: User add a new Site template with a page") {
 			SiteTemplates.addCP(siteTemplateName = "Site Template Name");
@@ -172,6 +173,7 @@ definition {
 	@priority = 3
 	test AllPageIsVisibleAfterAddingNewPages {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -221,6 +223,7 @@ definition {
 	@priority = 4
 	test ChangeLocalizationAfterSiteTemplateIsAddedInVirtualInstance {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given: Add virtual instance able.com") {
 			HeadlessPortalInstanceAPI.addPortalInstance(
@@ -312,6 +315,7 @@ definition {
 	@priority = 4
 	test ImportOldSchemaVersion {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("When: User navigate to Site template admin page") {
 			SiteTemplatesNavigator.openSiteTemplatesAdmin();
@@ -598,6 +602,7 @@ definition {
 	test SiteTemplatePageLinkInWebContentRedirectCorrectly {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -618,10 +623,9 @@ definition {
 
 			Navigator._gotoPage(pageName = "Page2 Name");
 
-			var page2URL = Navigator.getCurrentURL();
+			var entryExternalURL = Navigator.getCurrentURL();
 
-			var entryExternalURL = StringUtil.replace(${page2URL}, "http://", "");
-			var webContentAdminURL = StringUtil.replace(${page2URL}, "page2-name", "");
+			var webContentAdminURL = StringUtil.replace(${entryExternalURL}, "page2-name", "");
 		}
 
 		task ("And: Create WC on the Site template and use the copied URL as external URL") {
@@ -632,7 +636,7 @@ definition {
 			PortletEntry.inputTitle(title = "Web Content Title");
 
 			CKEditor.addEntryExternalURL(
-				displayText = ${page2URL},
+				displayText = ${entryExternalURL},
 				entryExternalURL = ${entryExternalURL},
 				fieldLabel = "Content");
 
@@ -674,7 +678,7 @@ definition {
 				siteName = "Site Name");
 
 			WebContentDisplayPortlet.viewContent(
-				displayText = ${page2URL},
+				displayText = ${entryExternalURL},
 				url = "${portalURL}/web/site-name/page2-name",
 				webContentTitle = "Web Content Title");
 		}
@@ -1182,6 +1186,7 @@ definition {
 	@priority = 4
 	test ViewImportedSitePageWithNumericFriendlyURL {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -1202,7 +1207,7 @@ definition {
 
 			AssertTextEquals(
 				inputFieldId = "friendlyURL",
-				locator1 = "TextInput#INPUT_ID",
+				locator1 = "TextInput#TEXT_INPUT_ID",
 				value1 = "/1");
 		}
 
@@ -1219,7 +1224,7 @@ definition {
 
 			AssertTextEquals(
 				inputFieldId = "friendlyURL",
-				locator1 = "TextInput#INPUT_ID",
+				locator1 = "TextInput#TEXT_INPUT_ID",
 				value1 = "/2");
 		}
 
@@ -1236,7 +1241,7 @@ definition {
 
 			AssertTextEquals(
 				inputFieldId = "friendlyURL",
-				locator1 = "TextInput#INPUT_ID",
+				locator1 = "TextInput#TEXT_INPUT_ID",
 				value1 = "/hello");
 		}
 

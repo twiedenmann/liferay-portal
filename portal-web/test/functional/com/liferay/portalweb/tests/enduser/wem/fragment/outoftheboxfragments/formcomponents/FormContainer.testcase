@@ -173,16 +173,9 @@ definition {
 	@description = "This is a test for LPS-190586. Even with the option to be redirected to a DPT, if there are validation errors on the object entry the page creator will remain on the same page and get a validation error message."
 	@priority = 4
 	test CannotRedirectToAssociatedDisplayPageTemplateWhenValidationFailed {
-		property custom.properties = "feature.flag.LPS-183498=true${line.separator}feature.flag.LPS-183727=true";
-		property test.liferay.virtual.instance = "false";
+		property custom.properties = "feature.flag.LPS-195205=true${line.separator}feature.flag.LPS-183727=true";
 
 		task ("Given a page creator has a Form Container with redirection option to a DPT") {
-			GogoShell.openGogoShellAdmin();
-
-			GogoShell.executeCommand(commandName = "scr:enable com.liferay.asset.display.page.internal.portlet.CustomAssetDisplayPageFriendlyURLResolver");
-
-			GogoShell.viewOutput(outputContent = "true");
-
 			ObjectAdmin.addObjectFieldViaAPI(
 				fieldBusinessType = "Text",
 				fieldLabelName = "Age",
@@ -213,7 +206,19 @@ definition {
 
 			ObjectCustomValidation.addErrorMessage(errorMessage = "The Age should be an integer.");
 
-			PortletEntry.save();
+			Button.clickSave();
+
+			WaitForElementNotPresent(locator1 = "ObjectAdmin#SIDE_PANEL");
+
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+			DisplayPageTemplatesAdmin.addDisplayPage(
+				contentType = "Purchase Order",
+				displayPageName = "Display Page Name");
+
+			PageEditor.publish();
+
+			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
@@ -602,17 +607,17 @@ definition {
 			PageEditor.gotoConfiguration(fragmentName = "Form Container");
 
 			AssertSelectedLabel(
-				key_fieldLabel = "Success Message",
+				key_fieldLabel = "Success Interaction",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "Embedded");
+				value1 = "Show Embedded Message");
 
 			AssertTextEquals(
-				key_text = "Success Text",
+				key_text = "Embedded Message",
 				locator1 = "TextInput#ANY",
 				value1 = "Thank you. Your information was successfully received.");
 
 			AssertNotChecked.assertNotCheckedNotVisible(
-				key_toggleSwitchLabel = "Preview Success State",
+				key_toggleSwitchLabel = "Preview Embedded Message",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
 			AssertVisible(
@@ -1326,7 +1331,7 @@ definition {
 
 			UploadDependencyFile.uploadFile(fileName = "Document_1.jpg");
 
-			Click(locator1 = "xpath=(//label[contains(.,'Select File')])[2]");
+			Click(locator1 = "xpath=(//button[contains(.,'Select File')])[2]");
 
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 

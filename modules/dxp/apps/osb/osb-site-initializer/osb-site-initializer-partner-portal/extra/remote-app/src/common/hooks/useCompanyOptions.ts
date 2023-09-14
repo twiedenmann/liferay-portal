@@ -1,12 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useEffect, useState} from 'react';
@@ -14,13 +8,15 @@ import {useEffect, useState} from 'react';
 import LiferayAccountBrief from '../interfaces/liferayAccountBrief';
 import LiferayPicklist from '../interfaces/liferayPicklist';
 import useGetAccountByERC from '../services/liferay/accounts/useGetAccountByERC';
+import useGetPartnerLevel from '../services/liferay/object/partner-level/useGetPartnerLevel';
 import isObjectEmpty from '../utils/isObjectEmpty';
 
 export default function useCompanyOptions(
 	handleSelected: (
 		partnerCountry: LiferayPicklist,
 		company: LiferayAccountBrief,
-		currency: LiferayPicklist
+		currency: LiferayPicklist,
+		claimPercent: number
 	) => void,
 	companyOptions?: React.OptionHTMLAttributes<HTMLOptionElement>[],
 	currencyOptions?: React.OptionHTMLAttributes<HTMLOptionElement>[],
@@ -35,6 +31,10 @@ export default function useCompanyOptions(
 
 	const {data: account} = useGetAccountByERC(
 		selectedAccountBrief?.externalReferenceCode
+	);
+
+	const {data: partnerLevel} = useGetPartnerLevel(
+		account?.r_prtLvlToAcc_c_partnerLevelERC
 	);
 
 	const currencyPicklist =
@@ -76,7 +76,8 @@ export default function useCompanyOptions(
 							key: currencyPicklist.value as string,
 							name: currencyPicklist.label as string,
 					  }) ||
-							{}
+							{},
+				partnerLevel?.claimPercent || 0
 			);
 		}
 	}, [
@@ -86,6 +87,7 @@ export default function useCompanyOptions(
 		currentCountry,
 		currentCurrency,
 		handleSelected,
+		partnerLevel?.claimPercent,
 		selectedAccountBrief,
 	]);
 

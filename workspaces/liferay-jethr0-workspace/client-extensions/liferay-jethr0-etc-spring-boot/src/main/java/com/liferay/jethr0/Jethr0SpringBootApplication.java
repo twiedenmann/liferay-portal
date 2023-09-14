@@ -1,26 +1,19 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.jethr0;
 
 import com.liferay.client.extension.util.spring.boot.ClientExtensionUtilSpringBootComponentScan;
-import com.liferay.jethr0.build.queue.BuildQueue;
+import com.liferay.jethr0.bui1d.queue.BuildQueue;
 import com.liferay.jethr0.entity.repository.EntityRepository;
+import com.liferay.jethr0.event.controller.EventJmsController;
 import com.liferay.jethr0.event.handler.EventHandlerContext;
 import com.liferay.jethr0.jenkins.JenkinsQueue;
-import com.liferay.jethr0.jms.JMSEventHandler;
-import com.liferay.jethr0.project.queue.ProjectQueue;
+import com.liferay.jethr0.job.queue.JobQueue;
+
+import java.util.Map;
 
 import javax.jms.ConnectionFactory;
 
@@ -51,45 +44,40 @@ public class Jethr0SpringBootApplication {
 		EventHandlerContext eventHandlerContext =
 			configurableApplicationContext.getBean(EventHandlerContext.class);
 
-		eventHandlerContext.setJMSEventHandler(
-			configurableApplicationContext.getBean(JMSEventHandler.class));
+		eventHandlerContext.setEventJmsController(
+			configurableApplicationContext.getBean(EventJmsController.class));
 
-		for (String beanDefinitionName :
-				configurableApplicationContext.getBeanDefinitionNames()) {
+		Map<String, EntityRepository> entityRepositories =
+			configurableApplicationContext.getBeansOfType(
+				EntityRepository.class);
 
-			Object bean = configurableApplicationContext.getBean(
-				beanDefinitionName);
-
-			if (bean instanceof EntityRepository) {
-				EntityRepository entityRepository = (EntityRepository)bean;
-
-				entityRepository.initialize();
-			}
+		for (EntityRepository entityRepository : entityRepositories.values()) {
+			entityRepository.initialize();
 		}
 
-		ProjectQueue projectQueue = configurableApplicationContext.getBean(
-			ProjectQueue.class);
+		JobQueue jobQueue = configurableApplicationContext.getBean(
+			JobQueue.class);
 
-		projectQueue.initialize();
+		jobQueue.initialize();
 
 		BuildQueue buildQueue = configurableApplicationContext.getBean(
 			BuildQueue.class);
 
 		buildQueue.initialize();
 
-		JenkinsQueue jenkinsQueue = configurableApplicationContext.getBean(
-			JenkinsQueue.class);
-
-		jenkinsQueue.setJmsEventHandler(
-			configurableApplicationContext.getBean(JMSEventHandler.class));
-
-		jenkinsQueue.initialize();
-
 		JmsListenerEndpointRegistry jmsListenerEndpointRegistry =
 			configurableApplicationContext.getBean(
 				JmsListenerEndpointRegistry.class);
 
 		jmsListenerEndpointRegistry.start();
+
+		JenkinsQueue jenkinsQueue = configurableApplicationContext.getBean(
+			JenkinsQueue.class);
+
+		jenkinsQueue.setEventJmsController(
+			configurableApplicationContext.getBean(EventJmsController.class));
+
+		jenkinsQueue.initialize();
 	}
 
 	@Bean

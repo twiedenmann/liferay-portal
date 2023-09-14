@@ -1,20 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.upgrade.internal.release;
 
-import com.liferay.osgi.service.tracker.collections.EagerServiceTrackerCustomizer;
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator;
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
@@ -39,6 +29,7 @@ import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.upgrade.internal.executor.UpgradeExecutor;
 import com.liferay.portal.upgrade.internal.graph.ReleaseGraphManager;
 import com.liferay.portal.upgrade.internal.registry.UpgradeInfo;
+import com.liferay.portal.upgrade.release.SchemaCreator;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -55,6 +46,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
@@ -178,13 +170,11 @@ public class ReleaseManagerImpl implements ReleaseManager {
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_initialUpgradeStepServiceTrackerMap =
-			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, UpgradeStep.class,
-				"(upgrade.initial.database.creation=true)",
-				new PropertyServiceReferenceMapper<>(
-					"upgrade.bundle.symbolic.name"),
-				new InitialUpgradeStepServiceTrackerCustomizer(bundleContext));
+		_schemaCreatorServiceTracker = new ServiceTracker<>(
+			bundleContext, SchemaCreator.class,
+			new SchemaCreatorServiceTrackerCustomizer(bundleContext));
+
+		_schemaCreatorServiceTracker.open();
 
 		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
 			bundleContext, UpgradeStep.class, null,
@@ -198,7 +188,7 @@ public class ReleaseManagerImpl implements ReleaseManager {
 
 	@Deactivate
 	protected void deactivate() {
-		_initialUpgradeStepServiceTrackerMap.close();
+		_schemaCreatorServiceTracker.close();
 
 		_serviceTrackerMap.close();
 	}
@@ -421,15 +411,13 @@ public class ReleaseManagerImpl implements ReleaseManager {
 	private static final Log _log = LogFactoryUtil.getLog(
 		ReleaseManagerImpl.class);
 
-	private ServiceTrackerMap<String, Release>
-		_initialUpgradeStepServiceTrackerMap;
-
 	@Reference
 	private ReleaseLocalService _releaseLocalService;
 
 	@Reference
 	private ReleasePublisher _releasePublisher;
 
+	private ServiceTracker<SchemaCreator, Release> _schemaCreatorServiceTracker;
 	private ServiceTrackerMap<String, List<UpgradeInfo>> _serviceTrackerMap;
 
 	@Reference(
@@ -482,30 +470,27 @@ public class ReleaseManagerImpl implements ReleaseManager {
 
 	}
 
-	private class InitialUpgradeStepServiceTrackerCustomizer
-		implements EagerServiceTrackerCustomizer<UpgradeStep, Release> {
+	private class SchemaCreatorServiceTrackerCustomizer
+		implements ServiceTrackerCustomizer<SchemaCreator, Release> {
 
 		@Override
 		public Release addingService(
-			ServiceReference<UpgradeStep> serviceReference) {
+			ServiceReference<SchemaCreator> serviceReference) {
 
-			String bundleSymbolicName = (String)serviceReference.getProperty(
-				"upgrade.bundle.symbolic.name");
+			SchemaCreator schemaCreator = _bundleContext.getService(
+				serviceReference);
+
+			String bundleSymbolicName = schemaCreator.getBundleSymbolicName();
 
 			Release release = _releaseLocalService.fetchRelease(
 				bundleSymbolicName);
 
 			if (release == null) {
-				UpgradeStep initialUpgradeStep = _bundleContext.getService(
-					serviceReference);
-
 				try {
-					initialUpgradeStep.upgrade();
+					schemaCreator.create();
 
 					release = _releaseLocalService.updateRelease(
-						bundleSymbolicName,
-						(String)serviceReference.getProperty(
-							"upgrade.to.schema.version"),
+						bundleSymbolicName, schemaCreator.getSchemaVersion(),
 						"0.0.0");
 
 					release.setVerified(true);
@@ -524,15 +509,15 @@ public class ReleaseManagerImpl implements ReleaseManager {
 
 		@Override
 		public void modifiedService(
-			ServiceReference<UpgradeStep> serviceReference, Release release) {
+			ServiceReference<SchemaCreator> serviceReference, Release release) {
 		}
 
 		@Override
 		public void removedService(
-			ServiceReference<UpgradeStep> serviceReference, Release release) {
+			ServiceReference<SchemaCreator> serviceReference, Release release) {
 		}
 
-		private InitialUpgradeStepServiceTrackerCustomizer(
+		private SchemaCreatorServiceTrackerCustomizer(
 			BundleContext bundleContext) {
 
 			_bundleContext = bundleContext;

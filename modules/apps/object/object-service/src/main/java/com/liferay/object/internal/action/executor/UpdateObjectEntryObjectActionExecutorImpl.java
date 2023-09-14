@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.action.executor;
 
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.object.action.executor.ObjectActionExecutor;
+import com.liferay.object.constants.ObjectActionConstants;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.internal.action.util.ObjectEntryVariablesUtil;
@@ -25,6 +17,7 @@ import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManagerProvider;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
+import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.system.SystemObjectDefinitionManager;
@@ -55,7 +48,8 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 
 	@Override
 	public void execute(
-			long companyId, UnicodeProperties parametersUnicodeProperties,
+			long companyId, long objectActionId,
+			UnicodeProperties parametersUnicodeProperties,
 			JSONObject payloadJSONObject, long userId)
 		throws Exception {
 
@@ -66,7 +60,7 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
 				_execute(
-					objectDefinition,
+					objectActionId, objectDefinition,
 					GetterUtil.getLong(payloadJSONObject.getLong("classPK")),
 					_userLocalService.getUser(userId),
 					_getValues(
@@ -86,8 +80,8 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 	}
 
 	private void _execute(
-			ObjectDefinition objectDefinition, long primaryKey, User user,
-			Map<String, Object> values)
+			long objectActionId, ObjectDefinition objectDefinition,
+			long primaryKey, User user, Map<String, Object> values)
 		throws Exception {
 
 		if (objectDefinition.isUnmodifiableSystemObject()) {
@@ -124,6 +118,12 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 						properties = values;
 					}
 				});
+		}
+		catch (Exception exception) {
+			_objectActionLocalService.updateStatus(
+				objectActionId, ObjectActionConstants.STATUS_FAILED);
+
+			throw exception;
 		}
 		finally {
 			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(
@@ -167,6 +167,9 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
+
+	@Reference
+	private ObjectActionLocalService _objectActionLocalService;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;

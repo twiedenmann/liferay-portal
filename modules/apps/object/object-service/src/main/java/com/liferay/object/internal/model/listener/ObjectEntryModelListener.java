@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.internal.model.listener;
@@ -21,6 +12,7 @@ import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.action.engine.ObjectActionEngine;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.internal.entry.util.ObjectEntryUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
@@ -427,19 +419,21 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 
 			JSONArray newValueJSONArray = new JSONArrayImpl();
 
-			for (int i = 0; i < valueJSONArray.length(); i++) {
-				if (StringUtil.equals(
-						(String)valueJSONArray.get(i),
-						objectEntry.getExternalReferenceCode())) {
+			if (valueJSONArray != null) {
+				for (int i = 0; i < valueJSONArray.length(); i++) {
+					if (StringUtil.equals(
+							(String)valueJSONArray.get(i),
+							objectEntry.getExternalReferenceCode())) {
 
-					if (!StringUtil.equals(
-							externalReferenceCode, StringPool.BLANK)) {
+						if (!StringUtil.equals(
+								externalReferenceCode, StringPool.BLANK)) {
 
-						newValueJSONArray.put(externalReferenceCode);
+							newValueJSONArray.put(externalReferenceCode);
+						}
 					}
-				}
-				else {
-					newValueJSONArray.put((String)valueJSONArray.get(i));
+					else {
+						newValueJSONArray.put((String)valueJSONArray.get(i));
+					}
 				}
 			}
 
@@ -464,6 +458,10 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 			ObjectEntry originalObjectEntry, ObjectEntry objectEntry)
 		throws ModelListenerException {
 
+		if (ObjectEntryThreadLocal.isSkipObjectValidationRules()) {
+			return;
+		}
+
 		try {
 			long userId = PrincipalThreadLocal.getUserId();
 
@@ -471,15 +469,21 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 				userId = objectEntry.getUserId();
 			}
 
-			_objectValidationRuleLocalService.validate(
-				objectEntry, objectEntry.getObjectDefinitionId(),
-				ObjectEntryUtil.getPayloadJSONObject(
-					_dtoConverterRegistry, _jsonFactory, null,
-					_objectDefinitionLocalService.getObjectDefinition(
-						objectEntry.getObjectDefinitionId()),
-					objectEntry, originalObjectEntry,
-					_userLocalService.getUser(userId)),
-				userId);
+			int count =
+				_objectValidationRuleLocalService.getObjectValidationRulesCount(
+					objectEntry.getObjectDefinitionId(), true);
+
+			if (count > 0) {
+				_objectValidationRuleLocalService.validate(
+					objectEntry, objectEntry.getObjectDefinitionId(),
+					ObjectEntryUtil.getPayloadJSONObject(
+						_dtoConverterRegistry, _jsonFactory, null,
+						_objectDefinitionLocalService.getObjectDefinition(
+							objectEntry.getObjectDefinitionId()),
+						objectEntry, originalObjectEntry,
+						_userLocalService.getUser(userId)),
+					userId);
+			}
 		}
 		catch (PortalException portalException) {
 			throw new ModelListenerException(portalException);

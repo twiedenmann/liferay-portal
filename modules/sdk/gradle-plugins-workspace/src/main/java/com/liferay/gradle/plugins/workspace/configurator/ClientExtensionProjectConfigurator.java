@@ -1,19 +1,11 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.gradle.plugins.workspace.configurator;
 
+import com.bmuschko.gradle.docker.DockerRegistryCredentials;
 import com.bmuschko.gradle.docker.DockerRemoteApiPlugin;
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage;
 import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage;
@@ -59,6 +51,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -120,6 +113,9 @@ public class ClientExtensionProjectConfigurator
 
 	@Override
 	public void apply(Project project) {
+		WorkspaceExtension workspaceExtension = GradleUtil.getExtension(
+			(ExtensionAware)project.getGradle(), WorkspaceExtension.class);
+
 		TaskProvider<CreateClientExtensionConfigTask>
 			createClientExtensionConfigTaskProvider =
 				GradleUtil.addTaskProvider(
@@ -143,7 +139,9 @@ public class ClientExtensionProjectConfigurator
 			project, assembleClientExtensionTaskProvider,
 			buildClientExtensionZipTaskProvider,
 			createClientExtensionConfigTaskProvider,
-			validateClientExtensionIdsTaskProvider);
+			validateClientExtensionIdsTaskProvider, workspaceExtension);
+
+		AtomicBoolean hasThemeCSSClientExtension = new AtomicBoolean(false);
 
 		Map<String, JsonNode> profileJsonNodes =
 			_configureClientExtensionJsonNodes(
@@ -235,8 +233,7 @@ public class ClientExtensionProjectConfigurator
 								});
 						}
 						else if (clientExtension.type.equals("themeCSS")) {
-							_themeCSSTypeConfigurer.apply(
-								project, assembleClientExtensionTaskProvider);
+							hasThemeCSSClientExtension.set(true);
 						}
 					}
 					catch (JsonProcessingException jsonProcessingException) {
@@ -247,12 +244,17 @@ public class ClientExtensionProjectConfigurator
 				});
 		}
 
+		if (hasThemeCSSClientExtension.get()) {
+			_themeCSSTypeConfigurer.apply(
+				project, assembleClientExtensionTaskProvider);
+		}
+
 		_nodeBuildConfigurer.apply(
 			project, assembleClientExtensionTaskProvider);
 
 		_addDockerTasks(
 			project, assembleClientExtensionTaskProvider,
-			createClientExtensionConfigTaskProvider);
+			createClientExtensionConfigTaskProvider, workspaceExtension);
 	}
 
 	@Override
@@ -307,7 +309,8 @@ public class ClientExtensionProjectConfigurator
 	private void _addDockerTasks(
 		Project project, TaskProvider<Copy> assembleClientExtensionTaskProvider,
 		TaskProvider<CreateClientExtensionConfigTask>
-			createClientExtensionConfigTaskProvider) {
+			createClientExtensionConfigTaskProvider,
+		WorkspaceExtension workspaceExtension) {
 
 		DockerBuildImage dockerBuildImage = GradleUtil.addTask(
 			project, RootProjectConfigurator.BUILD_DOCKER_IMAGE_TASK_NAME,
@@ -325,6 +328,36 @@ public class ClientExtensionProjectConfigurator
 
 		assembleClientExtensionTaskProvider.configure(
 			copy -> inputDirectoryProperty.set(copy.getDestinationDir()));
+
+		Property<Boolean> pullProperty = dockerBuildImage.getPull();
+
+		pullProperty.set(workspaceExtension.getDockerPullPolicy());
+
+		if (Objects.nonNull(
+				workspaceExtension.getDockerLocalRegistryAddress())) {
+
+			DockerRegistryCredentials dockerRegistryCredentials =
+				dockerBuildImage.getRegistryCredentials();
+
+			String dockerUserAccessToken =
+				workspaceExtension.getDockerUserAccessToken();
+
+			if (Objects.nonNull(dockerUserAccessToken)) {
+				Property<String> passwordProperty =
+					dockerRegistryCredentials.getPassword();
+
+				passwordProperty.set(dockerUserAccessToken);
+			}
+
+			String dockerUserName = workspaceExtension.getDockerUserName();
+
+			if (Objects.nonNull(dockerUserName)) {
+				Property<String> userNameProperty =
+					dockerRegistryCredentials.getUsername();
+
+				userNameProperty.set(dockerUserName);
+			}
+		}
 
 		DockerRemoveImage dockerRemoveImage = GradleUtil.addTask(
 			project, RootProjectConfigurator.CLEAN_DOCKER_IMAGE_TASK_NAME,
@@ -374,7 +407,8 @@ public class ClientExtensionProjectConfigurator
 		TaskProvider<Zip> buildClientExtensionZipTaskProvider,
 		TaskProvider<CreateClientExtensionConfigTask>
 			createClientExtensionConfigTaskProvider,
-		TaskProvider<DefaultTask> validateClientExtensionIdsTaskProvider) {
+		TaskProvider<DefaultTask> validateClientExtensionIdsTaskProvider,
+		WorkspaceExtension workspaceExtension) {
 
 		if (isDefaultRepositoryEnabled()) {
 			GradleUtil.addDefaultRepositories(project);
@@ -386,9 +420,6 @@ public class ClientExtensionProjectConfigurator
 
 		LiferayExtension liferayExtension = GradleUtil.getExtension(
 			project, LiferayExtension.class);
-
-		WorkspaceExtension workspaceExtension = GradleUtil.getExtension(
-			(ExtensionAware)project.getGradle(), WorkspaceExtension.class);
 
 		configureLiferay(project, workspaceExtension);
 

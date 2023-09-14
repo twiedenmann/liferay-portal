@@ -25,6 +25,16 @@ definition {
 			JSONPRM.updateAccount();
 		}
 
+		task ("Assign the users to the account") {
+			JSONAccountEntryUser.addExistUsertoAccount(
+				accountEntryName = "Company Name 1",
+				userEmailAddress = "pmu@partner.com");
+
+			JSONAccountEntryUser.addExistUsertoAccount(
+				accountEntryName = "Company Name 1",
+				userEmailAddress = "cmm@liferaytest.com");
+		}
+
 		task ("Go to Partner Portal and login with the created user") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "pmu@partner.com",
@@ -53,6 +63,7 @@ definition {
 	@priority = 5
 	test CanExpandAndSeeMultipleActivities {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -156,6 +167,7 @@ definition {
 	test CanExportAllVisibleMDFs {
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -190,6 +202,7 @@ definition {
 	@priority = 4
 	test CanExportFilteredMDFs {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -329,6 +342,7 @@ definition {
 	test CannotContinueWithoutFillRequiredField {
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -387,6 +401,7 @@ definition {
 	test CannotExceedTheValueOfMDFRequestedAmount {
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -433,6 +448,7 @@ definition {
 	@priority = 3
 	test CanRemoveBudgetValue {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -465,66 +481,11 @@ definition {
 		}
 	}
 
-	@description = "This is test is for LPS-188868. Verify that the partner can submit an MDF with an Digital Marketing > Advertising activity"
-	@priority = 5
-	test CanSubmitMDFWithDigitalMarketingAdvertisingActivity {
-		property test.liferay.virtual.instance = "false";
-
-		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
-
-		task ("Given I go to add a new MDF Request with 'Digital Marketing' as Type of Activity and 'Digital Advertising/Banner Ad' as Tactic") {
-			PRMMarketing.gotoAddNewMDF();
-
-			PRMMDFRequest.createNewRequest(
-				accountName = "Company Name 1",
-				activityDescription = "Activity Description",
-				activityName = "Activity Name 1",
-				budgetList = "Sponsorship Fee-2000",
-				campaignDescription = "Campaign Description",
-				campaignName = "Campaign Name",
-				goalsOptions = "Lead generation",
-				leadList = "No",
-				tactic = "Digital Advertising/Banner Ad",
-				targetMarketOptions = "Education",
-				targetRolesOptions = "Administrator",
-				typeOfActivity = "Digital Marketing");
-		}
-
-		task ("When I go to the created MDF") {
-			PRMNavigator.openSitePage(pageName = "MDF Requests");
-
-			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
-		}
-
-		task ("Then I can see the added data in MDF Detail Page") {
-			PRMMDFRequest.viewMDFActivityDetails(
-				activityName = "Activity Name 1",
-				fieldValue = "Overall Message",
-				specificFieldName = "Overall message, content or CTA",
-				tactic = "Digital Advertising/Banner Ad",
-				typeOfActivity = "Digital Marketing");
-
-			PRMMDFRequest.viewMDFActivityDetails(
-				activityName = "Activity Name 1",
-				fieldValue = "Specific Site",
-				specificFieldName = "Specific sites to be used");
-
-			PRMMDFRequest.viewMDFActivityDetails(
-				activityName = "Activity Name 1",
-				fieldValue = "No",
-				specificFieldName = "Do you require any assets from Liferay?");
-
-			PRMMDFRequest.viewMDFActivityDetails(
-				activityName = "Activity Name 1",
-				fieldValue = "Liferay Brand",
-				specificFieldName = "How will the Liferay brand be used in the campaign?");
-		}
-	}
-
 	@description = "This is a test for LPS-169960. Verify that a submited MDF will be displayed on the list"
 	@priority = 5
 	test CanViewMDFStatusOnListing {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -561,6 +522,7 @@ definition {
 	test DetailPageDisplaysAllMDFInformation {
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -638,6 +600,7 @@ definition {
 	test DifferenceBetweenStartAndEndDateCannotExceedSixMonths {
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -685,6 +648,7 @@ definition {
 	test OnlyManagersCanSeeStateManager {
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -734,6 +698,7 @@ definition {
 	test RequestedValueIsEqualsTo50PercentOfTotalCost {
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -776,6 +741,7 @@ definition {
 	test ReviewPageDisplaysAllInputedInformation {
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -857,6 +823,7 @@ definition {
 	test StartDateCannotBeBeforeToCurrentDate {
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -898,6 +865,7 @@ definition {
 	test StartDateCannotBeEqualsToCurrentDate {
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -938,6 +906,7 @@ definition {
 		property portal.acceptance = "true";
 		property solutions.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -974,6 +943,7 @@ definition {
 	@priority = 5
 	test VerifyMessageWhenNoClaimWasMade {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -1026,6 +996,7 @@ definition {
 	@priority = 5
 	test VerifyMessageWhenOneClaimWasMade {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -1077,6 +1048,7 @@ definition {
 	@priority = 5
 	test VerifyMessageWhenTwoClaimsWasMade {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		// Temporarily skip portal instances to get tests running for pending release. LRQA-80052
 
@@ -1136,6 +1108,7 @@ definition {
 	@priority = 5
 	test ViewMDFStatusWithRequestValueHigherThan15K {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given that I submit an MDF with the Total MDF Requested Amount value higher than 15k") {
 			PRMMarketing.gotoAddNewMDF();
@@ -1174,6 +1147,7 @@ definition {
 	@priority = 5
 	test ViewMDFStatusWithRequestValueLessThan15K {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given that I submit an MDF with the Total MDF Requested Amount value less than 15k") {
 			PRMMarketing.gotoAddNewMDF();
@@ -1212,6 +1186,7 @@ definition {
 	@priority = 4
 	test ViewTargetMarketOptionsError {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Given that the User go to add a new MDF Request") {
 			PRMMarketing.gotoAddNewMDF();

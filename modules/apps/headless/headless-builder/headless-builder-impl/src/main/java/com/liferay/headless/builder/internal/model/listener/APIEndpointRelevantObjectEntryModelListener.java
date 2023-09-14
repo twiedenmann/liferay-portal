@@ -1,34 +1,29 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.builder.internal.model.listener;
 
+import com.liferay.headless.builder.internal.helper.ObjectEntryHelper;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.exception.ObjectEntryValuesException;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.listener.RelevantObjectEntryModelListener;
-import com.liferay.object.rest.petra.sql.dsl.expression.FilterPredicateFactory;
+import com.liferay.object.rest.filter.factory.FilterFactory;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
@@ -67,75 +62,25 @@ public class APIEndpointRelevantObjectEntryModelListener
 			ObjectEntry originalObjectEntry, ObjectEntry objectEntry)
 		throws ModelListenerException {
 
-		if (_isModified(originalObjectEntry, objectEntry)) {
+		if (!_equals(
+				originalObjectEntry.getValues(), objectEntry.getValues(),
+				"httpMethod", "path",
+				"r_apiApplicationToAPIEndpoints_c_apiApplicationId",
+				"r_requestAPISchemaToAPIEndpoints_c_apiSchemaId",
+				"r_responseAPISchemaToAPIEndpoints_c_apiSchemaId")) {
+
 			_validate(objectEntry);
 		}
 	}
 
-	private boolean _isAPIApplication(long apiApplicationId) throws Exception {
-		if (apiApplicationId == 0) {
-			return false;
-		}
+	private boolean _equals(
+		Map<String, Serializable> map1, Map<String, Serializable> map2,
+		String... keys) {
 
-		ObjectEntry objectEntry = _objectEntryLocalService.fetchObjectEntry(
-			apiApplicationId);
-
-		if (objectEntry == null) {
-			return false;
-		}
-
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.getObjectDefinition(
-				objectEntry.getObjectDefinitionId());
-
-		if (!Objects.equals(
-				objectDefinition.getExternalReferenceCode(),
-				"L_API_APPLICATION")) {
-
-			return false;
-		}
-
-		return true;
-	}
-
-	private boolean _isAPISchema(long apiSchemaId) throws Exception {
-		ObjectEntry objectEntry = _objectEntryLocalService.fetchObjectEntry(
-			apiSchemaId);
-
-		if (objectEntry == null) {
-			return false;
-		}
-
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.getObjectDefinition(
-				objectEntry.getObjectDefinitionId());
-
-		if (!Objects.equals(
-				objectDefinition.getExternalReferenceCode(), "L_API_SCHEMA")) {
-
-			return false;
-		}
-
-		return true;
-	}
-
-	private boolean _isModified(
-		ObjectEntry originalObjectEntry, ObjectEntry objectEntry) {
-
-		Map<String, Serializable> originalValues =
-			originalObjectEntry.getValues();
-		Map<String, Serializable> values = objectEntry.getValues();
-
-		if (Objects.equals(
-				values.get("httpMethod"), originalValues.get("httpMethod")) &&
-			Objects.equals(values.get("path"), originalValues.get("path")) &&
-			Objects.equals(
-				originalValues.get(
-					"r_apiApplicationToAPIEndpoints_c_apiApplicationId"),
-				values.get(
-					"r_apiApplicationToAPIEndpoints_c_apiApplicationId"))) {
-
-			return false;
+		for (String key : keys) {
+			if (!Objects.equals(map1.get(key), map2.get(key))) {
+				return false;
+			}
 		}
 
 		return true;
@@ -145,21 +90,48 @@ public class APIEndpointRelevantObjectEntryModelListener
 		try {
 			Map<String, Serializable> values = objectEntry.getValues();
 
-			Matcher matcher = _pathPattern.matcher((String)values.get("path"));
+			String pathString = (String)values.get("path");
 
-			if (!matcher.matches()) {
-				User user = _userLocalService.getUser(objectEntry.getUserId());
+			if (StringUtil.equals(
+					(String)values.get("retrieveType"), "singleElement")) {
 
-				ObjectField objectField =
-					_objectFieldLocalService.getObjectField(
-						objectEntry.getObjectDefinitionId(), "path");
+				_validateSingleElementPath(
+					objectEntry, (String)values.get("pathParameter"),
+					pathString);
+			}
+			else {
+				Matcher matcher = _pathPattern.matcher(pathString);
 
-				throw new ObjectEntryValuesException.InvalidObjectField(
-					String.format(
-						"%s can have a maximum of 255 alphanumeric characters",
-						objectField.getLabel(user.getLocale())),
-					"x-can-have-a-maximum-of-255-alphanumeric-characters",
-					Arrays.asList(objectField.getLabel(user.getLocale())));
+				if (!matcher.matches()) {
+					User user = _userLocalService.getUser(
+						objectEntry.getUserId());
+
+					ObjectField objectField =
+						_objectFieldLocalService.getObjectField(
+							objectEntry.getObjectDefinitionId(), "path");
+
+					String message = null;
+					String messageKey = null;
+
+					if (pathString.startsWith(StringPool.FORWARD_SLASH)) {
+						message =
+							"%s can have a maximum of 255 alphanumeric " +
+								"characters";
+						messageKey =
+							"x-can-have-a-maximum-of-255-alphanumeric-" +
+								"characters";
+					}
+					else {
+						message = "%s must start with the \"/\" character";
+						messageKey = "x-must-start-with-the-x-character";
+					}
+
+					String label = objectField.getLabel(user.getLocale());
+
+					throw new ObjectEntryValuesException.InvalidObjectField(
+						Arrays.asList(label, "\"/\""),
+						String.format(message, label), messageKey);
+				}
 			}
 
 			String filterString = StringBundler.concat(
@@ -169,61 +141,53 @@ public class APIEndpointRelevantObjectEntryModelListener
 				"' and r_apiApplicationToAPIEndpoints_c_apiApplicationId eq '",
 				values.get("r_apiApplicationToAPIEndpoints_c_apiApplicationId"),
 				"'");
-
 			ObjectDefinition apiEndpointObjectDefinition =
 				_objectDefinitionLocalService.getObjectDefinition(
 					objectEntry.getObjectDefinitionId());
 
-			Predicate predicate = _filterPredicateFactory.create(
-				filterString,
-				apiEndpointObjectDefinition.getObjectDefinitionId());
+			Predicate predicate = _filterFactory.create(
+				filterString, apiEndpointObjectDefinition);
 
 			List<Map<String, Serializable>> valuesList =
 				_objectEntryLocalService.getValuesList(
 					objectEntry.getGroupId(), objectEntry.getCompanyId(),
 					objectEntry.getUserId(),
-					apiEndpointObjectDefinition.getObjectDefinitionId(),
-					predicate, null, -1, -1, null);
+					objectEntry.getObjectDefinitionId(), predicate, null, -1,
+					-1, null);
 
 			if (!valuesList.isEmpty()) {
 				throw new ObjectEntryValuesException.InvalidObjectField(
+					null,
 					"There is an API endpoint with the same HTTP method and " +
 						"path",
 					"there-is-an-api-endpoint-with-the-same-http-method-and-" +
-						"path",
-					null);
+						"path");
 			}
 
-			if (!_isAPIApplication(
-					(long)values.get(
-						"r_apiApplicationToAPIEndpoints_c_apiApplicationId"))) {
+			long apiApplicationId = (long)values.get(
+				"r_apiApplicationToAPIEndpoints_c_apiApplicationId");
+
+			if (!_objectEntryHelper.isValidObjectEntry(
+					apiApplicationId, "L_API_APPLICATION")) {
 
 				throw new ObjectEntryValuesException.InvalidObjectField(
+					null,
 					"An API endpoint must be related to an API application",
-					"an-api-endpoint-must-be-related-to-an-api-application",
-					null);
+					"an-api-endpoint-must-be-related-to-an-api-application");
 			}
 
 			long requestAPISchemaId = (long)values.get(
 				"r_requestAPISchemaToAPIEndpoints_c_apiSchemaId");
 
-			if ((requestAPISchemaId != 0) &&
-				!_isAPISchema(requestAPISchemaId)) {
-
-				throw new ObjectEntryValuesException.InvalidObjectField(
-					"An API endpoint must be related to an API schema",
-					"an-api-endpoint-must-be-related-to-an-api-schema", null);
+			if (requestAPISchemaId != 0) {
+				_validateAPISchema(apiApplicationId, requestAPISchemaId);
 			}
 
 			long responseAPISchemaId = (long)values.get(
 				"r_responseAPISchemaToAPIEndpoints_c_apiSchemaId");
 
-			if ((responseAPISchemaId != 0) &&
-				!_isAPISchema(responseAPISchemaId)) {
-
-				throw new ObjectEntryValuesException.InvalidObjectField(
-					"An API endpoint must be related to an API schema",
-					"an-api-endpoint-must-be-related-to-an-api-schema", null);
+			if (responseAPISchemaId != 0) {
+				_validateAPISchema(apiApplicationId, responseAPISchemaId);
 			}
 		}
 		catch (Exception exception) {
@@ -231,14 +195,106 @@ public class APIEndpointRelevantObjectEntryModelListener
 		}
 	}
 
-	private static final Pattern _pathPattern = Pattern.compile(
-		"[a-zA-Z0-9-/]{1,255}");
+	private void _validateAPISchema(long apiApplicationId, long apiSchemaId)
+		throws Exception {
 
-	@Reference
-	private FilterPredicateFactory _filterPredicateFactory;
+		ObjectEntry objectEntry = _objectEntryLocalService.fetchObjectEntry(
+			apiSchemaId);
+
+		if (objectEntry == null) {
+			throw new ObjectEntryValuesException.InvalidObjectField(
+				null, "An API endpoint must be related to an API schema",
+				"an-api-endpoint-must-be-related-to-an-api-schema");
+		}
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.getObjectDefinition(
+				objectEntry.getObjectDefinitionId());
+
+		if (!Objects.equals(
+				objectDefinition.getExternalReferenceCode(), "L_API_SCHEMA")) {
+
+			throw new ObjectEntryValuesException.InvalidObjectField(
+				null, "An API endpoint must be related to an API schema",
+				"an-api-endpoint-must-be-related-to-an-api-schema");
+		}
+
+		Map<String, Serializable> apiSchemaValues = objectEntry.getValues();
+
+		if (!Objects.equals(
+				apiApplicationId,
+				apiSchemaValues.get(
+					"r_apiApplicationToAPISchemas_c_apiApplicationId"))) {
+
+			throw new ObjectEntryValuesException.InvalidObjectField(
+				null,
+				"The API endpoint and the API schema must be related to the " +
+					"same API Application",
+				"the-api-endpoint-and-the-api-schema-must-be-related-to-the-" +
+					"same-api-application");
+		}
+	}
+
+	private void _validateSingleElementPath(
+			ObjectEntry objectEntry, String pathParameter, String pathString)
+		throws Exception {
+
+		if (pathParameter == null) {
+			throw new ObjectEntryValuesException.InvalidObjectField(
+				null,
+				"Path parameter cannot be null in a single element endpoint",
+				"path-parameter-cannot-be-null-in-a-single-element-endpoint");
+		}
+
+		ObjectField objectField = _objectFieldLocalService.getObjectField(
+			objectEntry.getObjectDefinitionId(), "path");
+
+		User user = _userLocalService.getUser(objectEntry.getUserId());
+
+		if (!pathString.startsWith(StringPool.FORWARD_SLASH)) {
+			throw new ObjectEntryValuesException.InvalidObjectField(
+				Arrays.asList(objectField.getLabel(user.getLocale()), "\"/\""),
+				"%s must start with the \"/\" character",
+				"x-must-start-with-the-x-character");
+		}
+
+		Matcher individualMatcher = _individualPathPattern.matcher(pathString);
+
+		Matcher leftForwardMatcher = _leftSlashForwardPattern.matcher(
+			pathString);
+
+		Matcher rightForwardMatcher = _rightSlashForwardPattern.matcher(
+			pathString);
+
+		if ((leftForwardMatcher.matches() || rightForwardMatcher.matches()) &&
+			!individualMatcher.matches()) {
+
+			throw new ObjectEntryValuesException.InvalidObjectField(
+				Arrays.asList(objectField.getLabel(user.getLocale())),
+				"%s can have a maximum of 255 alphanumeric characters",
+				"x-can-have-a-maximum-of-255-alphanumeric-characters");
+		}
+	}
+
+	private static final Pattern _individualPathPattern = Pattern.compile(
+		"/[a-zA-Z0-9][a-zA-Z0-9-/-{-}]{1,253}");
+	private static final Pattern _leftSlashForwardPattern = Pattern.compile(
+		".*[{].");
+	private static final Pattern _pathPattern = Pattern.compile(
+		"/[a-zA-Z0-9][a-zA-Z0-9-/]{1,253}");
+	private static final Pattern _rightSlashForwardPattern = Pattern.compile(
+		".*[}].");
+
+	@Reference(
+		target = "(filter.factory.key=" + ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT + ")"
+	)
+	private FilterFactory<Predicate> _filterFactory;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
+	private ObjectEntryHelper _objectEntryHelper;
 
 	@Reference
 	private ObjectEntryLocalService _objectEntryLocalService;

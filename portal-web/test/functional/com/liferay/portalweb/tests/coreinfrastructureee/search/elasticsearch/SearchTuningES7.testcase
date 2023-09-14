@@ -21,6 +21,7 @@ definition {
 		}
 	}
 
+	@priority = 3
 	test AssertAliasCaseInsensitivity {
 		JSONWebcontent.addWebContent(
 			content = "WC WC",
@@ -665,6 +666,7 @@ definition {
 		SearchResultPortlet.viewNoSearchResults(searchTerm = "orange");
 	}
 
+	@priority = 3
 	test NavigateToResultRankingsViaUI {
 		ApplicationsMenu.gotoPortlet(
 			category = "Search Tuning",
@@ -674,6 +676,7 @@ definition {
 		ControlMenu.viewHeaderTitle(headerTitle = "Result Rankings");
 	}
 
+	@priority = 3
 	test NavigateToSynonymsViaUI {
 		ApplicationsMenu.gotoPortlet(
 			category = "Search Tuning",
@@ -798,6 +801,7 @@ definition {
 	@priority = 5
 	test ReindexingRestoresResultRankingsIndex {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		for (var title : list "Article,Journal") {
 			JSONWebcontent.addWebContent(
@@ -845,6 +849,7 @@ definition {
 	@priority = 5
 	test ReindexingRestoresSynonymsIndex {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		SearchTuning.openSynonymsAdmin();
 

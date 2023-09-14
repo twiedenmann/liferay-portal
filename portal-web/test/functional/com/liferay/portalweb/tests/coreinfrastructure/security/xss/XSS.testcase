@@ -30,6 +30,7 @@ definition {
 	@priority = 4
 	test MaliciousURLScriptsAreNotValidated {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Access malicious url and assert script was not validated") {
 			var maliciousUrl1 = '''
@@ -251,6 +252,28 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-113685"
+	@priority = 4
+	test NoXSSVulnerabilityInGroovyScript {
+		property test.liferay.virtual.instance = "false";
+
+		ServerAdministration.openServerAdmin();
+
+		var script = '''
+			<script>alert(123)</script>
+		''';
+
+		ServerAdministration.executeScript(
+			language = "Groovy",
+			script = ${script});
+
+		AssertElementPresent(
+			locator1 = "Message#ERROR",
+			value1 = "Your request failed to complete.");
+
+		AssertAlertNotPresent();
+	}
+
 	@description = "This is a use case for LRQA-10563. View JSONWS."
 	@priority = 3
 	test NoXSSVulnerabilityInJSONWS {
@@ -362,6 +385,7 @@ definition {
 	@priority = 3
 	test NoXSSVulnerabilityInMatomo {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Edit matomo CP") {
 			var portalURL = PropsUtil.get("portal.url");

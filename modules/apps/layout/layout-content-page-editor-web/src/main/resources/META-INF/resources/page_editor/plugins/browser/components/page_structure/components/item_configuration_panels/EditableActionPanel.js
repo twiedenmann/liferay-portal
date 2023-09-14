@@ -1,18 +1,10 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm, {ClayInput, ClayToggle} from '@clayui/form';
+import {useId} from 'frontend-js-components-web';
 import {debounce, openToast, sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useMemo, useState} from 'react';
@@ -34,12 +26,12 @@ import selectLanguageId from '../../../../../../app/selectors/selectLanguageId';
 import InfoItemService from '../../../../../../app/services/InfoItemService';
 import updateEditableValues from '../../../../../../app/thunks/updateEditableValues';
 import {CACHE_KEYS} from '../../../../../../app/utils/cache';
+import isMapped from '../../../../../../app/utils/editable_value/isMapped';
 import {updateIn} from '../../../../../../app/utils/updateIn';
 import useCache from '../../../../../../app/utils/useCache';
 import CurrentLanguageFlag from '../../../../../../common/components/CurrentLanguageFlag';
 import {LayoutSelector} from '../../../../../../common/components/LayoutSelector';
 import MappingSelector from '../../../../../../common/components/MappingSelector';
-import {useId} from '../../../../../../common/hooks/useId';
 import {getEditableItemPropTypes} from '../../../../../../prop_types/index';
 
 const INTERACTION_NONE = 'none';
@@ -116,7 +108,8 @@ export default function EditableActionPanel({item}) {
 		);
 	};
 
-	const {classNameId, fieldId} = editableValue.config.mappedAction || {};
+	const {mappedAction = {}} = editableValue.config;
+	const {classNameId, fieldId} = mappedAction;
 
 	const defaultError = useCache({
 		fetcher: () =>
@@ -133,13 +126,13 @@ export default function EditableActionPanel({item}) {
 				fieldSelectorLabel={Liferay.Language.get('action')}
 				fieldType={EDITABLE_TYPES.action}
 				itemSelectorURL={config.actionableInfoItemSelectorURL}
-				mappedItem={editableValue.config.mappedAction || {}}
+				mappedItem={mappedAction}
 				onMappingSelect={(action) => {
 					onValueSelect('mappedAction', action);
 				}}
 			/>
 
-			{editableValue.config.mappedAction && (
+			{isMapped(mappedAction) && (
 				<>
 					<InteractionSelector
 						config={editableValue.config}

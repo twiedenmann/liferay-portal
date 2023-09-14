@@ -1,43 +1,32 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import {useMemo} from 'react';
 
 import {PartnerOpportunitiesColumnKey} from '../../../common/enums/partnerOpportunitiesColumnKey';
-import DealRegistrationDTO from '../../../common/interfaces/dto/dealRegistrationDTO';
 import useGetDealRegistration from '../../../common/services/liferay/object/deal-registration/useGetDealRegistration';
 import {ResourceName} from '../../../common/services/liferay/object/enum/resourceName';
 import getOpportunityAmount from '../utils/getOpportunityAmount';
 import getOpportunityDates from '../utils/getOpportunityDates';
 
 export default function useGetListItemsFromPartnerOpportunities(
-	getDates: (
-		item: DealRegistrationDTO
-	) =>
-		| {
-				[key in PartnerOpportunitiesColumnKey]?: string;
-		  }
-		| undefined,
 	page: number,
 	pageSize: number,
 	filtersTerm: string,
-	sort: string
+	sort: string,
+	opportunityFilter?: string
 ) {
 	const swrResponse = useGetDealRegistration(
 		ResourceName.OPPORTUNITIES_SALESFORCE,
 		page,
 		pageSize,
 		filtersTerm,
+		opportunityFilter ? `&filter=${opportunityFilter}` : '',
 		sort
 	);
+
 	const listItems = useMemo(
 		() =>
 			swrResponse.data?.items.map((item) => ({
@@ -56,7 +45,9 @@ export default function useGetListItemsFromPartnerOpportunities(
 							[PartnerOpportunitiesColumnKey.START_DATE]: ' - ',
 							[PartnerOpportunitiesColumnKey.END_DATE]: ' - ',
 					  }),
-				[PartnerOpportunitiesColumnKey.ACCOUNT_NAME]: ' - ',
+				[PartnerOpportunitiesColumnKey.ACCOUNT_NAME]: item.accountName
+					? item.accountName
+					: ' - ',
 				...(item.amount
 					? getOpportunityAmount(item.amount)
 					: {[PartnerOpportunitiesColumnKey.DEAL_AMOUNT]: ' - '}),

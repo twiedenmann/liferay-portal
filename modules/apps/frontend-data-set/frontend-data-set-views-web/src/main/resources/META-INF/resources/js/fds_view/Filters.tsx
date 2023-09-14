@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayButton from '@clayui/button';
@@ -25,7 +16,7 @@ import ClayLayout from '@clayui/layout';
 import ClayModal from '@clayui/modal';
 import classNames from 'classnames';
 import {format, getYear, isBefore, isEqual} from 'date-fns';
-import {fetch, navigate, openModal, openToast, sub} from 'frontend-js-web';
+import {fetch, navigate, openModal, sub} from 'frontend-js-web';
 import fuzzy from 'fuzzy';
 import React, {useEffect, useState} from 'react';
 
@@ -34,6 +25,8 @@ import {FDSViewType} from '../FDSViews';
 import {IPickList, getAllPicklists, getFields} from '../api';
 import CheckboxMultiSelect from '../components/CheckboxMultiSelect';
 import OrderableTable from '../components/OrderableTable';
+import openDefaultFailureToast from '../utils/openDefaultFailureToast';
+import openDefaultSuccessToast from '../utils/openDefaultSuccessToast';
 
 interface IField {
 	format: string;
@@ -64,20 +57,6 @@ interface IDynamicFilter extends IFilter {
 
 type FilterCollection = Array<IDateFilter | IDynamicFilter>;
 
-function alertFailed() {
-	openToast({
-		message: Liferay.Language.get('your-request-failed-to-complete'),
-		type: 'danger',
-	});
-}
-
-function alertSuccess() {
-	openToast({
-		message: Liferay.Language.get('your-request-completed-successfully'),
-		type: 'success',
-	});
-}
-
 interface IPropsAddFDSFilterModalContent {
 	closeModal: Function;
 	fdsView: FDSViewType;
@@ -106,6 +85,7 @@ function AddFDSFilterModalContent({
 			: 'include'
 	);
 	const [isValidDateRange, setIsValidDateRange] = useState(true);
+	const [saveButtonDisabled, setSaveButtonDisabled] = useState(false);
 	const [multiple, setMultiple] = useState<boolean>(
 		(filter as IDynamicFilter)?.multiple ?? true
 	);
@@ -159,8 +139,10 @@ function AddFDSFilterModalContent({
 	}, [from, to]);
 
 	const handleFilterSave = async () => {
+		setSaveButtonDisabled(true);
+
 		if (!selectedField) {
-			alertFailed();
+			openDefaultFailureToast();
 
 			return null;
 		}
@@ -173,7 +155,10 @@ function AddFDSFilterModalContent({
 		let displayType: string = '';
 		let url: string = '';
 
-		if (selectedField.format === 'date-time') {
+		if (
+			selectedField.format === 'date' ||
+			selectedField.format === 'date-time'
+		) {
 			url = API_URL.FDS_DATE_FILTERS;
 
 			body = {
@@ -219,14 +204,16 @@ function AddFDSFilterModalContent({
 		});
 
 		if (!response.ok) {
-			alertFailed();
+			setSaveButtonDisabled(false);
+
+			openDefaultFailureToast();
 
 			return null;
 		}
 
 		const responseJSON = await response.json();
 
-		alertSuccess();
+		openDefaultSuccessToast();
 
 		onSave({...responseJSON, displayType});
 
@@ -590,7 +577,8 @@ function AddFDSFilterModalContent({
 							disabled={
 								!selectedField ||
 								(!multiple && preselectedValues.length > 1) ||
-								!isValidDateRange
+								!isValidDateRange ||
+								saveButtonDisabled
 							}
 							onClick={handleFilterSave}
 							type="submit"
@@ -653,11 +641,9 @@ function Filters({fdsView, fdsViewsURL, namespace}: IProps) {
 
 				let notOrdered: FilterCollection = [];
 
-				if (filtersOrdered.length > order.length) {
-					notOrdered = filtersOrdered.filter(
-						(filter) => !order.includes(String(filter.id))
-					);
-				}
+				notOrdered = filtersOrdered.filter(
+					(filter) => !order.includes(String(filter.id))
+				);
 
 				filtersOrdered = fdsView.fdsFiltersOrder
 					.split(',')
@@ -668,7 +654,7 @@ function Filters({fdsView, fdsViewsURL, namespace}: IProps) {
 					)
 					.filter(Boolean) as FilterCollection;
 
-				filtersOrdered = [...filtersOrdered, ...notOrdered];
+				filtersOrdered = [...notOrdered, ...filtersOrdered];
 			}
 
 			setFilters(filtersOrdered);
@@ -699,7 +685,7 @@ function Filters({fdsView, fdsViewsURL, namespace}: IProps) {
 		);
 
 		if (!response.ok) {
-			alertFailed();
+			openDefaultFailureToast();
 
 			return null;
 		}
@@ -709,12 +695,12 @@ function Filters({fdsView, fdsViewsURL, namespace}: IProps) {
 		const fdsFiltersOrder = responseJSON?.fdsFiltersOrder;
 
 		if (fdsFiltersOrder && fdsFiltersOrder === newFiltersOrder) {
-			alertSuccess();
+			openDefaultSuccessToast();
 
 			setNewFiltersOrder('');
 		}
 		else {
-			alertFailed();
+			openDefaultFailureToast();
 		}
 	};
 
@@ -772,7 +758,7 @@ function Filters({fdsView, fdsViewsURL, namespace}: IProps) {
 					type: 'cancel',
 				},
 				{
-					displayType: 'warning',
+					displayType: 'danger',
 					label: Liferay.Language.get('delete'),
 					onClick: ({processClose}: {processClose: Function}) => {
 						processClose();
@@ -787,7 +773,7 @@ function Filters({fdsView, fdsViewsURL, namespace}: IProps) {
 							method: 'DELETE',
 						})
 							.then(() => {
-								alertSuccess();
+								openDefaultSuccessToast();
 
 								setFilters(
 									filters.filter(
@@ -796,9 +782,7 @@ function Filters({fdsView, fdsViewsURL, namespace}: IProps) {
 									)
 								);
 							})
-							.catch(() => {
-								alertFailed();
-							});
+							.catch(openDefaultFailureToast);
 					},
 				},
 			],
@@ -820,6 +804,12 @@ function Filters({fdsView, fdsViewsURL, namespace}: IProps) {
 						icon: 'trash',
 						label: Liferay.Language.get('delete'),
 						onClick: handleDelete,
+					},
+				]}
+				creationMenuItems={[
+					{
+						label: Liferay.Language.get('new-filter'),
+						onClick: onCreationButtonClick,
 					},
 				]}
 				disableSave={!newFiltersOrder.length}
@@ -846,7 +836,6 @@ function Filters({fdsView, fdsViewsURL, namespace}: IProps) {
 					'no-default-filters-were-created'
 				)}
 				onCancelButtonClick={() => navigate(fdsViewsURL)}
-				onCreationButtonClick={onCreationButtonClick}
 				onOrderChange={({orderedItems}: {orderedItems: IFilter[]}) => {
 					setNewFiltersOrder(
 						orderedItems.map((filter) => filter.id).join(',')

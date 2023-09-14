@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.service.test;
@@ -178,6 +169,26 @@ public class ObjectDefinitionServiceTest {
 	}
 
 	@Test
+	public void testUpdateRootObjectDefinitionId() throws Exception {
+		try {
+			_testUpdateRootObjectDefinitionId(_adminUser, _user);
+
+			Assert.fail();
+		}
+		catch (PrincipalException.MustHavePermission principalException) {
+			String message = principalException.getMessage();
+
+			Assert.assertTrue(
+				message.contains(
+					"User " + _user.getUserId() +
+						" must have UPDATE permission for"));
+		}
+
+		_testUpdateRootObjectDefinitionId(_adminUser, _adminUser);
+		_testUpdateRootObjectDefinitionId(_user, _user);
+	}
+
+	@Test
 	public void testUpdateTitleObjectFieldId() throws Exception {
 		try {
 			_testUpdateTitleObjectFieldId(_adminUser, _user);
@@ -211,7 +222,7 @@ public class ObjectDefinitionServiceTest {
 			user.getUserId(), objectDefinition.getObjectDefinitionId());*/
 
 		return _objectDefinitionLocalService.addCustomObjectDefinition(
-			user.getUserId(), false, false,
+			user.getUserId(), 0, false, false, false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			"A" + RandomTestUtil.randomString(), null, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -239,7 +250,7 @@ public class ObjectDefinitionServiceTest {
 
 			objectDefinition =
 				_objectDefinitionService.addCustomObjectDefinition(
-					false, false,
+					0, false, false, false,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					"A" + RandomTestUtil.randomString(), null, null,
@@ -320,7 +331,7 @@ public class ObjectDefinitionServiceTest {
 
 			objectDefinition =
 				_objectDefinitionLocalService.addCustomObjectDefinition(
-					user.getUserId(), false, false,
+					user.getUserId(), 0, false, false, false,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					"A" + RandomTestUtil.randomString(), null, null,
@@ -357,7 +368,7 @@ public class ObjectDefinitionServiceTest {
 
 			objectDefinition =
 				_objectDefinitionLocalService.addCustomObjectDefinition(
-					ownerUser.getUserId(), false, false,
+					ownerUser.getUserId(), 0, false, false, false,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					"A" + RandomTestUtil.randomString(), null, null,
@@ -374,12 +385,34 @@ public class ObjectDefinitionServiceTest {
 
 			objectDefinition =
 				_objectDefinitionService.updateCustomObjectDefinition(
-					null, objectDefinition.getObjectDefinitionId(), 0, 0, 0,
+					null, objectDefinition.getObjectDefinitionId(), 0, 0, 0, 0,
 					false, objectDefinition.isActive(), true, false, false,
-					false, LocalizedMapUtil.getLocalizedMap("Able"), "Able",
-					null, null, false,
+					false, false, LocalizedMapUtil.getLocalizedMap("Able"),
+					"Able", null, null, false,
 					LocalizedMapUtil.getLocalizedMap("Ables"),
 					objectDefinition.getScope());
+		}
+		finally {
+			if (objectDefinition != null) {
+				_objectDefinitionLocalService.deleteObjectDefinition(
+					objectDefinition);
+			}
+		}
+	}
+
+	private void _testUpdateRootObjectDefinitionId(User ownerUser, User user)
+		throws Exception {
+
+		ObjectDefinition objectDefinition = null;
+
+		try {
+			_setUser(user);
+
+			objectDefinition = _addCustomObjectDefinition(ownerUser);
+
+			_objectDefinitionService.updateRootObjectDefinitionId(
+				objectDefinition.getObjectDefinitionId(),
+				objectDefinition.getObjectDefinitionId());
 		}
 		finally {
 			if (objectDefinition != null) {
@@ -399,7 +432,7 @@ public class ObjectDefinitionServiceTest {
 
 			objectDefinition =
 				_objectDefinitionLocalService.addCustomObjectDefinition(
-					ownerUser.getUserId(), false, false,
+					ownerUser.getUserId(), 0, false, false, false,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					"A" + RandomTestUtil.randomString(), null, null,

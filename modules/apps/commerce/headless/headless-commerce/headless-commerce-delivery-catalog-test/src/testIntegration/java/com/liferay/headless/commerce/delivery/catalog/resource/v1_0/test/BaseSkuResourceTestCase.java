@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.headless.commerce.delivery.catalog.resource.v1_0.test;
@@ -462,6 +453,14 @@ public abstract class BaseSkuResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("backOrderAllowed", additionalAssertFieldName)) {
+				if (sku.getBackOrderAllowed() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("depth", additionalAssertFieldName)) {
 				if (sku.getDepth() == null) {
 					valid = false;
@@ -596,6 +595,14 @@ public abstract class BaseSkuResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("replacementSku", additionalAssertFieldName)) {
+				if (sku.getReplacementSku() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"replacementSkuExternalReferenceCode",
 					additionalAssertFieldName)) {
@@ -625,6 +632,16 @@ public abstract class BaseSkuResourceTestCase {
 
 			if (Objects.equals("skuOptions", additionalAssertFieldName)) {
 				if (sku.getSkuOptions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"skuUnitOfMeasures", additionalAssertFieldName)) {
+
+				if (sku.getSkuUnitOfMeasures() == null) {
 					valid = false;
 				}
 
@@ -789,6 +806,17 @@ public abstract class BaseSkuResourceTestCase {
 			if (Objects.equals("availability", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						sku1.getAvailability(), sku2.getAvailability())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("backOrderAllowed", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						sku1.getBackOrderAllowed(),
+						sku2.getBackOrderAllowed())) {
 
 					return false;
 				}
@@ -968,6 +996,16 @@ public abstract class BaseSkuResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("replacementSku", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						sku1.getReplacementSku(), sku2.getReplacementSku())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"replacementSkuExternalReferenceCode",
 					additionalAssertFieldName)) {
@@ -1004,6 +1042,19 @@ public abstract class BaseSkuResourceTestCase {
 			if (Objects.equals("skuOptions", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						sku1.getSkuOptions(), sku2.getSkuOptions())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"skuUnitOfMeasures", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						sku1.getSkuUnitOfMeasures(),
+						sku2.getSkuUnitOfMeasures())) {
 
 					return false;
 				}
@@ -1141,6 +1192,11 @@ public abstract class BaseSkuResourceTestCase {
 		}
 
 		if (entityFieldName.equals("availability")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("backOrderAllowed")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -1404,15 +1460,13 @@ public abstract class BaseSkuResourceTestCase {
 		}
 
 		if (entityFieldName.equals("maxOrderQuantity")) {
-			sb.append(String.valueOf(sku.getMaxOrderQuantity()));
-
-			return sb.toString();
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("minOrderQuantity")) {
-			sb.append(String.valueOf(sku.getMinOrderQuantity()));
-
-			return sb.toString();
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("neverExpire")) {
@@ -1431,6 +1485,11 @@ public abstract class BaseSkuResourceTestCase {
 		}
 
 		if (entityFieldName.equals("purchasable")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("replacementSku")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -1537,6 +1596,11 @@ public abstract class BaseSkuResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("skuUnitOfMeasures")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("weight")) {
 			sb.append(String.valueOf(sku.getWeight()));
 
@@ -1593,6 +1657,7 @@ public abstract class BaseSkuResourceTestCase {
 	protected Sku randomSku() throws Exception {
 		return new Sku() {
 			{
+				backOrderAllowed = RandomTestUtil.randomBoolean();
 				depth = RandomTestUtil.randomDouble();
 				discontinued = RandomTestUtil.randomBoolean();
 				discontinuedDate = RandomTestUtil.nextDate();
@@ -1606,8 +1671,6 @@ public abstract class BaseSkuResourceTestCase {
 					RandomTestUtil.randomString());
 				manufacturerPartNumber = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
-				maxOrderQuantity = RandomTestUtil.randomInt();
-				minOrderQuantity = RandomTestUtil.randomInt();
 				neverExpire = RandomTestUtil.randomBoolean();
 				published = RandomTestUtil.randomBoolean();
 				purchasable = RandomTestUtil.randomBoolean();

@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.dynamic.data.mapping.web.internal.display.context;
@@ -24,7 +15,6 @@ import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateService;
-import com.liferay.dynamic.data.mapping.storage.StorageAdapterRegistry;
 import com.liferay.dynamic.data.mapping.util.DDMDisplay;
 import com.liferay.dynamic.data.mapping.util.DDMDisplayRegistry;
 import com.liferay.dynamic.data.mapping.util.DDMDisplayTabItem;
@@ -76,7 +66,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
@@ -97,8 +86,7 @@ public class DDMDisplayContext {
 		DDMStructureService ddmStructureService,
 		DDMTemplateHelper ddmTemplateHelper,
 		DDMTemplateService ddmTemplateService,
-		DDMWebConfiguration ddmWebConfiguration,
-		StorageAdapterRegistry storageAdapterRegistry) {
+		DDMWebConfiguration ddmWebConfiguration) {
 
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
@@ -108,7 +96,6 @@ public class DDMDisplayContext {
 		_ddmTemplateHelper = ddmTemplateHelper;
 		_ddmTemplateService = ddmTemplateService;
 		_ddmWebConfiguration = ddmWebConfiguration;
-		_storageAdapterRegistry = storageAdapterRegistry;
 
 		_ddmWebRequestHelper = new DDMWebRequestHelper(
 			PortalUtil.getHttpServletRequest(renderRequest));
@@ -373,10 +360,6 @@ public class DDMDisplayContext {
 				return "asc";
 			}
 		).buildString();
-	}
-
-	public Set<String> getStorageTypes() {
-		return _storageAdapterRegistry.getStorageTypes();
 	}
 
 	public CreationMenu getStructureCreationMenu() throws PortalException {
@@ -1067,6 +1050,5 @@ public class DDMDisplayContext {
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final StorageAdapterRegistry _storageAdapterRegistry;
 
 }

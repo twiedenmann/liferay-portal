@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.poshi.core.util;
@@ -29,7 +20,7 @@ import org.json.JSONException;
  */
 public class ListUtil {
 
-	public static void add(List<String> list, String item) {
+	public static <T> void add(List<T> list, T item) {
 		list.add(item);
 	}
 
@@ -41,15 +32,15 @@ public class ListUtil {
 		return new ArrayList<>(master);
 	}
 
-	public static String get(List<String> list, Integer index) {
+	public static <T> T get(List<T> list, Integer index) {
 		return list.get(index);
 	}
 
-	public static String get(List<String> list, Long index) {
+	public static <T> T get(List<T> list, Long index) {
 		return list.get(Math.toIntExact(index));
 	}
 
-	public static String get(List<String> list, String index) {
+	public static <T> T get(List<T> list, String index) {
 		try {
 			return list.get(Integer.parseInt(index));
 		}
@@ -104,11 +95,15 @@ public class ListUtil {
 		return list;
 	}
 
-	public static void remove(List<String> list, String item) {
+	public static List<Object> newObjectList() {
+		return new ArrayList<>();
+	}
+
+	public static <T> void remove(List<T> list, T item) {
 		list.remove(item);
 	}
 
-	public static String size(List<String> list) {
+	public static <T> String size(List<T> list) {
 		int size = list.size();
 
 		return String.valueOf(size);

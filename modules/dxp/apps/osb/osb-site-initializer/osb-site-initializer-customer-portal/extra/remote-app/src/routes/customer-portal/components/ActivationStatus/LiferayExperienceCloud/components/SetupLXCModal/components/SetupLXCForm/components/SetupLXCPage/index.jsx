@@ -1,31 +1,24 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * The contents of this file are subject to the terms of the Liferay Enterprise
- * Subscription License ("License"). You may not use this file except in
- * compliance with the License. You can obtain a copy of the License by
- * contacting Liferay, Inc. See the License for the specific language governing
- * permissions and limitations under the License, including but not limited to
- * distribution rights of the Software.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 import ClayForm from '@clayui/form';
 import {FieldArray} from 'formik';
 import {useEffect, useState} from 'react';
+import {HIGH_PRIORITY_CONTACT_CATEGORIES} from '~/routes/customer-portal/utils/getHighPriorityContacts';
 import i18n from '../../../../../../../../../../../common/I18n';
 import {
 	Button,
 	Input,
 	Select,
 } from '../../../../../../../../../../../common/components';
+import SetupHighPriorityContactForm from '../../../../../../../../../../../common/components/HighPriorityContacts/SetupHighPriorityContact';
 import Layout from '../../../../../../../../../../../common/containers/setup-forms/Layout';
-import useBannedDomains from '../../../../../../../../../../../common/hooks/useBannedDomains';
-import {isValidEmail} from '../../../../../../../../../../../common/utils/validations.form';
 import getInitialLxcAdmins from '../../utils/getInitialLxcAdmins';
 import AdminInputs from './components/AdminsInput';
 import useGetPrimaryRegionList from './hooks/useGetPrimaryRegionList';
 import useSubmitLXCEnvironment from './hooks/useSubmitLXCEnvironment';
-
 const INITIAL_SETUP_ADMIN_COUNT = 1;
 
 const SetupLiferayExperienceCloudPage = ({
@@ -34,18 +27,77 @@ const SetupLiferayExperienceCloudPage = ({
 	handleOnLeftButtonClick,
 	leftButton,
 	project,
+	setFieldValue,
 	setFormAlreadySubmitted,
 	subscriptionGroupLxcId,
 	touched,
 	values,
 }) => {
+	const [isLoadingSubmitButton, setIsLoadingSubmitButton] = useState(false);
 	const [baseButtonDisabled, setBaseButtonDisabled] = useState(true);
-	const bannedDomains = useBannedDomains(
-		values?.lxc?.incidentManagementEmail,
-		500
-	);
+	const [
+		addHighPriorityContactList,
+		setAddHighPriorityContactList,
+	] = useState([]);
+	const [
+		removeHighPriorityContactList,
+		setRemoveHighPriorityContactList,
+	] = useState([]);
+	const [inputErrors, setInputErrors] = useState({});
+	const [step, setStep] = useState(1);
+
+	const handlePreviousStep = () => {
+		setStep(step - 1);
+	};
+
+	const handleNextStep = () => {
+		setStep(step + 1);
+	};
+
+	const handleButtonClick = () => {
+		// eslint-disable-next-line no-unused-expressions
+		step === 1 ? handleOnLeftButtonClick() : handlePreviousStep();
+	};
+
+	const addHighPriorityContacts = (contactList) => {
+		setAddHighPriorityContactList((oldList) => {
+			const uniqueContacts = [
+				...oldList,
+				...contactList.filter(
+					(contact) =>
+						!oldList.some(
+							(oldContact) => oldContact.id === contact.id
+						)
+				),
+			];
+
+			return uniqueContacts;
+		});
+	};
+
+	const removeHighPriorityContacts = (contactList) => {
+		setRemoveHighPriorityContactList((oldList) => {
+			const uniqueContacts = [
+				...oldList,
+				...contactList.filter(
+					(contact) =>
+						!oldList.some(
+							(oldContact) => oldContact.id === contact.id
+						)
+				),
+			];
+
+			return uniqueContacts;
+		});
+	};
 
 	const primaryRegionList = useGetPrimaryRegionList();
+
+	useEffect(() => {
+		if (primaryRegionList.length) {
+			setFieldValue('lxc.primaryRegion', primaryRegionList[0].value);
+		}
+	}, [primaryRegionList, setFieldValue]);
 
 	useEffect(() => {
 		const hasTouched = !Object.keys(touched).length;
@@ -54,13 +106,31 @@ const SetupLiferayExperienceCloudPage = ({
 		setBaseButtonDisabled(hasTouched || hasError);
 	}, [touched, errors]);
 
+	const handleLoadingSubmitButton = (state) => {
+		return setIsLoadingSubmitButton(state);
+	};
+
 	const handleSubmitLxcEnvironment = useSubmitLXCEnvironment(
 		handleChangeForm,
 		project,
 		setFormAlreadySubmitted,
+		addHighPriorityContactList,
+		removeHighPriorityContactList,
 		subscriptionGroupLxcId,
+		handleLoadingSubmitButton,
 		values
 	);
+
+	const updateMultiSelectEmpty = (error, inputName) => {
+		setInputErrors((prevErrors) => ({
+			...prevErrors,
+			[inputName]: error,
+		}));
+	};
+
+	const isSubmitDisable = () => {
+		return Object.values(inputErrors).some((error) => !!error);
+	};
 
 	return (
 		<Layout
@@ -69,18 +139,32 @@ const SetupLiferayExperienceCloudPage = ({
 				leftButton: (
 					<Button
 						borderless
-						onClick={() => handleOnLeftButtonClick()}
+						className="text-neutral-10"
+						onClick={() => {
+							handleButtonClick();
+						}}
 					>
-						{leftButton}
+						{step === 1 ? leftButton : i18n.translate('previous')}
 					</Button>
 				),
 				middleButton: (
 					<Button
-						disabled={baseButtonDisabled}
+						disabled={
+							step === 1
+								? baseButtonDisabled
+								: isSubmitDisable() || isLoadingSubmitButton
+						}
 						displayType="primary"
-						onClick={() => handleSubmitLxcEnvironment()}
+						isLoading={isLoadingSubmitButton}
+						onClick={
+							step === 1
+								? handleNextStep
+								: handleSubmitLxcEnvironment
+						}
 					>
-						{i18n.translate('submit')}
+						{step === 1
+							? i18n.translate('next')
+							: i18n.translate('submit')}
 					</Button>
 				),
 			}}
@@ -91,116 +175,118 @@ const SetupLiferayExperienceCloudPage = ({
 				title: i18n.translate('set-up-liferay-experience-cloud'),
 			}}
 		>
-			<FieldArray
-				name="lxc.admins"
-				render={({pop, push}) => (
-					<>
-						<div className="d-flex justify-content-between mb-2 pb-1 pl-3">
-							<div className="mr-4 pr-2">
-								<label>
-									{i18n.translate('organization-name')}
-								</label>
+			{step === 1 && (
+				<FieldArray
+					name="lxc.admins"
+					render={({pop, push}) => (
+						<>
+							<div className="d-flex justify-content-between mb-2 pb-1 pl-3">
+								<div className="mr-4 pr-2">
+									<label>
+										{i18n.translate('organization-name')}
+									</label>
 
-								<p className="dxp-cloud-project-name text-neutral-6 text-paragraph-lg">
-									<strong>{project.name}</strong>
-								</p>
+									<p className="dxp-cloud-project-name text-neutral-6 text-paragraph-lg">
+										<strong>{project.name}</strong>
+									</p>
+								</div>
 							</div>
-						</div>
-						<ClayForm.Group className="mb-0">
-							<ClayForm.Group className="mb-0 pb-1">
-								<Input
-									groupStyle="pb-1"
-									helper={i18n.translate(
-										'lowercase-letters-and-numbers-only-project-ids-cannot-be-changed'
-									)}
-									label={i18n.translate('project-id')}
-									name="lxc.projectId"
-									required
-									type="text"
-								/>
-
-								<Select
-									groupStyle="mb-0"
-									key={primaryRegionList}
-									label={i18n.translate('primary-region')}
-									name="lxc.primaryRegion"
-									options={primaryRegionList}
-									required
-								/>
-							</ClayForm.Group>
-
 							<ClayForm.Group className="mb-0">
-								{values.lxc.admins.map((admin, index) => (
-									<AdminInputs
-										admin={admin}
-										id={index}
-										key={index}
+								<ClayForm.Group className="mb-0 pb-1">
+									<Input
+										groupStyle="pb-1"
+										helper={i18n.translate(
+											'lowercase-letters-and-numbers-only-project-ids-cannot-be-changed'
+										)}
+										label={i18n.translate('project-id')}
+										name="lxc.projectId"
+										required
+										type="text"
 									/>
-								))}
-							</ClayForm.Group>
-						</ClayForm.Group>
 
-						{values?.lxc?.admins?.length >
-							INITIAL_SETUP_ADMIN_COUNT && (
+									<Select
+										groupStyle="mb-0"
+										key={primaryRegionList}
+										label={i18n.translate('primary-region')}
+										name="lxc.primaryRegion"
+										options={primaryRegionList}
+										required
+									/>
+								</ClayForm.Group>
+
+								<ClayForm.Group className="mb-0">
+									{values.lxc.admins.map((admin, index) => (
+										<AdminInputs
+											admin={admin}
+											id={index}
+											key={index}
+										/>
+									))}
+								</ClayForm.Group>
+							</ClayForm.Group>
+
+							{values?.lxc?.admins?.length >
+								INITIAL_SETUP_ADMIN_COUNT && (
+								<Button
+									className="ml-3 my-2 text-brandy-secondary"
+									displayType="secondary"
+									onClick={() => {
+										pop();
+										setBaseButtonDisabled(false);
+									}}
+									prependIcon="hr"
+									small
+								>
+									{i18n.translate('remove-project-admin')}
+								</Button>
+							)}
+
 							<Button
-								className="ml-3 my-2 text-brandy-secondary"
-								displayType="secondary"
+								className="cp-btn-add-dxp-cloud ml-3 my-2 rounded-xs"
 								onClick={() => {
-									pop();
-									setBaseButtonDisabled(false);
+									push(
+										getInitialLxcAdmins(values?.lxc?.admins)
+									);
+									setBaseButtonDisabled(true);
 								}}
-								prependIcon="hr"
+								prependIcon="plus"
 								small
 							>
-								{i18n.translate('remove-project-admin')}
+								{i18n.translate('add-another-admin')}
 							</Button>
-						)}
 
-						<Button
-							className="cp-btn-add-dxp-cloud ml-3 my-2 rounded-xs"
-							onClick={() => {
-								push(getInitialLxcAdmins(values?.lxc?.admins));
-								setBaseButtonDisabled(true);
-							}}
-							prependIcon="plus"
-							small
-						>
-							{i18n.translate('add-another-admin')}
-						</Button>
+							<hr />
+						</>
+					)}
+				/>
+			)}
 
-						<hr />
+			{step === 2 && (
+				<div>
+					<SetupHighPriorityContactForm
+						addContactList={addHighPriorityContacts}
+						disableSubmit={updateMultiSelectEmpty}
+						filter={
+							HIGH_PRIORITY_CONTACT_CATEGORIES.criticalIncident
+						}
+						removedContactList={removeHighPriorityContacts}
+					/>
 
-						<ClayForm.Group className="mb-0">
-							<Input
-								groupStyle="pb-1"
-								label={i18n.translate(
-									'incident-management-contacts-first-and-last-name'
-								)}
-								name="lxc.incidentManagementFullName"
-								required
-								type="text"
-							/>
+					<SetupHighPriorityContactForm
+						addContactList={addHighPriorityContacts}
+						disableSubmit={updateMultiSelectEmpty}
+						filter={HIGH_PRIORITY_CONTACT_CATEGORIES.privacyBreach}
+						removedContactList={removeHighPriorityContacts}
+					/>
 
-							<Input
-								groupStyle="pb-1"
-								helper={i18n.translate(
-									'lowercase-letters-and-numbers-only-project-ids-cannot-be-changed'
-								)}
-								label={i18n.translate(
-									'incident-management-contacts-email-address'
-								)}
-								name="lxc.incidentManagementEmail"
-								required
-								type="text"
-								validations={[
-									(value) =>
-										isValidEmail(value, bannedDomains),
-								]}
-							/>
-						</ClayForm.Group>
-					</>
-				)}
-			/>
+					<SetupHighPriorityContactForm
+						addContactList={addHighPriorityContacts}
+						disableSubmit={updateMultiSelectEmpty}
+						filter={HIGH_PRIORITY_CONTACT_CATEGORIES.securityBreach}
+						removedContactList={removeHighPriorityContacts}
+					/>
+				</div>
+			)}
 		</Layout>
 	);
 };

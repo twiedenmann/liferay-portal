@@ -26,57 +26,15 @@
 				{
 					"DBType": "String",
 					"businessType": "Text",
-					"externalReferenceCode": "OBJECT_FIELD_ERC",
+					"externalReferenceCode": "ODATA_SORT",
 					"indexed": true,
 					"indexedAsKeyword": false,
 					"label": {
-						"en_US": "Object Field ERC"
+						"en_US": "OData Sort"
 					},
-					"name": "objectFieldERC",
+					"name": "oDataSort",
 					"required": true,
 					"state": false,
-					"system": false,
-					"type": "String"
-				},
-				{
-					"DBType": "String",
-					"businessType": "Picklist",
-					"defaultValue": "ascending",
-					"externalReferenceCode": "ORDER",
-					"indexed": true,
-					"indexedAsKeyword": false,
-					"label": {
-						"en_US": "Order"
-					},
-					"listTypeDefinitionExternalReferenceCode": "ORDER_PICKLIST",
-					"name": "order",
-					"objectFieldSettings": [
-						{
-							"name": "stateFlow",
-							"value": {
-								"objectStates": [
-									{
-										"key": "ascending",
-										"objectStateTransitions": [
-											{
-												"key": "descending"
-											}
-										]
-									},
-									{
-										"key": "descending",
-										"objectStateTransitions": [
-											{
-												"key": "ascending"
-											}
-										]
-									}
-								]
-							}
-						}
-					],
-					"required": true,
-					"state": true,
 					"system": false,
 					"type": "String"
 				}
@@ -208,6 +166,77 @@
 					"name": "path",
 					"required": true,
 					"state": false,
+					"system": false,
+					"type": "String"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"externalReferenceCode": "PATH_PARAMETER",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Path Parameter"
+					},
+					"listTypeDefinitionExternalReferenceCode": "PATH_PARAMETER_PICKLIST",
+					"name": "pathParameter",
+					"objectFieldSettings": [
+						{
+							"name": "stateFlow",
+							"value": {
+								"objectStates": [
+									{
+										"key": "ID",
+										"objectStateTransitions": [
+										]
+									}
+								]
+							}
+						}
+					],
+					"required": false,
+					"system": false,
+					"type": "String"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"defaultValue": "collection",
+					"externalReferenceCode": "RETRIEVE_TYPE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Retrieve Type"
+					},
+					"listTypeDefinitionExternalReferenceCode": "RETRIEVE_TYPE_PICKLIST",
+					"name": "retrieveType",
+					"objectFieldSettings": [
+						{
+							"name": "stateFlow",
+							"value": {
+								"objectStates": [
+									{
+										"key": "collection",
+										"objectStateTransitions": [
+											{
+												"key": "singleElement"
+											}
+										]
+									},
+									{
+										"key": "singleElement",
+										"objectStateTransitions": [
+											{
+												"key": "collection"
+											}
+										]
+									}
+								]
+							}
+						}
+					],
+					"required": true,
+					"state": true,
 					"system": false,
 					"type": "String"
 				},
@@ -354,13 +383,13 @@
 				{
 					"DBType": "String",
 					"businessType": "Text",
-					"externalReferenceCode": "OBJECT_RELATIONSHIP_IDS",
+					"externalReferenceCode": "OBJECT_RELATIONSHIP_NAMES",
 					"indexed": true,
 					"indexedAsKeyword": false,
 					"label": {
-						"en_US": "Object Relationship IDs"
+						"en_US": "Object Relationship Names"
 					},
-					"name": "objectRelationshipIds",
+					"name": "objectRelationshipNames",
 					"required": false,
 					"state": false,
 					"system": false,

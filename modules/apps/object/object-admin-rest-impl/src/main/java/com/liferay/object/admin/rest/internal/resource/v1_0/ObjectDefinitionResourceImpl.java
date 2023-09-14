@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.object.admin.rest.internal.resource.v1_0;
@@ -44,6 +35,7 @@ import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.ObjectDefinitionEnableLocalizationException;
 import com.liferay.object.exception.ObjectDefinitionStorageTypeException;
+import com.liferay.object.model.ObjectFolder;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectActionService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -51,6 +43,7 @@ import com.liferay.object.service.ObjectDefinitionService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFilterLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.service.ObjectLayoutLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectValidationRuleLocalService;
@@ -59,6 +52,7 @@ import com.liferay.object.service.ObjectViewService;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
 import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
+import com.liferay.object.util.comparator.ObjectFieldCreateDateComparator;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
@@ -72,6 +66,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Localization;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -117,10 +112,6 @@ public class ObjectDefinitionResourceImpl
 			Collection<ObjectDefinition> objectDefinitions,
 			Map<String, Serializable> parameters)
 		throws Exception {
-
-		for (ObjectDefinition objectDefinition : objectDefinitions) {
-			objectDefinition.setActive(false);
-		}
 
 		super.create(objectDefinitions, parameters);
 
@@ -244,8 +235,21 @@ public class ObjectDefinitionResourceImpl
 			throw new ObjectDefinitionEnableLocalizationException();
 		}
 
+		if (Validator.isNotNull(objectDefinition.getEnableObjectEntryDraft()) &&
+			!FeatureFlagManagerUtil.isEnabled("LPS-181663")) {
+
+			throw new UnsupportedOperationException();
+		}
+
 		if (Validator.isNotNull(objectDefinition.getModifiable()) &&
 			!FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		if (Validator.isNotNull(
+				objectDefinition.getObjectFolderExternalReferenceCode()) &&
+			!FeatureFlagManagerUtil.isEnabled("LPS-148856")) {
 
 			throw new UnsupportedOperationException();
 		}
@@ -268,6 +272,9 @@ public class ObjectDefinitionResourceImpl
 				_objectDefinitionService.addSystemObjectDefinition(
 					objectDefinition.getExternalReferenceCode(),
 					contextUser.getUserId(),
+					_getObjectFolderId(
+						objectDefinition.
+							getObjectFolderExternalReferenceCode()),
 					GetterUtil.getBoolean(objectDefinition.getEnableComments()),
 					LocalizedMapUtil.getLocalizedMap(
 						objectDefinition.getLabel()),
@@ -290,9 +297,14 @@ public class ObjectDefinitionResourceImpl
 		else {
 			serviceBuilderObjectDefinition =
 				_objectDefinitionService.addCustomObjectDefinition(
+					_getObjectFolderId(
+						objectDefinition.
+							getObjectFolderExternalReferenceCode()),
 					GetterUtil.getBoolean(objectDefinition.getEnableComments()),
 					GetterUtil.getBoolean(
 						objectDefinition.getEnableLocalization()),
+					GetterUtil.getBoolean(
+						objectDefinition.getEnableObjectEntryDraft()),
 					LocalizedMapUtil.getLocalizedMap(
 						objectDefinition.getLabel()),
 					objectDefinition.getName(),
@@ -403,7 +415,7 @@ public class ObjectDefinitionResourceImpl
 	}
 
 	@Override
-	public void postObjectDefinitionPublish(Long objectDefinitionId)
+	public ObjectDefinition postObjectDefinitionPublish(Long objectDefinitionId)
 		throws Exception {
 
 		com.liferay.object.model.ObjectDefinition
@@ -414,13 +426,14 @@ public class ObjectDefinitionResourceImpl
 		if (GetterUtil.getBoolean(serviceBuilderObjectDefinition.getSystem()) &&
 			FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
 
-			_objectDefinitionService.publishSystemObjectDefinition(
-				objectDefinitionId);
+			return _toObjectDefinition(
+				_objectDefinitionService.publishSystemObjectDefinition(
+					objectDefinitionId));
 		}
-		else {
+
+		return _toObjectDefinition(
 			_objectDefinitionService.publishCustomObjectDefinition(
-				objectDefinitionId);
-		}
+				objectDefinitionId));
 	}
 
 	@Override
@@ -430,8 +443,21 @@ public class ObjectDefinitionResourceImpl
 
 		// TODO Move logic to service
 
+		if (Validator.isNotNull(objectDefinition.getEnableObjectEntryDraft()) &&
+			!FeatureFlagManagerUtil.isEnabled("LPS-181663")) {
+
+			throw new UnsupportedOperationException();
+		}
+
 		if (Validator.isNotNull(objectDefinition.getModifiable()) &&
 			!FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		if (Validator.isNotNull(
+				objectDefinition.getObjectFolderExternalReferenceCode()) &&
+			!FeatureFlagManagerUtil.isEnabled("LPS-148856")) {
 
 			throw new UnsupportedOperationException();
 		}
@@ -481,7 +507,11 @@ public class ObjectDefinitionResourceImpl
 			serviceBuilderObjectDefinition =
 				_objectDefinitionService.updateSystemObjectDefinition(
 					objectDefinition.getExternalReferenceCode(),
-					objectDefinitionId, titleObjectFieldId);
+					objectDefinitionId,
+					_getObjectFolderId(
+						objectDefinition.
+							getObjectFolderExternalReferenceCode()),
+					titleObjectFieldId);
 		}
 		else {
 			serviceBuilderObjectDefinition =
@@ -489,6 +519,9 @@ public class ObjectDefinitionResourceImpl
 					objectDefinition.getExternalReferenceCode(),
 					objectDefinitionId,
 					GetterUtil.getLong(accountEntryRestrictedObjectFieldId), 0,
+					_getObjectFolderId(
+						objectDefinition.
+							getObjectFolderExternalReferenceCode()),
 					titleObjectFieldId,
 					GetterUtil.getBoolean(
 						objectDefinition.getAccountEntryRestricted()),
@@ -500,6 +533,8 @@ public class ObjectDefinitionResourceImpl
 					GetterUtil.getBoolean(objectDefinition.getEnableComments()),
 					GetterUtil.getBoolean(
 						objectDefinition.getEnableLocalization()),
+					GetterUtil.getBoolean(
+						objectDefinition.getEnableObjectEntryDraft()),
 					GetterUtil.getBoolean(
 						objectDefinition.getEnableObjectEntryHistory()),
 					LocalizedMapUtil.getLocalizedMap(
@@ -584,11 +619,6 @@ public class ObjectDefinitionResourceImpl
 		Set<String> accountEntryRestrictedObjectRelationshipsNames =
 			_getAccountEntryRestrictedObjectRelationshipsNames(
 				serviceBuilderObjectDefinition, objectRelationships);
-
-		if (objectRelationships != null) {
-			_objectRelationshipLocalService.deleteObjectRelationships(
-				objectDefinitionId, false);
-		}
 
 		ObjectValidationRule[] objectValidationRules =
 			objectDefinition.getObjectValidationRules();
@@ -688,6 +718,29 @@ public class ObjectDefinitionResourceImpl
 		}
 
 		if (objectRelationships != null) {
+			Set<String> deleteObjectRelationshipsNames =
+				SetUtil.asymmetricDifference(
+					transform(
+						_objectRelationshipLocalService.getObjectRelationships(
+							objectDefinitionId),
+						com.liferay.object.model.ObjectRelationship::getName),
+					transformToList(
+						objectRelationships, ObjectRelationship::getName));
+
+			for (String deleteObjectRelationshipsName :
+					deleteObjectRelationshipsNames) {
+
+				com.liferay.object.model.ObjectRelationship
+					serviceBuilderObjectRelationship =
+						_objectRelationshipLocalService.
+							fetchObjectRelationshipByObjectDefinitionId(
+								objectDefinitionId,
+								deleteObjectRelationshipsName);
+
+				_objectRelationshipLocalService.deleteObjectRelationship(
+					serviceBuilderObjectRelationship.getObjectRelationshipId());
+			}
+
 			ObjectRelationshipResource.Builder builder =
 				_objectRelationshipResourceFactory.create();
 
@@ -697,6 +750,22 @@ public class ObjectDefinitionResourceImpl
 				).build();
 
 			for (ObjectRelationship objectRelationship : objectRelationships) {
+				com.liferay.object.model.ObjectRelationship
+					serviceBuilderObjectRelationship =
+						_objectRelationshipLocalService.
+							fetchObjectRelationshipByObjectDefinitionId(
+								objectDefinitionId,
+								objectRelationship.getName());
+
+				if (serviceBuilderObjectRelationship != null) {
+					objectRelationshipResource.putObjectRelationship(
+						serviceBuilderObjectRelationship.
+							getObjectRelationshipId(),
+						objectRelationship);
+
+					continue;
+				}
+
 				objectRelationship =
 					objectRelationshipResource.
 						postObjectDefinitionObjectRelationship(
@@ -803,6 +872,21 @@ public class ObjectDefinitionResourceImpl
 		return accountEntryRestrictedObjectRelationshipsNames;
 	}
 
+	private long _getObjectFolderId(String objectFolderExternalReferenceCode)
+		throws Exception {
+
+		if (Validator.isNull(objectFolderExternalReferenceCode)) {
+			return 0;
+		}
+
+		ObjectFolder objectFolder =
+			_objectFolderLocalService.getObjectFolderByExternalReferenceCode(
+				objectFolderExternalReferenceCode,
+				contextCompany.getCompanyId());
+
+		return objectFolder.getObjectFolderId();
+	}
+
 	private ObjectDefinition _toObjectDefinition(
 		com.liferay.object.model.ObjectDefinition objectDefinition) {
 
@@ -841,6 +925,23 @@ public class ObjectDefinitionResourceImpl
 				accountEntryRestricted =
 					objectDefinition.isAccountEntryRestricted();
 				actions = HashMapBuilder.put(
+					"bind",
+					() -> {
+						if (!FeatureFlagManagerUtil.isEnabled("LPS-187142") ||
+							(objectDefinition.getRootObjectDefinitionId() !=
+								0) ||
+							objectDefinition.isApproved() ||
+							objectDefinition.isSystem()) {
+
+							return null;
+						}
+
+						return addAction(
+							ActionKeys.UPDATE, "putObjectDefinition",
+							permissionName,
+							objectDefinition.getObjectDefinitionId());
+					}
+				).put(
 					"delete",
 					() -> {
 						if (objectDefinition.isUnmodifiableSystemObject()) {
@@ -876,9 +977,23 @@ public class ObjectDefinitionResourceImpl
 							objectDefinition.getObjectDefinitionId());
 					}
 				).put(
+					"unbind",
+					() -> {
+						if (objectDefinition.getRootObjectDefinitionId() == 0) {
+							return null;
+						}
+
+						return addAction(
+							ActionKeys.UPDATE, "putObjectDefinition",
+							permissionName,
+							objectDefinition.getObjectDefinitionId());
+					}
+				).put(
 					"update",
 					() -> {
-						if (objectDefinition.isUnmodifiableSystemObject()) {
+						if (!FeatureFlagManagerUtil.isEnabled("LPS-148856") &&
+							objectDefinition.isUnmodifiableSystemObject()) {
+
 							return null;
 						}
 
@@ -900,6 +1015,11 @@ public class ObjectDefinitionResourceImpl
 				if (FeatureFlagManagerUtil.isEnabled("LPS-172017")) {
 					enableLocalization =
 						objectDefinition.getEnableLocalization();
+				}
+
+				if (FeatureFlagManagerUtil.isEnabled("LPS-181663")) {
+					enableObjectEntryDraft =
+						objectDefinition.getEnableObjectEntryDraft();
 				}
 
 				enableObjectEntryHistory =
@@ -925,7 +1045,9 @@ public class ObjectDefinitionResourceImpl
 					ObjectAction.class);
 				objectFields = transformToArray(
 					_objectFieldLocalService.getObjectFields(
-						objectDefinition.getObjectDefinitionId()),
+						objectDefinition.getObjectDefinitionId(),
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+						new ObjectFieldCreateDateComparator(true)),
 					objectField -> _objectFieldDTOConverter.toDTO(
 						new DefaultDTOConverterContext(
 							false, null, null, null,
@@ -933,6 +1055,12 @@ public class ObjectDefinitionResourceImpl
 							null),
 						objectField),
 					ObjectField.class);
+
+				if (FeatureFlagManagerUtil.isEnabled("LPS-148856")) {
+					objectFolderExternalReferenceCode =
+						objectDefinition.getObjectFolderExternalReferenceCode();
+				}
+
 				objectLayouts = transformToArray(
 					_objectLayoutLocalService.getObjectLayouts(
 						objectDefinition.getObjectDefinitionId()),
@@ -1013,6 +1141,26 @@ public class ObjectDefinitionResourceImpl
 
 						return serviceBuilderObjectField.getName();
 					});
+
+				if (FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
+					setRootObjectDefinitionExternalReferenceCode(
+						() -> {
+							com.liferay.object.model.ObjectDefinition
+								serviceBuilderObjectDefinition =
+									_objectDefinitionLocalService.
+										fetchObjectDefinition(
+											objectDefinition.
+												getRootObjectDefinitionId());
+
+							if (serviceBuilderObjectDefinition == null) {
+								return null;
+							}
+
+							return serviceBuilderObjectDefinition.
+								getExternalReferenceCode();
+						});
+				}
+
 				setTitleObjectFieldName(
 					() -> {
 						com.liferay.object.model.ObjectField
@@ -1075,6 +1223,9 @@ public class ObjectDefinitionResourceImpl
 
 	@Reference
 	private ObjectFilterLocalService _objectFilterLocalService;
+
+	@Reference
+	private ObjectFolderLocalService _objectFolderLocalService;
 
 	@Reference
 	private ObjectLayoutLocalService _objectLayoutLocalService;

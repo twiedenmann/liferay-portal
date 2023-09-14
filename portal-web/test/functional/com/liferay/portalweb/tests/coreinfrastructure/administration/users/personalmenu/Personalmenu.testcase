@@ -1,4 +1,4 @@
-@component-name = "portal-security"
+@component-name = "portal-user-management"
 definition {
 
 	property portal.release = "true";
@@ -33,6 +33,7 @@ definition {
 	test CanViewNotFoundWhenGuestAccessManageURL {
 		property custom.properties = "virtual.hosts.default.site.name=Guest";
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -144,6 +145,7 @@ definition {
 	@priority = 4
 	test EnableStaging {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -284,6 +286,7 @@ definition {
 	@priority = 4
 	test UpdateUserInformation {
 		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		UserBar.viewUserDefaultIcon();
 
@@ -382,6 +385,10 @@ definition {
 	@description = "This is a use case for LPS-76106."
 	@priority = 5
 	test ViewMyAccountUserViaURL {
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property test.liferay.virtual.instance = "false";
+
 		var portalURL = PropsUtil.get("portal.url");
 
 		JSONUser.addUser(

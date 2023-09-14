@@ -227,7 +227,7 @@
 </tr>
 <tr>
 	<td>FIELD_TYPE_SELECT</td>
-	<td>//div/select[contains(@id,'FieldTypeName')]</td>
+	<td>//div/select[contains(@id,'commerceOptionTypeKey')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -691,6 +691,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ENTRY_CONTENT_ROW_NUMBER_DATASET</td>
+	<td>//table[@class='table table-autofit']/tbody/tr[${key_rowNumber}]/td[text()="${key_entry}"]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ENTRY_CONTENT_ROW_BY_NAME</td>
 	<td>//tr[contains(@data-qa-id,'row')]//a[contains(text(),'${key_entryName}')]</td>
 	<td></td>
@@ -703,6 +708,11 @@
 <tr>
 	<td>MODAL_DATASET_ROW_ITEM</td>
 	<td>//div[contains(@class,'modal-iframe-content')]//div[@class='dnd-tbody']//div[@class='dnd-tr' and contains(.,'${key_entry}')]/div[${key_index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DELETE_SAMPLE_FILE_ATTACHMENT</td>
+	<td>//span[contains(@id,'FileEntryNameInput')]/a[contains(.,'${key_sampleFileName}')]/../..//span[*[name()='svg'][contains(@class,'icon-times')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -818,6 +828,11 @@
 <tr>
 	<td>TABLE_ASSERT_TWO_COLUMNS_ELLIPSIS</td>
 	<td>//div[contains(@id,'${key_table}')]//div[1][@class='dnd-td' and contains(.,'${key_firstColumnValue}')]/following::div[@class='dnd-td' and contains (.,'${key_secondColumnValue}')]/following::div[@class='dropdown']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TABLE_ASSERT_SPECIFIC_ROW_ANY_COLUMN_VALUE</td>
+	<td>//div[@class='dnd-tbody']/div[${key_row}]//div//a[text()='${key_entryName}']/../../../div[${key_column}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -1184,6 +1199,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SUBSCRIPTION_TYPE_IN_LENGTH</td>
+	<td>//h4[contains(text(), '${key_subscriptionName}')]/..//label[contains(.,'${key_subscriptionFieldLabel}')]/..//span</td>
+	<td></td>
+</tr>
+<tr>
 	<td>TOGGLE_SWITCH_BUTTON</td>
 	<td>xpath=(//label[(contains(.,'${key_buttonName}')) or (contains(@for,'${key_buttonName}'))])[${key_indexNumber}]//input</td>
 	<td></td>
@@ -1254,6 +1274,16 @@
 <tr>
 	<td>DELETE_OPTION_BUTTON</td>
 	<td>//h4[contains(.,'Option')]//..//button[contains(.,'Delete')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>OPTION_CATEGORY</td>
+	<td>//div[contains(@class,'form-group')]/label[contains(.,'Category')]/..//span[contains(@class,'label label-secondary')]/span[contains(.,'${key_category}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>REMOVE_OPTION_CATEGORY</td>
+	<td>//div[contains(@class,'form-group')]/label[contains(.,'Category')]/..//span[contains(@class,'label label-secondary')]/span[contains(.,'${key_category}')]/..//button</td>
 	<td></td>
 </tr>
 <tr>

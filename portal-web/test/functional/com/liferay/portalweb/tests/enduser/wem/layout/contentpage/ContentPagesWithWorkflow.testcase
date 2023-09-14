@@ -1,10 +1,10 @@
 @component-name = "portal-wcm"
 definition {
 
+	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testcase.url = "http://localhost:8080";
 	property testray.main.component.name = "Page Administration";
 
 	static var randomSiteName = StringUtil.randomString(8);
@@ -17,6 +17,10 @@ definition {
 	static var randomRoleKey = StringUtil.randomString(8);
 
 	setUp {
+		task ("Set up virtual instance") {
+			TestCase.setUpPortalInstance();
+		}
+
 		task ("Sign in") {
 			User.firstLoginPG();
 		}
@@ -225,6 +229,8 @@ definition {
 		task ("Edit Heading fragment") {
 			MenuItem.click(menuItem = "Edit");
 
+			PageEditor.assertFragmentSidebarLoaded();
+
 			PageEditor.editFragmentText(
 				fragmentName = "Heading",
 				id = "text",
@@ -375,6 +381,8 @@ definition {
 			MenuItem.viewVisible(menuItem = "Edit");
 
 			MenuItem.click(menuItem = "Edit");
+
+			PageEditor.assertFragmentSidebarLoaded();
 
 			PageEditor.editFragmentText(
 				fragmentName = "Heading",

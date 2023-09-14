@@ -1,15 +1,6 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
 package com.liferay.portal.tools;
@@ -19,6 +10,7 @@ import com.liferay.document.library.kernel.store.Store;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.db.index.IndexUpdaterUtil;
+import com.liferay.portal.db.partition.DBPartitionUtil;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
@@ -163,7 +155,7 @@ public class DBUpgrader {
 
 			InitUtil.registerContext();
 
-			upgradeModules();
+			upgradeModules(false);
 
 			BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
@@ -226,10 +218,12 @@ public class DBUpgrader {
 		}
 	}
 
-	public static void upgradeModules() {
+	public static void upgradeModules(boolean autoUpgrade) {
 		_registerModuleServiceLifecycle("portal.initialized");
 
-		DependencyManagerSyncUtil.sync();
+		if (!autoUpgrade) {
+			DependencyManagerSyncUtil.sync();
+		}
 
 		PortalCacheHelperUtil.clearPortalCaches(
 			PortalCacheManagerNames.MULTI_VM);
@@ -340,7 +334,13 @@ public class DBUpgrader {
 			_log.debug("Check class names");
 		}
 
-		ClassNameLocalServiceUtil.checkClassNames();
+		try {
+			DBPartitionUtil.forEachCompanyId(
+				companyId -> ClassNameLocalServiceUtil.checkClassNames());
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Check resource actions");
