@@ -11,13 +11,23 @@
 
 <tbody>
 <tr>
+	<td>ANY_DASHBOARD_BUTTON</td>
+	<td>//*[contains(@class, 'dashboard-page') and contains(text(), '${key_buttonName}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>CARD_DETAILS</td>
 	<td>//div[contains(@class, 'detailed-card-container')]//h2[contains(text(),'${key_text}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>ANY_DASHBOARD_BUTTON</td>
-	<td>//*[contains(@class, 'dashboard-page') and contains(text(), '${key_buttonName}')]</td>
+	<td>SVG_DROPDOWN</td>
+	<td>//*[contains(@class, 'dashboard-navigation-header')]/following-sibling::div</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SVG_DROPDOWN_LIST</td>
+	<td>//*[contains(@class, 'dropdown-item') and contains(text(), '${key_accountTitle}')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -310,6 +310,7 @@ definition {
 				goalsOptions = "Lead generation",
 				leadFollowUpList = "Other",
 				leadList = "No",
+				ofWeek = 10,
 				tactic = "Broadcast Advertising",
 				targetMarketOptions = "Education",
 				targetRolesOptions = "Administrator",
@@ -376,7 +377,7 @@ definition {
 			var tacticFieldsList = '''
 				Marketing activity: Activity Description,
 				What type of merchandise?: Type Merchandise,
-				Quantity: Quantity Merchandise
+				Quantity: 5
 			''';
 
 			var tacticFields = ListUtil.newListFromString(${tacticFieldsList});
@@ -419,7 +420,7 @@ definition {
 
 			var tacticFieldsList = '''
 				Marketing activity: Activity Description,
-				Target Of Sends: Target Of Sends,
+				Target # of sends: 5,
 				CTA: Activity CTA,
 			''';
 
