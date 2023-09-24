@@ -13,10 +13,10 @@ import {
 	LeftSidebarItem,
 	LeftSidebarObjectDefinitionItem,
 	ObjectRelationshipEdgeData,
-	RightSidebarType,
 	TAction,
 	TState,
 } from '../types';
+import {updateURLParam} from '../utils';
 import {
 	fieldsCustomSort,
 	getNonOverlappingEdges,
@@ -282,7 +282,7 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 					...updatedObjectDefinitionNodes,
 				],
 				leftSidebarItems: updatedLeftSidebarItems,
-				rightSidebarType: 'empty' as RightSidebarType,
+				rightSidebarType: 'empty',
 			};
 		}
 
@@ -604,6 +604,27 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 			};
 		}
 
+		case TYPES.SET_OBJECT_FOLDER_NAME: {
+			const {objectFolderName} = action.payload;
+
+			updateURLParam('objectFolderName', objectFolderName);
+
+			return {
+				...state,
+				objectFolderName,
+				rightSidebarType: 'empty',
+			};
+		}
+
+		case TYPES.SET_LOADING_OBJECT_FOLDER: {
+			const {isLoadingObjectFolder} = action.payload;
+
+			return {
+				...state,
+				isLoadingObjectFolder,
+			};
+		}
+
 		case TYPES.SET_SELECTED_OBJECT_DEFINITION_NODE: {
 			const {edges, nodes, selectedObjectDefinitionId} = action.payload;
 
@@ -664,7 +685,7 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 					...newObjectDefinitionNodes,
 				],
 				leftSidebarItems: newLeftSidebarItems,
-				rightSidebarType: 'objectDefinitionDetails' as RightSidebarType,
+				rightSidebarType: 'objectDefinitionDetails',
 			};
 		}
 
@@ -708,7 +729,7 @@ export function ObjectFolderReducer(state: TState, action: TAction): TState {
 					...newObjectRelationshipEdges,
 					...newObjectDefinitionNodes,
 				],
-				rightSidebarType: 'objectRelationshipDetails' as RightSidebarType,
+				rightSidebarType: 'objectRelationshipDetails',
 			};
 		}
 

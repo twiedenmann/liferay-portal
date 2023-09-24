@@ -27,7 +27,15 @@ import org.springframework.context.annotation.Configuration;
 public class BuildParameterEntityRepository
 	extends BaseEntityRepository<BuildParameterEntity> {
 
-	public BuildParameterEntity add(
+	public BuildParameterEntity create(
+		BuildEntity buildEntity, JSONObject jsonObject) {
+
+		return create(
+			buildEntity, jsonObject.getString("name"),
+			jsonObject.getString("value"));
+	}
+
+	public BuildParameterEntity create(
 		BuildEntity buildEntity, String name, String value) {
 
 		JSONObject jsonObject = new JSONObject();
@@ -40,13 +48,13 @@ public class BuildParameterEntityRepository
 			"value", value
 		);
 
-		BuildParameterEntity buildParameterEntity = add(jsonObject);
+		BuildParameterEntity buildParameterEntity = create(jsonObject);
 
 		buildEntity.addBuildParameterEntity(buildParameterEntity);
 
 		buildParameterEntity.setBuildEntity(buildEntity);
 
-		return buildParameterEntity;
+		return add(buildParameterEntity);
 	}
 
 	public Set<BuildParameterEntity> getAll(BuildEntity buildEntity) {

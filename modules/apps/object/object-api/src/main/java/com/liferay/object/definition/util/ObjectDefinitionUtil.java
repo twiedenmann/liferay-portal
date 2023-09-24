@@ -6,10 +6,10 @@
 package com.liferay.object.definition.util;
 
 import com.liferay.batch.engine.unit.BatchEngineUnitThreadLocal;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.util.PortalInstances;
 
 import java.util.Map;
 import java.util.Objects;
@@ -53,21 +53,42 @@ public class ObjectDefinitionUtil {
 	}
 
 	public static boolean isInvokerBundleAllowed() {
-		if (PortalRunMode.isTestMode()) {
+		if (PortalInstances.isCurrentCompanyInDeletionProcess() ||
+			PortalRunMode.isTestMode()) {
+
 			return true;
 		}
 
 		String fileName = BatchEngineUnitThreadLocal.getFileName();
 
-		if (StringUtil.startsWith(
-				fileName, "com.liferay.headless.builder.impl") ||
-			StringUtil.startsWith(fileName, "com.liferay.object.service")) {
+		for (String allowedInvokerBundleSymbolicName :
+				_ALLOWED_INVOKER_BUNDLE_SYMBOLIC_NAMES) {
 
-			return true;
+			if (fileName.matches(
+					_getInvokerFileNameRegex(
+						allowedInvokerBundleSymbolicName))) {
+
+				return true;
+			}
 		}
 
 		return false;
 	}
+
+	private static String _getInvokerFileNameRegex(
+		String allowedInvokerBundleSymbolicName) {
+
+		String invokerFileNameRegex = StringUtil.replace(
+			allowedInvokerBundleSymbolicName, '.', "\\.");
+
+		return invokerFileNameRegex + "_\\d+\\.\\d+\\.\\d+\\s+\\[\\d+\\]";
+	}
+
+	private static final String[] _ALLOWED_INVOKER_BUNDLE_SYMBOLIC_NAMES = {
+		"com.liferay.frontend.data.set.views.web",
+		"com.liferay.headless.builder.impl", "com.liferay.list.type.service",
+		"com.liferay.object.service"
+	};
 
 	private static final Map<String, String>
 		_allowedModifiableSystemObjectDefinitionNames = HashMapBuilder.put(
@@ -86,6 +107,9 @@ public class ObjectDefinitionUtil {
 			"Bookmark", "/bookmarks"
 		).put(
 			"FDSAction", "/data-set-manager/actions"
+		).put(
+			"FDSClientExtensionFilter",
+			"/data-set-manager/client-extension-filters"
 		).put(
 			"FDSDateFilter", "/data-set-manager/date-filters"
 		).put(

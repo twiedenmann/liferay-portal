@@ -66,7 +66,7 @@ public interface ObjectValidationRuleLocalService
 	public ObjectValidationRule addObjectValidationRule(
 			long userId, long objectDefinitionId, boolean active, String engine,
 			Map<Locale, String> errorLabelMap, Map<Locale, String> nameMap,
-			String outputType, String script,
+			String outputType, String script, boolean system,
 			List<ObjectValidationRuleSetting> objectValidationRuleSettings)
 		throws PortalException;
 
@@ -125,11 +125,13 @@ public interface ObjectValidationRuleLocalService
 	 *
 	 * @param objectValidationRule the object validation rule
 	 * @return the object validation rule that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public ObjectValidationRule deleteObjectValidationRule(
-		ObjectValidationRule objectValidationRule);
+			ObjectValidationRule objectValidationRule)
+		throws PortalException;
 
 	public void deleteObjectValidationRules(Long objectDefinitionId)
 		throws PortalException;

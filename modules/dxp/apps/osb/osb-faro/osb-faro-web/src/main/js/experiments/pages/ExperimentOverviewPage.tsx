@@ -1,20 +1,22 @@
 import * as breadcrumbs from 'shared/util/breadcrumbs';
 import BasePage from 'shared/components/base-page';
+import DeleteExperimentModal from 'experiments/components/modals/DeleteExperimentModal';
 import ErrorPage from 'shared/pages/ErrorPage';
-import React from 'react';
+import React, {useState} from 'react';
 import SessionCard from 'experiments/components/SessionCard';
 import SummaryCard from 'experiments/components/summary-card/SummaryCard';
 import TextTruncate from 'shared/components/TextTruncate';
 import VariantCard from 'experiments/components/variant-card/index';
 import {connect, ConnectedProps} from 'react-redux';
 import {EXPERIMENT_ROOT_QUERY} from 'experiments/queries/ExperimentQuery';
-import {getExperimentLink, useAddRefetch} from 'experiments/util/experiments';
+import {getActions, useAddRefetch} from 'experiments/util/experiments';
 import {RootState} from 'shared/store';
 import {Router} from 'shared/types';
 import {Routes, toRoute} from 'shared/util/router';
 import {SafeResults} from 'shared/hoc/util';
 import {StateProvider} from 'experiments/state';
 import {useChannelContext} from 'shared/context/channel';
+import {useModal} from '@clayui/modal';
 import {useQuery} from '@apollo/react-hooks';
 
 const NAV_ITEMS = [
@@ -56,95 +58,39 @@ interface IExperimentActionsProps extends React.HTMLAttributes<HTMLElement> {
 	experiment: {
 		id: string;
 		pageURL: string;
+		publishable: boolean;
 		status: string;
 	};
 }
 
 const ExperimentActions: React.FC<IExperimentActionsProps> = ({
-	experiment: {id, pageURL, status}
+	experiment: {id, pageURL, publishable, status}
 }) => {
-	const actions = [];
+	const [visibleDeleteModal, setVisibleDeleteModal] = useState(false);
+	const {observer, onClose} = useModal({
+		onClose: () => setVisibleDeleteModal(false)
+	});
 
-	if (status === 'DRAFT') {
-		actions.push(
-			...[
-				{
-					displayType: 'primary',
-					label: Liferay.Language.get('review'),
-					redirectURL: getExperimentLink({
-						action: 'reviewAndRun',
-						id,
-						pageURL
-					})
-				},
-				{
-					displayType: 'secondary',
-					label: Liferay.Language.get('delete'),
-					redirectURL: getExperimentLink({
-						action: 'delete',
-						id,
-						pageURL
-					})
-				}
-			]
-		);
-	} else if (status === 'FINISHED_NO_WINNER') {
-		actions.push(
-			...[
-				{
-					displayType: 'primary',
-					label: Liferay.Language.get('publish'),
-					redirectURL: getExperimentLink({
-						action: 'publish',
-						id,
-						pageURL
-					})
-				},
-				{
-					displayType: 'secondary',
-					label: Liferay.Language.get('delete'),
-					redirectURL: getExperimentLink({
-						action: 'delete',
-						id,
-						pageURL
-					})
-				}
-			]
-		);
-	} else if (status === 'RUNNING') {
-		actions.push({
-			displayType: 'secondary',
-			label: Liferay.Language.get('terminate'),
-			redirectURL: getExperimentLink({
-				action: 'terminate',
-				id,
-				pageURL
-			})
-		});
-	} else if (status === 'TERMINATED') {
-		actions.push(
-			{
-				displayType: 'primary',
-				label: Liferay.Language.get('publish'),
-				redirectURL: getExperimentLink({
-					action: 'publish',
+	return (
+		<>
+			<BasePage.Header.Actions
+				actions={getActions(status, {
 					id,
-					pageURL
-				})
-			},
-			{
-				displayType: 'secondary',
-				label: Liferay.Language.get('delete'),
-				redirectURL: getExperimentLink({
-					action: 'delete',
-					id,
-					pageURL
-				})
-			}
-		);
-	}
+					onDelete: () => setVisibleDeleteModal(true),
+					pageURL,
+					publishable
+				})}
+			/>
 
-	return <BasePage.Header.Actions actions={actions} />;
+			{visibleDeleteModal && (
+				<DeleteExperimentModal
+					experimentId={id}
+					observer={observer}
+					onClose={onClose}
+				/>
+			)}
+		</>
+	);
 };
 
 const ExperimentOverviewPage: React.FC<IExperimentOverviewPage> = ({
@@ -156,6 +102,7 @@ const ExperimentOverviewPage: React.FC<IExperimentOverviewPage> = ({
 	} = router;
 
 	const {refetch, ...result} = useQuery(EXPERIMENT_ROOT_QUERY, {
+		fetchPolicy: 'network-only',
 		variables: {experimentId}
 	});
 

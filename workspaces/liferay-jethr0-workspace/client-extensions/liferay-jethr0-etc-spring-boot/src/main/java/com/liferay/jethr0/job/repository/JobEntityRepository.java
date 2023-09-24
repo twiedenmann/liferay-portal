@@ -14,6 +14,7 @@ import com.liferay.jethr0.job.dalo.JobToBuildsEntityRelationshipDALO;
 import com.liferay.jethr0.util.StringUtil;
 
 import java.util.Date;
+import java.util.Set;
 
 import org.json.JSONObject;
 
@@ -26,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class JobEntityRepository extends BaseEntityRepository<JobEntity> {
 
-	public JobEntity add(
+	public JobEntity create(
 		String name, int priority, Date startDate, JobEntity.State state,
 		JobEntity.Type type) {
 
@@ -36,15 +37,23 @@ public class JobEntityRepository extends BaseEntityRepository<JobEntity> {
 			"name", name
 		).put(
 			"priority", priority
-		).put(
-			"startDate", StringUtil.toString(startDate)
-		).put(
+		);
+
+		if (startDate != null) {
+			jsonObject.put("startDate", StringUtil.toString(startDate));
+		}
+
+		if (state == null) {
+			state = JobEntity.State.OPENED;
+		}
+
+		jsonObject.put(
 			"state", state.getJSONObject()
 		).put(
 			"type", type.getJSONObject()
 		);
 
-		return add(jsonObject);
+		return create(jsonObject);
 	}
 
 	@Override
@@ -64,6 +73,10 @@ public class JobEntityRepository extends BaseEntityRepository<JobEntity> {
 		return add(jobEntity);
 	}
 
+	public Set<JobEntity> getByState(JobEntity.State... states) {
+		return addAll(_jobEntityDALO.getJobsByState(states));
+	}
+
 	@Override
 	public JobEntityDALO getEntityDALO() {
 		return _jobEntityDALO;
@@ -71,9 +84,6 @@ public class JobEntityRepository extends BaseEntityRepository<JobEntity> {
 
 	@Override
 	public void initialize() {
-		addAll(
-			_jobEntityDALO.getJobsByState(
-				JobEntity.State.QUEUED, JobEntity.State.RUNNING));
 	}
 
 	@Override

@@ -33,6 +33,7 @@ import com.liferay.info.item.creator.InfoItemCreator;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.info.item.updater.InfoItemFieldValuesUpdater;
+import com.liferay.info.type.WebURL;
 import com.liferay.layout.constants.LayoutWebKeys;
 import com.liferay.layout.provider.LayoutStructureProvider;
 import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
@@ -70,6 +71,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.text.SimpleDateFormat;
 
@@ -183,6 +185,10 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 			InfoItemIdentifier infoItemIdentifier = _getInfoItemIdentifier(
 				httpServletRequest);
 
+			int status = ParamUtil.getInteger(
+				httpServletRequest, "status",
+				WorkflowConstants.STATUS_APPROVED);
+
 			if ((infoItemIdentifier != null) &&
 				FeatureFlagManagerUtil.isEnabled("LPS-183727")) {
 
@@ -207,7 +213,8 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 							new ArrayList<>(infoFieldValues.values())
 						).infoItemReference(
 							new InfoItemReference(className, 0)
-						).build());
+						).build(),
+						status);
 			}
 			else {
 				InfoItemCreator<Object> infoItemCreator =
@@ -225,7 +232,8 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 						new ArrayList<>(infoFieldValues.values())
 					).infoItemReference(
 						new InfoItemReference(className, 0)
-					).build());
+					).build(),
+					status);
 			}
 
 			String displayPageURL = _getDisplayPageURL(
@@ -271,28 +279,15 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 				_log.debug(infoFormValidationException);
 			}
 
-			if (FeatureFlagManagerUtil.isEnabled("LPS-182728")) {
-				SessionErrors.add(
-					httpServletRequest,
-					String.valueOf(
-						infoFormValidationException.getFragmentEntryLinkId()),
-					infoFormValidationException);
-			}
-			else {
-				SessionErrors.add(
-					httpServletRequest, formItemId,
-					infoFormValidationException);
-			}
+			SessionErrors.add(
+				httpServletRequest,
+				String.valueOf(
+					infoFormValidationException.getFragmentEntryLinkId()),
+				infoFormValidationException);
 		}
 		catch (InfoFormValidationException infoFormValidationException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(infoFormValidationException);
-			}
-
-			if (!FeatureFlagManagerUtil.isEnabled("LPS-182728")) {
-				SessionErrors.add(
-					httpServletRequest, formItemId,
-					infoFormValidationException);
 			}
 
 			boolean hasInfoFormValidationExceptionCustomValidationErrors =
@@ -331,9 +326,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 				}
 			}
 
-			if (!FeatureFlagManagerUtil.isEnabled("LPS-182728") ||
-				!hasInfoFormValidationExceptionCustomValidationErrors) {
-
+			if (!hasInfoFormValidationExceptionCustomValidationErrors) {
 				SessionErrors.add(
 					httpServletRequest, formItemId,
 					infoFormValidationException);
@@ -427,52 +420,46 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 	}
 
 	private FragmentEntryLink _getCaptchaFragmentEntryLink(
-			String itemId, LayoutStructure layoutStructure)
+			String formItemId, LayoutStructure layoutStructure)
 		throws InfoFormException {
 
-		LayoutStructureItem layoutStructureItem =
-			layoutStructure.getLayoutStructureItem(itemId);
+		for (String itemId :
+				LayoutStructureItemUtil.getChildrenItemIds(
+					formItemId, layoutStructure)) {
 
-		if (layoutStructureItem == null) {
-			throw new InfoFormException();
-		}
+			LayoutStructureItem layoutStructureItem =
+				layoutStructure.getLayoutStructureItem(itemId);
 
-		if (layoutStructureItem instanceof FragmentStyledLayoutStructureItem) {
+			if (!(layoutStructureItem instanceof
+					FragmentStyledLayoutStructureItem)) {
+
+				continue;
+			}
+
 			FragmentStyledLayoutStructureItem
 				fragmentStyledLayoutStructureItem =
 					(FragmentStyledLayoutStructureItem)layoutStructureItem;
 
-			if (fragmentStyledLayoutStructureItem.getFragmentEntryLinkId() <=
-					0) {
+			long fragmentEntryLinkId =
+				fragmentStyledLayoutStructureItem.getFragmentEntryLinkId();
 
-				throw new InfoFormException();
+			if (fragmentEntryLinkId <= 0) {
+				continue;
 			}
 
 			FragmentEntryLink fragmentEntryLink =
 				_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
-					fragmentStyledLayoutStructureItem.getFragmentEntryLinkId());
+					fragmentEntryLinkId);
 
-			if (fragmentEntryLink == null) {
-				throw new InfoFormException();
+			if (!fragmentEntryLink.isTypeInput()) {
+				continue;
 			}
 
-			if (fragmentEntryLink.isTypeInput() &&
-				_isCaptchaFragmentEntry(
+			if (_isCaptchaFragmentEntry(
 					fragmentEntryLink.getFragmentEntryId(),
 					fragmentEntryLink.getRendererKey())) {
 
 				return fragmentEntryLink;
-			}
-		}
-
-		List<String> childrenItemIds = layoutStructureItem.getChildrenItemIds();
-
-		for (String childItemId : childrenItemIds) {
-			FragmentEntryLink captchaFragmentEntryLink =
-				_getCaptchaFragmentEntryLink(childItemId, layoutStructure);
-
-			if (captchaFragmentEntryLink != null) {
-				return captchaFragmentEntryLink;
 			}
 		}
 
@@ -508,8 +495,15 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 				(ThemeDisplay)httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
 
-			return GetterUtil.getString(
-				infoFieldValue.getValue(themeDisplay.getLocale()));
+			Object value = infoFieldValue.getValue(themeDisplay.getLocale());
+
+			if (value instanceof WebURL) {
+				WebURL webURL = (WebURL)value;
+
+				return webURL.getURL();
+			}
+
+			return GetterUtil.getString(value);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {

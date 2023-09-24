@@ -635,6 +635,14 @@ public class LayoutsAdminDisplayContext {
 
 		Layout selLayout = getSelLayout();
 
+		if (selLayout.isTypeAssetDisplay() &&
+			FeatureFlagManagerUtil.isEnabled("LPS-195205")) {
+
+			friendlyURLBase.append("/e");
+
+			return friendlyURLBase.toString();
+		}
+
 		LayoutSet layoutSet = selLayout.getLayoutSet();
 
 		TreeMap<String, String> virtualHostnames =
@@ -1656,8 +1664,11 @@ public class LayoutsAdminDisplayContext {
 		}
 
 		try {
-			layoutFullURL = HttpComponentsUtil.setParameter(
-				layoutFullURL, "p_l_back_url", _getBackURL());
+			PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
+			layoutFullURL = HttpComponentsUtil.addParameters(
+				layoutFullURL, "p_l_back_url", _getBackURL(),
+				"p_l_back_url_title", portletDisplay.getTitle());
 		}
 		catch (Exception exception) {
 			_log.error(
@@ -2292,7 +2303,7 @@ public class LayoutsAdminDisplayContext {
 		return HttpComponentsUtil.addParameters(
 			PortalUtil.getLayoutFullURL(getDraftLayout(layout), themeDisplay),
 			"p_l_back_url", _getBackURL(), "p_l_back_url_title",
-			portletDisplay.getTitle(), "p_l_mode", Constants.EDIT);
+			portletDisplay.getPortletDisplayName(), "p_l_mode", Constants.EDIT);
 	}
 
 	private String _getFriendlyURLWarningURL() {

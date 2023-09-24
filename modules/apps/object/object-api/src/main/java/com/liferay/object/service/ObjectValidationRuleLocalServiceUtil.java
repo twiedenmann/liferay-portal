@@ -40,14 +40,14 @@ public class ObjectValidationRuleLocalServiceUtil {
 			long userId, long objectDefinitionId, boolean active, String engine,
 			Map<java.util.Locale, String> errorLabelMap,
 			Map<java.util.Locale, String> nameMap, String outputType,
-			String script,
+			String script, boolean system,
 			List<com.liferay.object.model.ObjectValidationRuleSetting>
 				objectValidationRuleSettings)
 		throws PortalException {
 
 		return getService().addObjectValidationRule(
 			userId, objectDefinitionId, active, engine, errorLabelMap, nameMap,
-			outputType, script, objectValidationRuleSettings);
+			outputType, script, system, objectValidationRuleSettings);
 	}
 
 	/**
@@ -115,9 +115,11 @@ public class ObjectValidationRuleLocalServiceUtil {
 	 *
 	 * @param objectValidationRule the object validation rule
 	 * @return the object validation rule that was removed
+	 * @throws PortalException
 	 */
 	public static ObjectValidationRule deleteObjectValidationRule(
-		ObjectValidationRule objectValidationRule) {
+			ObjectValidationRule objectValidationRule)
+		throws PortalException {
 
 		return getService().deleteObjectValidationRule(objectValidationRule);
 	}

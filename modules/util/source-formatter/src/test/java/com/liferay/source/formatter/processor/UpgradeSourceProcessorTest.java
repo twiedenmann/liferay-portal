@@ -24,6 +24,13 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testJSONUpgradeLiferayThemePackageJSONCheck() throws Exception {
+		test(
+			"upgrade/json-upgrade-liferay-theme-package-json-check/package." +
+				"testjson");
+	}
+
+	@Test
 	public void testPropertiesUpgradeLiferayPluginPackageFileCheck()
 		throws Exception {
 
@@ -116,6 +123,18 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		throws Exception {
 
 		test("upgrade/UpgradeJavaAssetEntryAssetCategoriesCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaBasePanelAppExtendedClassesCheck()
+		throws Exception {
+
+		test("upgrade/UpgradeJavaBasePanelAppExtendedClassesCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaCaptchaUtilCheck() throws Exception {
+		test("upgrade/UpgradeJavaCaptchaUtilCheck.testjava");
 	}
 
 	@Test
@@ -349,6 +368,21 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testUpgradeSCSSImportsCheck() throws Exception {
 		test("upgrade/UpgradeSCSSImportsCheck.testscss");
+	}
+
+	@Test
+	public void testUpgradeSCSSMixinsCheck() throws Exception {
+		test(
+			"upgrade/UpgradeSCSSMixinsCheck.testscss",
+			StringBundler.concat(
+				"Do not use 'media-query' mixing, replace with its equivalent ",
+				"(e.g., media-breakpoint-up, media-breakpoint-only, ",
+				"media-breakpoint-down, etc.), see LPS-194507."));
+	}
+
+	@Test
+	public void testUpgradeSCSSNodeSassPatternsCheck() throws Exception {
+		test("upgrade/UpgradeSCSSNodeSassPatternsCheck.testscss");
 	}
 
 	@Test

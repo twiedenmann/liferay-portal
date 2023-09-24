@@ -159,6 +159,36 @@ public class ObjectEntryHelper {
 	}
 
 	public ObjectEntry getObjectEntry(
+			long companyId, List<String> nestedFields,
+			String objectDefinitionExternalReferenceCode,
+			String objetEntryExternalReferenceCode, String scopeKey)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.
+				fetchObjectDefinitionByExternalReferenceCode(
+					objectDefinitionExternalReferenceCode, companyId);
+
+		if (objectDefinition == null) {
+			return null;
+		}
+
+		return _withNestedFields(
+			nestedFields,
+			() -> {
+				PermissionThreadLocal.setPermissionChecker(
+					_permissionCheckerFactory.create(
+						_userLocalService.getUser(
+							objectDefinition.getUserId())));
+
+				return _objectEntryManager.getObjectEntry(
+					companyId, _getDefaultDTOConverterContext(objectDefinition),
+					objetEntryExternalReferenceCode, objectDefinition,
+					scopeKey);
+			});
+	}
+
+	public ObjectEntry getObjectEntry(
 			long companyId, String filterString,
 			String objectDefinitionExternalReferenceCode)
 		throws Exception {

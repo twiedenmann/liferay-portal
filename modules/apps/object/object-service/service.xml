@@ -773,6 +773,7 @@
 		<column localized="true" name="name" type="String" />
 		<column name="outputType" type="String" />
 		<column name="script" type="String" />
+		<column name="system" type="boolean" />
 
 		<!-- Finder methods -->
 
@@ -975,6 +976,7 @@
 		<exception>ObjectDefinitionRootObjectDefinitionId</exception>
 		<exception>ObjectDefinitionScope</exception>
 		<exception>ObjectDefinitionStatus</exception>
+		<exception>ObjectDefinitionSystem</exception>
 		<exception>ObjectDefinitionVersion</exception>
 		<exception>ObjectEntryCount</exception>
 		<exception>ObjectEntryValues</exception>
@@ -1008,6 +1010,7 @@
 		<exception>ObjectValidationRuleScript</exception>
 		<exception>ObjectValidationRuleSettingName</exception>
 		<exception>ObjectValidationRuleSettingValue</exception>
+		<exception>ObjectValidationRuleSystem</exception>
 		<exception>ObjectViewColumnFieldName</exception>
 		<exception>ObjectViewFilterColumn</exception>
 		<exception>ObjectViewSortColumn</exception>

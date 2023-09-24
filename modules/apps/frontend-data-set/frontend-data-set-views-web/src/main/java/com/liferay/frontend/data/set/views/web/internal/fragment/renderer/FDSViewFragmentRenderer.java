@@ -57,10 +57,12 @@ import java.io.Writer;
 
 import java.sql.Timestamp;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -173,12 +175,35 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 			if ((fdsViewObjectEntry == null) &&
 				fragmentRendererContext.isEditMode()) {
 
+				printWriter.write("<div class=\"portlet-msg-info\">");
+				printWriter.write("<ul class=\"navbar-nav\">");
+				printWriter.write("<li class=\"nav-item\">");
 				printWriter.write(
-					StringBundler.concat(
-						"<div class=\"portlet-msg-info\">",
-						_language.get(
-							httpServletRequest, "select-a-data-set-view"),
-						"</div>"));
+					_language.get(
+						httpServletRequest, "select-a-data-set-view"));
+				printWriter.write("</li><li class=\"nav-item\"><div id=\"");
+
+				String betaBadgeComponentId =
+					fragmentRendererContext.getFragmentElementId() + "Beta";
+
+				printWriter.write(betaBadgeComponentId);
+
+				printWriter.write("\">");
+
+				Writer writer = new CharArrayWriter();
+
+				ComponentDescriptor componentDescriptor =
+					new ComponentDescriptor(
+						"{BetaBadge} from frontend-js-components-web",
+						betaBadgeComponentId, null, true);
+
+				_reactRenderer.renderReact(
+					componentDescriptor, new HashMap<>(), httpServletRequest,
+					writer);
+
+				printWriter.write(writer.toString());
+
+				printWriter.write("</div></li></ul></div>");
 			}
 
 			if (fdsViewObjectEntry == null) {
@@ -187,7 +212,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 
 			printWriter.write(
 				_buildFragmentHTML(
-					fdsViewObjectEntry, fdsViewObjectDefinition,
+					fdsViewObjectDefinition, fdsViewObjectEntry,
 					fragmentRendererContext, httpServletRequest));
 		}
 		catch (Exception exception) {
@@ -198,8 +223,8 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 	}
 
 	private String _buildFragmentHTML(
-			ObjectEntry fdsViewObjectEntry,
 			ObjectDefinition fdsViewObjectDefinition,
+			ObjectEntry fdsViewObjectEntry,
 			FragmentRendererContext fragmentRendererContext,
 			HttpServletRequest httpServletRequest)
 		throws Exception {
@@ -246,9 +271,16 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 			).put(
 				"id", "FDS_" + fragmentRendererContext.getFragmentElementId()
 			).put(
+				"itemsActions",
+				_getItemsActionsJSONArray(
+					fdsViewObjectDefinition, fdsViewObjectEntry)
+			).put(
 				"namespace", fragmentRendererContext.getFragmentElementId()
 			).put(
 				"pagination", _getPaginationJSONObject(fdsViewObjectEntry)
+			).put(
+				"sorts",
+				_getSortsJSONArray(fdsViewObjectDefinition, fdsViewObjectEntry)
 			).put(
 				"style", "fluid"
 			).put(
@@ -398,6 +430,10 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 		fdsFilterObjectEntries.addAll(
 			_getRelatedObjectEntries(
 				fdsViewObjectDefinition, fdsViewObjectEntry,
+				"fdsViewFDSClientExtensionFilter"));
+		fdsFilterObjectEntries.addAll(
+			_getRelatedObjectEntries(
+				fdsViewObjectDefinition, fdsViewObjectEntry,
 				"fdsViewFDSDateFilterRelationship"));
 		fdsFilterObjectEntries.addAll(
 			_getRelatedObjectEntries(
@@ -485,6 +521,56 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 				}
 
 				return null;
+			});
+	}
+
+	private JSONArray _getItemsActionsJSONArray(
+			ObjectDefinition fdsViewObjectDefinition,
+			ObjectEntry fdsViewObjectEntry)
+		throws Exception {
+
+		Set<ObjectEntry> fdsActionObjectEntries = new TreeSet<>(
+			new ObjectEntryComparator(
+				ListUtil.toList(
+					ListUtil.fromString(
+						MapUtil.getString(
+							fdsViewObjectEntry.getProperties(),
+							"fdsActionsOrder"),
+						StringPool.COMMA),
+					Long::parseLong)));
+
+		fdsActionObjectEntries.addAll(
+			_getRelatedObjectEntries(
+				fdsViewObjectDefinition, fdsViewObjectEntry,
+				"fdsViewFDSActionRelationship"));
+
+		return JSONUtil.toJSONArray(
+			fdsActionObjectEntries,
+			(ObjectEntry fdsActionObjectEntry) -> {
+				Map<String, Object> properties =
+					fdsActionObjectEntry.getProperties();
+
+				return JSONUtil.put(
+					"data",
+					JSONUtil.put(
+						"confirmationMessage",
+						properties.get("confirmationMessage")
+					).put(
+						"permissionKey", properties.get("permissionKey")
+					).put(
+						"status", properties.get("confirmationMessageType")
+					).put(
+						"title", properties.get("label")
+					)
+				).put(
+					"href", properties.get("url")
+				).put(
+					"icon", properties.get("icon")
+				).put(
+					"label", properties.get("label")
+				).put(
+					"target", properties.get("type")
+				);
 			});
 	}
 
@@ -579,6 +665,37 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 		}
 
 		return jsonArray;
+	}
+
+	private JSONArray _getSortsJSONArray(
+			ObjectDefinition fdsViewObjectDefinition,
+			ObjectEntry fdsViewObjectEntry)
+		throws Exception {
+
+		List<ObjectEntry> fdsSortingObjectEntries = new ArrayList<>(
+			_getRelatedObjectEntries(
+				fdsViewObjectDefinition, fdsViewObjectEntry,
+				"fdsViewFDSSortRelationship"));
+
+		if (ListUtil.isEmpty(fdsSortingObjectEntries)) {
+			return _jsonFactory.createJSONArray();
+		}
+
+		return JSONUtil.toJSONArray(
+			fdsSortingObjectEntries,
+			(ObjectEntry fdsSortingObjectEntry) -> _getSortsJSONObject(
+				fdsSortingObjectEntry));
+	}
+
+	private JSONObject _getSortsJSONObject(ObjectEntry fdsSortingObjectEntry) {
+		Map<String, Object> fdsSortingProperties =
+			fdsSortingObjectEntry.getProperties();
+
+		return JSONUtil.put(
+			"direction", fdsSortingProperties.get("sortingDirection")
+		).put(
+			"key", fdsSortingProperties.get("fieldName")
+		);
 	}
 
 	private String _interpolateURL(

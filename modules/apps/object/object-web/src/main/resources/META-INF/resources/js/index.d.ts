@@ -90,6 +90,7 @@ interface ModelBuilderModals
 	> {
 	addObjectRelationship: boolean;
 	editObjectDefinitionExternalReferenceCode: boolean;
+	publishObjectDefinitions: boolean;
 	redirectToEditObjectDefinitionDetails: boolean;
 }
 
@@ -405,6 +406,7 @@ interface ObjectValidation {
 	}[];
 	outputType?: string;
 	script: string;
+	system?: boolean;
 }
 
 type ObjectValidationType = {

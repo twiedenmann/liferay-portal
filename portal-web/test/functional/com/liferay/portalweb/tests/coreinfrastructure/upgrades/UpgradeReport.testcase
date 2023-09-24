@@ -10,6 +10,7 @@ definition {
 	property portal.version = "7.4.13";
 	property skip.start.app.server = "true";
 	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
 	property testcase.url = "http://www.example.com";
 	property testray.main.component.name = "Database Upgrade Tool";
 	property upgrade.reports.enabled = "true";
@@ -118,7 +119,7 @@ definition {
 				fail("Upgrade report does not contain the error class name.");
 			}
 
-			if (!(contains(${upgradeReportContent}, "1 occurrences of the following event: Unknown column 'servletContextName' in 'where clause'"))) {
+			if (!(contains(${upgradeReportContent}, "1 occurrences of the following event: com.liferay.portal.kernel.upgrade.UpgradeException: java.sql.SQLSyntaxErrorException: Unknown column 'servletContextName' in 'where clause'"))) {
 				echo(${upgradeReportContent});
 
 				fail("Upgrade report does not contain the error message.");

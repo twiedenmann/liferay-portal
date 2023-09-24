@@ -93,14 +93,17 @@ export default function EditObjectValidation({
 		}
 		catch (error) {
 			const {detail, message} = error as ErrorDetails;
-			const {fieldName, message: detailMessage} = JSON.parse(
-				detail as string
-			) as {
-				fieldName: keyof ObjectValidationErrors;
-				message: string;
-			};
 
-			setErrorMessage({[fieldName]: detailMessage});
+			if (detail) {
+				const {fieldName, message: detailMessage} = JSON.parse(
+					detail as string
+				) as {
+					fieldName: keyof ObjectValidationErrors;
+					message: string;
+				};
+
+				setErrorMessage({[fieldName]: detailMessage});
+			}
 
 			openToast({message, type: 'danger'});
 		}
@@ -164,6 +167,8 @@ export default function EditObjectValidation({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectDefinitionId, objectValidationRuleId]);
 
+	const disabled = readOnly || !!values?.system;
+
 	return (
 		<SidePanelForm
 			onSubmit={handleSubmit}
@@ -192,7 +197,7 @@ export default function EditObjectValidation({
 							<Component
 								componentLabel={label}
 								creationLanguageId={creationLanguageId}
-								disabled={readOnly}
+								disabled={disabled}
 								errors={
 									Object.keys(errors).length !== 0
 										? errors

@@ -6,8 +6,13 @@
 package com.liferay.jethr0.job.controller;
 
 import com.liferay.jethr0.bui1d.BuildEntity;
+import com.liferay.jethr0.bui1d.queue.BuildQueue;
+import com.liferay.jethr0.bui1d.repository.BuildEntityRepository;
+import com.liferay.jethr0.bui1d.repository.BuildParameterEntityRepository;
 import com.liferay.jethr0.bui1d.run.BuildRunEntity;
+import com.liferay.jethr0.jenkins.JenkinsQueue;
 import com.liferay.jethr0.job.JobEntity;
+import com.liferay.jethr0.job.dalo.JobEntityDALO;
 import com.liferay.jethr0.job.queue.JobQueue;
 import com.liferay.jethr0.job.repository.JobEntityRepository;
 
@@ -23,6 +28,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,6 +39,39 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/jobs")
 @RestController
 public class JobRestController {
+
+	@PostMapping("/create")
+	public ResponseEntity<String> createJob(
+		@AuthenticationPrincipal Jwt jwt, @RequestBody String body) {
+
+		JobEntity jobEntity = _jobEntityRepository.create(new JSONObject(body));
+
+		for (JSONObject initialBuildJSONObject :
+				jobEntity.getInitialBuildJSONObjects()) {
+
+			BuildEntity buildEntity = _buildEntityRepository.create(
+				jobEntity, initialBuildJSONObject);
+
+			JSONArray buildParametersJSONArray =
+				initialBuildJSONObject.optJSONArray("buildParameters");
+
+			for (int i = 0; i < buildParametersJSONArray.length(); i++) {
+				JSONObject buildParameterJSONObject =
+					buildParametersJSONArray.getJSONObject(i);
+
+				_buildParameterEntityRepository.create(
+					buildEntity, buildParameterJSONObject);
+			}
+		}
+
+		if (jobEntity.getState() == JobEntity.State.QUEUED) {
+			_buildQueue.addJobEntity(jobEntity);
+
+			_jenkinsQueue.invoke();
+		}
+
+		return new ResponseEntity<>(jobEntity.toString(), HttpStatus.OK);
+	}
 
 	@GetMapping("/{id}")
 	public ResponseEntity<String> job(
@@ -125,6 +165,44 @@ public class JobRestController {
 
 		return new ResponseEntity<>(jobsJSONArray.toString(), HttpStatus.OK);
 	}
+
+	@GetMapping
+	public ResponseEntity<String> jobs(@AuthenticationPrincipal Jwt jwt) {
+		JSONArray jobsJSONArray = new JSONArray();
+
+		for (JobEntity jobEntity : _jobEntityDALO.getAll()) {
+			jobsJSONArray.put(jobEntity.getJSONObject());
+		}
+
+		return new ResponseEntity<>(jobsJSONArray.toString(), HttpStatus.OK);
+	}
+
+	@GetMapping("/types")
+	public ResponseEntity<String> jobTypes(@AuthenticationPrincipal Jwt jwt) {
+		JSONArray jobTypesJSONArray = new JSONArray();
+
+		for (JobEntity.Type type : JobEntity.Type.values()) {
+			jobTypesJSONArray.put(type.getJSONObject());
+		}
+
+		return new ResponseEntity<>(
+			jobTypesJSONArray.toString(), HttpStatus.OK);
+	}
+
+	@Autowired
+	private BuildEntityRepository _buildEntityRepository;
+
+	@Autowired
+	private BuildParameterEntityRepository _buildParameterEntityRepository;
+
+	@Autowired
+	private BuildQueue _buildQueue;
+
+	@Autowired
+	private JenkinsQueue _jenkinsQueue;
+
+	@Autowired
+	private JobEntityDALO _jobEntityDALO;
 
 	@Autowired
 	private JobEntityRepository _jobEntityRepository;

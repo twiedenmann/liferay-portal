@@ -40,32 +40,27 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 				%>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand"
 					name="title"
 				>
-					<clay:content-row>
-						<clay:content-col>
-							<clay:sticker
-								cssClass="sticker-secondary"
-								icon="folder"
-							/>
-						</clay:content-col>
+					<clay:sticker
+						cssClass="sticker-secondary"
+						icon="folder"
+					/>
 
-						<clay:content-col
-							expand="<%= true %>"
-						>
-							<liferay-portlet:renderURL varImpl="rowURL">
-								<portlet:param name="mvcPath" value="/admin/view_kb_folders.jsp" />
-								<portlet:param name="redirect" value="<%= currentURL %>" />
-								<portlet:param name="parentResourceClassNameId" value="<%= String.valueOf(kbFolder.getClassNameId()) %>" />
-								<portlet:param name="parentResourcePrimKey" value="<%= String.valueOf(kbFolder.getKbFolderId()) %>" />
-								<portlet:param name="selectedItemId" value="<%= String.valueOf(kbFolder.getKbFolderId()) %>" />
-							</liferay-portlet:renderURL>
+					<liferay-portlet:renderURL varImpl="rowURL">
+						<portlet:param name="mvcPath" value="/admin/view_kb_folders.jsp" />
+						<portlet:param name="redirect" value="<%= currentURL %>" />
+						<portlet:param name="parentResourceClassNameId" value="<%= String.valueOf(kbFolder.getClassNameId()) %>" />
+						<portlet:param name="parentResourcePrimKey" value="<%= String.valueOf(kbFolder.getKbFolderId()) %>" />
+						<portlet:param name="selectedItemId" value="<%= String.valueOf(kbFolder.getKbFolderId()) %>" />
+					</liferay-portlet:renderURL>
 
-							<aui:a href="<%= rowURL.toString() %>">
-								<%= HtmlUtil.escape(kbFolder.getName()) %>
-							</aui:a>
-						</clay:content-col>
-					</clay:content-row>
+					<clay:link
+						aria-label="<%= HtmlUtil.escape(kbFolder.getName()) %>"
+						href="<%= rowURL.toString() %>"
+						label="<%= HtmlUtil.escape(kbFolder.getName()) %>"
+					/>
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
@@ -103,6 +98,7 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-minw-150"
 					name="status"
 					value="--"
 				/>
@@ -136,29 +132,23 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 				%>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand"
 					name="title"
 				>
-					<clay:content-row>
-						<clay:content-col>
-							<clay:sticker
-								cssClass="sticker-secondary"
-								icon="document-text"
-							/>
-						</clay:content-col>
+					<clay:sticker
+						cssClass="sticker-secondary"
+						icon="document-text"
+					/>
 
-						<clay:content-col
-							expand="<%= true %>"
-						>
+					<%
+					PortletURL viewURL = kbArticleURLHelper.createViewWithRedirectURL(kbArticle, currentURL);
+					%>
 
-							<%
-							PortletURL viewURL = kbArticleURLHelper.createViewWithRedirectURL(kbArticle, currentURL);
-							%>
-
-							<aui:a href="<%= viewURL.toString() %>">
-								<%= HtmlUtil.escape(kbArticle.getTitle()) %>
-							</aui:a>
-						</clay:content-col>
-					</clay:content-row>
+					<clay:link
+						aria-label="<%= HtmlUtil.escape(kbArticle.getTitle()) %>"
+						href="<%= viewURL.toString() %>"
+						label="<%= HtmlUtil.escape(kbArticle.getTitle()) %>"
+					/>
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
@@ -191,6 +181,7 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-minw-150"
 					name="status"
 				>
 					<c:choose>

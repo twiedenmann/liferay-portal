@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
@@ -236,10 +237,11 @@ public class APIEndpointRelevantObjectEntryModelListener
 	}
 
 	private void _validateSingleElementPath(
-			ObjectEntry objectEntry, String pathParameter, String pathString)
+			ObjectEntry objectEntry, String pathParameterString,
+			String pathString)
 		throws Exception {
 
-		if (pathParameter == null) {
+		if (Validator.isNull(pathParameterString)) {
 			throw new ObjectEntryValuesException.InvalidObjectField(
 				null,
 				"Path parameter cannot be null in a single element endpoint",
@@ -258,32 +260,36 @@ public class APIEndpointRelevantObjectEntryModelListener
 				"x-must-start-with-the-x-character");
 		}
 
-		Matcher individualMatcher = _individualPathPattern.matcher(pathString);
-
-		Matcher leftForwardMatcher = _leftSlashForwardPattern.matcher(
+		Matcher singleElementPathMatcher = _singleElementPathPattern.matcher(
 			pathString);
 
-		Matcher rightForwardMatcher = _rightSlashForwardPattern.matcher(
-			pathString);
-
-		if ((leftForwardMatcher.matches() || rightForwardMatcher.matches()) &&
-			!individualMatcher.matches()) {
-
+		if (!singleElementPathMatcher.matches()) {
 			throw new ObjectEntryValuesException.InvalidObjectField(
 				Arrays.asList(objectField.getLabel(user.getLocale())),
 				"%s can have a maximum of 255 alphanumeric characters",
 				"x-can-have-a-maximum-of-255-alphanumeric-characters");
 		}
+
+		String pathInParameterString = StringUtil.extractLast(
+			pathString, StringPool.FORWARD_SLASH);
+
+		Matcher curlyBraceMatcher = _curlyBracePattern.matcher(
+			pathInParameterString);
+
+		if (!curlyBraceMatcher.matches()) {
+			throw new ObjectEntryValuesException.InvalidObjectField(
+				Arrays.asList(objectField.getLabel(user.getLocale())),
+				"%s must contain a path parameter between curly braces",
+				"x-must-contain-a-path-parameter-between-curly-braces");
+		}
 	}
 
-	private static final Pattern _individualPathPattern = Pattern.compile(
-		"/[a-zA-Z0-9][a-zA-Z0-9-/-{-}]{1,253}");
-	private static final Pattern _leftSlashForwardPattern = Pattern.compile(
-		".*[{].");
+	private static final Pattern _curlyBracePattern = Pattern.compile(
+		"^\\{[a-zA-Z0-9]+\\}$");
 	private static final Pattern _pathPattern = Pattern.compile(
 		"/[a-zA-Z0-9][a-zA-Z0-9-/]{1,253}");
-	private static final Pattern _rightSlashForwardPattern = Pattern.compile(
-		".*[}].");
+	private static final Pattern _singleElementPathPattern = Pattern.compile(
+		"/[a-zA-Z0-9][a-zA-Z0-9-/-{\\-}]{1,253}");
 
 	@Reference(
 		target = "(filter.factory.key=" + ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT + ")"

@@ -9,6 +9,7 @@ import ClayModal, {useModal} from '@clayui/modal';
 import classNames from 'classnames';
 import {useCallback, useEffect, useState} from 'react';
 
+import appPlaceholder from '../../assets/images/app_placeholder.png';
 import {getCompanyId} from '../../liferay/constants';
 import {Liferay} from '../../liferay/liferay';
 import {
@@ -302,7 +303,7 @@ export function GetAppModal({handleClose}: GetAppModalProps) {
 							}
 						);
 
-						if (attachmentsCustomField[0] === 'Yes') {
+						if (attachmentsCustomField[0].toLowerCase() === 'yes') {
 							return currentAttachment;
 						}
 						else {
@@ -481,7 +482,13 @@ export function GetAppModal({handleClose}: GetAppModalProps) {
 
 		return;
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [enablePurchaseButton, freeApp, selectedAccount, showSelectAccount]);
+	}, [
+		enablePurchaseButton,
+		freeApp,
+		selectedAccount,
+		showSelectAccount,
+		thumbnail,
+	]);
 
 	const getButtonText = () => {
 		if (!freeApp) {
@@ -567,10 +574,19 @@ export function GetAppModal({handleClose}: GetAppModalProps) {
 									<img
 										alt="App Image"
 										className="get-app-modal-body-content-image"
-										src={showAppImage(thumbnail).replace(
-											app.urlImage.split('/o')[0],
-											baseURL
-										)}
+										src={
+											showAppImage(thumbnail) ===
+											appPlaceholder
+												? appPlaceholder
+												: showAppImage(
+														thumbnail
+												  ).replace(
+														app.urlImage.split(
+															'/o'
+														)[0],
+														baseURL
+												  )
+										}
 									/>
 
 									<div className="get-app-modal-body-content-app-info-container">

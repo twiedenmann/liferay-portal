@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import React from 'react';
+import React, {FocusEventHandler} from 'react';
 import './InputLocalized.scss';
 interface InputLocalizedProps {
 	className?: string;
@@ -13,6 +13,7 @@ interface InputLocalizedProps {
 	id?: string;
 	label: string;
 	name?: string;
+	onBlur?: FocusEventHandler<HTMLInputElement>;
 	onChange: (
 		value: Liferay.Language.LocalizedValue<string>,
 		locale: InputLocale
@@ -22,6 +23,7 @@ interface InputLocalizedProps {
 	required?: boolean;
 	resultFormatter?: (value: string) => React.ReactNode;
 	selectedLocale?: Liferay.Language.Locale;
+	tooltip?: string;
 	translations: Liferay.Language.LocalizedValue<string>;
 }
 interface InputLocale {
@@ -35,12 +37,14 @@ export default function InputLocalized({
 	id,
 	label,
 	name,
+	onBlur,
 	onChange,
 	onSelectedLocaleChange,
 	placeholder,
 	required,
 	resultFormatter,
 	selectedLocale,
+	tooltip,
 	translations,
 	...otherProps
 }: InputLocalizedProps): JSX.Element;

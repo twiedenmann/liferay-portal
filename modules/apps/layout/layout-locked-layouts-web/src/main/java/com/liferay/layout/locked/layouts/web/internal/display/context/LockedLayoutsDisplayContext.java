@@ -7,8 +7,10 @@ package com.liferay.layout.locked.layouts.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.layout.constants.LockedLayoutType;
 import com.liferay.layout.manager.LayoutLockManager;
 import com.liferay.layout.model.LockedLayout;
+import com.liferay.layout.model.LockedLayoutOrder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -30,6 +32,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Lourdes Fernández Besada
@@ -103,9 +106,55 @@ public class LockedLayoutsDisplayContext {
 		).build();
 	}
 
+	public LockedLayoutOrder getLockedLayoutOrder() {
+		if (_lockedLayoutOrder != null) {
+			return _lockedLayoutOrder;
+		}
+
+		_lockedLayoutOrder = new LockedLayoutOrder(
+			Objects.equals(getOrderByType(), "desc"), _themeDisplay.getLocale(),
+			LockedLayoutOrder.LockedLayoutOrderType.create(getOrderByCol()));
+
+		return _lockedLayoutOrder;
+	}
+
+	public LockedLayoutType getLockedLayoutType() {
+		if (_lockedLayoutType != null) {
+			return _lockedLayoutType;
+		}
+
+		_lockedLayoutType = LockedLayoutType.create(
+			ParamUtil.getString(_liferayPortletRequest, "type"));
+
+		return _lockedLayoutType;
+	}
+
 	public String getName(LockedLayout lockedLayout) {
 		return LocalizationUtil.getLocalization(
 			lockedLayout.getName(), _themeDisplay.getLanguageId());
+	}
+
+	public String getOrderByCol() {
+		if (_orderByCol != null) {
+			return _orderByCol;
+		}
+
+		_orderByCol = ParamUtil.getString(
+			_liferayPortletRequest, "orderByCol",
+			LockedLayoutOrder.LockedLayoutOrderType.LAST_AUTOSAVE.getValue());
+
+		return _orderByCol;
+	}
+
+	public String getOrderByType() {
+		if (_orderByType != null) {
+			return _orderByType;
+		}
+
+		_orderByType = ParamUtil.getString(
+			_liferayPortletRequest, "orderByType", "desc");
+
+		return _orderByType;
 	}
 
 	public SearchContainer<LockedLayout> getSearchContainer() {
@@ -170,7 +219,8 @@ public class LockedLayoutsDisplayContext {
 		}
 
 		_lockedLayouts = _layoutLockManager.getLockedLayouts(
-			_themeDisplay.getCompanyId(), _themeDisplay.getScopeGroupId());
+			_themeDisplay.getCompanyId(), _themeDisplay.getScopeGroupId(),
+			getLockedLayoutOrder(), getLockedLayoutType());
 
 		return _lockedLayouts;
 	}
@@ -196,7 +246,11 @@ public class LockedLayoutsDisplayContext {
 	private final LayoutLockManager _layoutLockManager;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
+	private LockedLayoutOrder _lockedLayoutOrder;
 	private List<LockedLayout> _lockedLayouts;
+	private LockedLayoutType _lockedLayoutType;
+	private String _orderByCol;
+	private String _orderByType;
 	private SearchContainer<LockedLayout> _searchContainer;
 	private final ThemeDisplay _themeDisplay;
 

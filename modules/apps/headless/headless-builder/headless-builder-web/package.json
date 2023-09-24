@@ -13,6 +13,7 @@
 		"@clayui/management-toolbar": "3.93.0",
 		"@clayui/modal": "3.104.0",
 		"@clayui/navigation-bar": "3.104.0",
+		"@clayui/panel": "3.104.0",
 		"@clayui/tabs": "3.104.0",
 		"@clayui/tooltip": "3.104.0",
 		"@liferay/frontend-data-set-web": "*",
@@ -27,5 +28,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "1.0.8"
+	"version": "1.0.10"
 }

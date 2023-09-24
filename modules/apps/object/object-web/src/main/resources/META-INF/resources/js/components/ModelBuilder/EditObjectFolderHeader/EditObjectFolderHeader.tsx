@@ -7,13 +7,12 @@ import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
+import {sub} from 'frontend-js-web';
 import React from 'react';
 
-import './EditObjectFolderHeader.scss';
-
-import {sub} from 'frontend-js-web';
-
 import {useObjectFolderContext} from '../ModelBuilderContext/objectFolderContext';
+
+import './EditObjectFolderHeader.scss';
 
 interface EditObjectFolderHeaderProps {
 	hasDraftObjectDefinitions: boolean;
@@ -138,6 +137,14 @@ export default function EditObjectFolderHeader({
 					<ClayButton
 						disabled={!hasDraftObjectDefinitions}
 						displayType="primary"
+						onClick={() => {
+							setShowModal(
+								(previousState: ModelBuilderModals) => ({
+									...previousState,
+									publishObjectDefinitions: true,
+								})
+							);
+						}}
 					>
 						{Liferay.Language.get('publish')}
 					</ClayButton>

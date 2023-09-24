@@ -5,10 +5,17 @@
  */
 --%>
 
-<%@ include file="/init.jsp" %>
+<%@ include file="/admin/common/init.jsp" %>
 
 <div>
 	<react:component
 		module="admin/js/components/ScheduleModal"
+		props='<%=
+			HashMapBuilder.<String, Object>put(
+				"displayDate", ParamUtil.getString(request, "displayDate")
+			).put(
+				"isScheduled", ParamUtil.getBoolean(request, "scheduled")
+			).build()
+		%>'
 	/>
 </div>

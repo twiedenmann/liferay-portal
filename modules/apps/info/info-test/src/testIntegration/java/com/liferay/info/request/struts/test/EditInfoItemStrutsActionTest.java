@@ -88,8 +88,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.upload.UploadPortletRequestImpl;
-import com.liferay.portal.upload.UploadServletRequestImpl;
+import com.liferay.portal.upload.test.util.UploadTestUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
@@ -242,7 +241,7 @@ public class EditInfoItemStrutsActionTest {
 			"999.9999999999999", null, null, null, null, null, null);
 	}
 
-	@FeatureFlags({"LPS-183727", "LPS-187754", "LPS-195205"})
+	@FeatureFlags({"LPS-183727", "LPS-195205"})
 	@Test
 	public void testAddInfoItemWithDisplayPageSuccessMessage()
 		throws Exception {
@@ -435,8 +434,8 @@ public class EditInfoItemStrutsActionTest {
 			).build();
 
 		UploadPortletRequest uploadPortletRequest =
-			new UploadPortletRequestImpl(
-				new UploadServletRequestImpl(
+			UploadTestUtil.createUploadPortletRequest(
+				UploadTestUtil.createUploadServletRequest(
 					mockMultipartHttpServletRequest, null, regularParameters),
 				null, RandomTestUtil.randomString());
 
@@ -469,8 +468,8 @@ public class EditInfoItemStrutsActionTest {
 
 		mockHttpServletResponse = new MockHttpServletResponse();
 
-		uploadPortletRequest = new UploadPortletRequestImpl(
-			new UploadServletRequestImpl(
+		uploadPortletRequest = UploadTestUtil.createUploadPortletRequest(
+			UploadTestUtil.createUploadServletRequest(
 				mockMultipartHttpServletRequest, null, regularParameters),
 			null, RandomTestUtil.randomString());
 
@@ -831,6 +830,9 @@ public class EditInfoItemStrutsActionTest {
 		MockMultipartHttpServletRequest mockMultipartHttpServletRequest =
 			new MockMultipartHttpServletRequest();
 
+		mockMultipartHttpServletRequest.setContentType(
+			"multipart/form-data;boundary=" + System.currentTimeMillis());
+
 		Map<String, FileItem[]> fileParameters = null;
 
 		if (attachmentValue != null) {
@@ -847,8 +849,8 @@ public class EditInfoItemStrutsActionTest {
 		mockMultipartHttpServletRequest.addHeader(
 			HttpHeaders.REFERER, "https://example.com/error");
 
-		return new UploadPortletRequestImpl(
-			new UploadServletRequestImpl(
+		return UploadTestUtil.createUploadPortletRequest(
+			UploadTestUtil.createUploadServletRequest(
 				mockMultipartHttpServletRequest, fileParameters,
 				HashMapBuilder.put(
 					"backURL",

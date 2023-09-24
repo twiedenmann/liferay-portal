@@ -8,11 +8,14 @@ import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {useModal} from '@clayui/modal';
 import ClayTable from '@clayui/table';
+import classNames from 'classnames';
 import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
 
 import SegmentsExperimentsContext from '../../../context.es';
+import {openPublishModal} from '../../../state/actions.es';
+import {DispatchContext} from '../../../state/context.es';
 import {SegmentsVariantType} from '../../../types.es';
 import {navigateToExperience} from '../../../util/navigation.es';
 import {indexToPercentageString} from '../../../util/percentages.es';
@@ -31,7 +34,7 @@ function ImprovementCell({control, improvement: initialImprovement}) {
 
 	if (control) {
 		return (
-			<ClayTable.Cell className="text-danger">
+			<ClayTable.Cell className="pr-0 text-danger">
 				{sub(Liferay.Language.get('x-loss'), 0).toLowerCase()}
 			</ClayTable.Cell>
 		);
@@ -39,7 +42,10 @@ function ImprovementCell({control, improvement: initialImprovement}) {
 
 	return (
 		<ClayTable.Cell
-			className={improvement > 0 ? 'text-success' : 'text-danger'}
+			className={classNames(
+				'pr-0',
+				improvement > 0 ? 'text-success' : 'text-danger'
+			)}
 		>
 			{sub(
 				improvement > 0
@@ -64,6 +70,7 @@ function VariantTable({
 		variantId: null,
 	});
 	const {editVariantLayoutURL} = useContext(SegmentsExperimentsContext);
+	const dispatch = useContext(DispatchContext);
 
 	const {observer, onClose} = useModal({
 		onClose: () => {
@@ -89,13 +96,25 @@ function VariantTable({
 						</ClayTable.Cell>
 
 						{showImprovement && (
-							<ClayTable.Cell headingCell>
+							<ClayTable.Cell className="pr-0" headingCell>
 								{Liferay.Language.get('improvement')}
 							</ClayTable.Cell>
 						)}
 
 						{experiment.status.value === STATUS_DRAFT && (
-							<ClayTable.Cell />
+							<ClayTable.Cell>
+								<span className="sr-only">
+									{Liferay.Language.get('traffic')}
+								</span>
+							</ClayTable.Cell>
+						)}
+
+						{publishable && (
+							<ClayTable.Cell>
+								<span className="sr-only">
+									{Liferay.Language.get('actions')}
+								</span>
+							</ClayTable.Cell>
 						)}
 					</ClayTable.Row>
 				</ClayTable.Head>
@@ -129,15 +148,15 @@ function VariantTable({
 											)
 										}
 									>
-										{winner && (
-											<ClayIcon
-												className="mr-1 text-success"
-												symbol="check-circle-full"
-											/>
-										)}
-
 										{control ? (
 											<span className="align-items-center d-flex">
+												{winner && (
+													<ClayIcon
+														className="mr-1 text-success"
+														symbol="check-circle-full"
+													/>
+												)}
+
 												{name}
 
 												<ClayIcon
@@ -247,6 +266,29 @@ function VariantTable({
 										className="text-secondary"
 									>
 										{indexToPercentageString(split)}
+									</ClayTable.Cell>
+								)}
+
+								{publishable && (
+									<ClayTable.Cell>
+										<ClayButton
+											borderless
+											data-title={Liferay.Language.get(
+												'publish'
+											)}
+											displayType="secondary"
+											onClick={() => {
+												dispatch(
+													openPublishModal({
+														experienceId: segmentsExperienceId,
+														experienceName: name,
+													})
+												);
+											}}
+											size="sm"
+										>
+											<ClayIcon symbol="arrow-right-full" />
+										</ClayButton>
 									</ClayTable.Cell>
 								)}
 							</ClayTable.Row>

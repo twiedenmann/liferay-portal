@@ -31,7 +31,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
  * @author Alberto Javier Moreno Lage
  */
 @DataGuard(scope = DataGuard.Scope.METHOD)
-@FeatureFlags({"LPS-167253", "LPS-184413", "LPS-186757"})
+@FeatureFlags({"LPS-167253", "LPS-178642"})
 public class APIFilterRelevantObjectEntryModelListenerTest
 	extends BaseTestCase {
 
@@ -171,7 +171,7 @@ public class APIFilterRelevantObjectEntryModelListenerTest
 				"status", "BAD_REQUEST"
 			).put(
 				"title",
-				"The API endpoint already has an associated API filter"
+				"The API endpoint already has an associated API filter."
 			).toString(),
 			HTTPTestUtil.invokeToJSONObject(
 				JSONUtil.put(

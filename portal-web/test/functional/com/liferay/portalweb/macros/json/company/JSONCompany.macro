@@ -100,10 +100,12 @@ definition {
 		}
 
 		if (!(isSet(creatorEmailAddress))) {
-			var creatorEmailAddress = JSONUtil2.getSuperAdminUserEmail();
+			var creatorEmailAddress = JSONUtil2.getDefaultUserEmail();
 		}
 
-		var creatorPassword = JSONUtil2.getSuperAdminUserPassword();
+		if (!(isSet(creatorPassword))) {
+			var creatorPassword = JSONUtil2.getDefaultUserPassword();
+		}
 
 		var curl = '''
 			${portalURL}/api/jsonws/company/get-company-by-virtual-host/virtual-host/${portalInstanceName} \

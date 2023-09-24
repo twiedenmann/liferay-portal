@@ -16,21 +16,20 @@ import {
 	IClientExtensionRenderer,
 	IInternalRenderer,
 	fetch,
-	navigate,
 	openModal,
 } from 'frontend-js-web';
 import fuzzy from 'fuzzy';
 import React, {useEffect, useRef, useState} from 'react';
 
 import {API_URL, FUZZY_OPTIONS, OBJECT_RELATIONSHIP} from '../Constants';
-import {IFDSViewSectionInterface} from '../FDSView';
+import {IFDSViewSectionProps} from '../FDSView';
 import {FDSViewType} from '../FDSViews';
 import {getFields} from '../api';
 import OrderableTable from '../components/OrderableTable';
 import openDefaultFailureToast from '../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../utils/openDefaultSuccessToast';
 
-import '../../css/FDSEntries.scss';
+import '../../css/Fields.scss';
 
 const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 type LocalizedValue<T> = Liferay.Language.LocalizedValue<T>;
@@ -85,7 +84,7 @@ const getRendererLabel = ({
 	else {
 		clientExtensionRenderer = cetRenderers.find(
 			(renderer: IClientExtensionRenderer) => {
-				return renderer.erc === rendererName;
+				return renderer.externalReferenceCode === rendererName;
 			}
 		);
 
@@ -495,7 +494,7 @@ const EditFDSFieldModalContent = ({
 	options.push(
 		...fdsClientExtensionCellRenderers.map((item) => ({
 			label: item.name!,
-			value: item.erc!,
+			value: item.externalReferenceCode!,
 		}))
 	);
 
@@ -512,7 +511,7 @@ const EditFDSFieldModalContent = ({
 		onItemClick: Function;
 	}) => {
 		const fdsClientExtensionCellRenderersERCs = fdsClientExtensionCellRenderers.map(
-			(cellRendererCET) => cellRendererCET.erc
+			(cellRendererCET) => cellRendererCET.externalReferenceCode
 		);
 
 		return (
@@ -660,13 +659,10 @@ const EditFDSFieldModalContent = ({
 const Fields = ({
 	fdsClientExtensionCellRenderers,
 	fdsView,
-	fdsViewsURL,
 	namespace,
 	saveFDSFieldsURL,
-}: IFDSViewSectionInterface) => {
+}: IFDSViewSectionProps) => {
 	const [fdsFields, setFDSFields] = useState<Array<IFDSField> | null>(null);
-
-	const fdsFieldsOrderRef = useRef('');
 
 	const getFDSFields = async () => {
 		const response = await fetch(
@@ -694,8 +690,6 @@ const Fields = ({
 				?.fdsFieldsOrder;
 
 		if (fdsFieldsOrder) {
-			fdsFieldsOrderRef.current = fdsFieldsOrder;
-
 			const storedOrderedFDSFieldIds = fdsFieldsOrder.split(',');
 
 			const orderedFDSFields: Array<IFDSField> = [];
@@ -718,15 +712,9 @@ const Fields = ({
 				}
 			});
 
-			fdsFieldsOrderRef.current = orderedFDSFieldIds.join(',');
-
 			setFDSFields(orderedFDSFields);
 		}
 		else {
-			fdsFieldsOrderRef.current = storedFDSFields
-				.map((storedFDSField: IFDSField) => storedFDSField.id)
-				.join(',');
-
 			setFDSFields(storedFDSFields);
 		}
 	};
@@ -778,9 +766,13 @@ const Fields = ({
 		});
 	};
 
-	const updateFDSFieldsOrder = async () => {
+	const updateFDSFieldsOrder = async ({
+		fdsFieldsOrder,
+	}: {
+		fdsFieldsOrder: string;
+	}) => {
 		const body = {
-			fdsFieldsOrder: fdsFieldsOrderRef.current,
+			fdsFieldsOrder,
 		};
 
 		const response = await fetch(
@@ -803,9 +795,9 @@ const Fields = ({
 
 		const responseJSON = await response.json();
 
-		const fdsFieldsOrder = responseJSON?.fdsFieldsOrder;
+		const storedFDSFieldsOrder = responseJSON?.fdsFieldsOrder;
 
-		if (fdsFieldsOrder && fdsFieldsOrder === fdsFieldsOrderRef.current) {
+		if (storedFDSFieldsOrder && storedFDSFieldsOrder === fdsFieldsOrder) {
 			openDefaultSuccessToast();
 		}
 		else {
@@ -951,17 +943,11 @@ const Fields = ({
 						'add-fields-to-show-in-your-view'
 					)}
 					noItemsTitle={Liferay.Language.get('no-fields-added-yet')}
-					onCancelButtonClick={() => navigate(fdsViewsURL)}
-					onOrderChange={({
-						orderedItems,
-					}: {
-						orderedItems: Array<IFDSField>;
-					}) => {
-						fdsFieldsOrderRef.current = orderedItems
-							.map((item) => item.id)
-							.join(',');
+					onOrderChange={({order}: {order: string}) => {
+						updateFDSFieldsOrder({
+							fdsFieldsOrder: order,
+						});
 					}}
-					onSaveButtonClick={() => updateFDSFieldsOrder()}
 					title={Liferay.Language.get('fields')}
 				/>
 			) : (

@@ -7,6 +7,7 @@ package com.liferay.layout.internal.importer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.liferay.asset.kernel.NoSuchClassTypeException;
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.client.extension.type.CET;
@@ -1304,6 +1305,21 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 			throw new PortalException();
 		}
+		catch (NoSuchClassTypeException noSuchClassTypeException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(noSuchClassTypeException);
+			}
+
+			_layoutsImporterResultEntries.add(
+				new LayoutsImporterResultEntry(
+					name, layoutPageTemplateEntryType,
+					LayoutsImporterResultEntry.Status.INVALID,
+					_getErrorMessage(
+						groupId, _MESSAGE_KEY_TYPE_INVALID,
+						new String[] {zipPath})));
+
+			return null;
+		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(portalException);
@@ -1314,7 +1330,7 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 					name, layoutPageTemplateEntryType,
 					LayoutsImporterResultEntry.Status.INVALID,
 					_getErrorMessage(
-						groupId, _MESSAGE_KEY_INVALID,
+						groupId, _MESSAGE_KEY_NAME_INVALID,
 						new String[] {
 							zipPath, _toTypeName(layoutPageTemplateEntryType)
 						})));
@@ -1448,7 +1464,7 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 				new LayoutsImporterResultEntry(
 					name, LayoutsImporterResultEntry.Status.INVALID,
 					_getErrorMessage(
-						groupId, _MESSAGE_KEY_INVALID,
+						groupId, _MESSAGE_KEY_NAME_INVALID,
 						new String[] {zipPath, "utility page"})));
 		}
 	}
@@ -1956,8 +1972,12 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 	private static final String _MESSAGE_KEY_IGNORED =
 		"x-was-ignored-because-a-x-with-the-same-key-already-exists";
 
-	private static final String _MESSAGE_KEY_INVALID =
+	private static final String _MESSAGE_KEY_NAME_INVALID =
 		"x-could-not-be-imported-because-a-x-with-the-same-name-already-exists";
+
+	private static final String _MESSAGE_KEY_TYPE_INVALID =
+		"x-could-not-be-imported-because-its-content-type-or-subtype-is-" +
+			"missing";
 
 	private static final String _PAGE_TEMPLATE_COLLECTION_KEY_DEFAULT =
 		"imported";

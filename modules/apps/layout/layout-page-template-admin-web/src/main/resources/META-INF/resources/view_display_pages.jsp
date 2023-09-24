@@ -92,6 +92,13 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 
 					<liferay-ui:search-container-column-text>
 						<clay:vertical-card
+							additionalProps='<%=
+								HashMapBuilder.<String, Object>put(
+									"changeContentTypeURL", displayPageDisplayContext.getChangeContentTypeURL(curLayoutPageTemplateEntry)
+								).put(
+									"mappingTypes", displayPageDisplayContext.getMappingTypesJSONArray()
+								).build()
+							%>'
 							propsTransformer="js/propsTransformers/DisplayPageDropdownPropsTransformer"
 							verticalCard="<%= new DisplayPageVerticalCard(curLayoutPageTemplateEntry, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
 						/>

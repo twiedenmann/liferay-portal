@@ -829,9 +829,11 @@ definition {
 					layoutName = "Test Page Name ${n}",
 					type = "content");
 
-				JSONLayout.publishLayout(
-					groupName = ${randomSiteName},
-					layoutName = "Test Page Name ${n}");
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Test Page Name ${n}",
+					siteName = ${randomSiteName});
+
+				PageEditor.publish();
 			}
 		}
 
@@ -842,9 +844,11 @@ definition {
 				parentLayoutName = "Test Page Name 1",
 				type = "content");
 
-			JSONLayout.publishLayout(
-				groupName = ${randomSiteName},
-				layoutName = "Child Page Name 1");
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Child Page Name 1",
+				siteName = ${randomSiteName});
+
+			PageEditor.publish();
 		}
 
 		task ("View child page in Pages admin") {
@@ -1881,7 +1885,7 @@ definition {
 			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteName});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
-				menuItem = "Copy",
+				menuItem = "Make a Copy",
 				pageName = "Test Content Page Name");
 
 			DropdownMenuItem.click(menuItem = "Page With Permissions");
@@ -1945,7 +1949,7 @@ definition {
 			PagesAdmin.openPagesAdmin(siteURLKey = ${randomSiteName});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
-				menuItem = "Copy",
+				menuItem = "Make a Copy",
 				pageName = "Test Widget Page Name");
 
 			DropdownMenuItem.click(menuItem = "Page With Permissions");
@@ -2016,7 +2020,7 @@ definition {
 			PagesAdmin.openPagesAdmin(siteURLKey = ${organizationName});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
-				menuItem = "Copy",
+				menuItem = "Make a Copy",
 				pageName = "Test Content Page Name");
 
 			DropdownMenuItem.click(menuItem = "Page With Permissions");
@@ -2065,7 +2069,7 @@ definition {
 			PagesAdmin.openPagesAdmin(siteURLKey = ${organizationName});
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
-				menuItem = "Copy",
+				menuItem = "Make a Copy",
 				pageName = "Test Widget Page Name");
 
 			DropdownMenuItem.click(menuItem = "Page With Permissions");
@@ -2548,7 +2552,7 @@ definition {
 
 		task ("When the page designer creates a copy of this page with permissions") {
 			PagesAdmin.gotoPageEllipsisMenuItem(
-				menuItem = "Copy",
+				menuItem = "Make a Copy",
 				pageName = "Test Content Page Name");
 
 			DropdownMenuItem.click(menuItem = "Page With Permissions");

@@ -45,7 +45,12 @@ export default function setDataRecord(
 			!!localizedValue?.[languageId] ||
 			(localizedValueEdited && localizedValueEdited[languageId]);
 
-		let availableLanguageIds;
+		if (
+			!edited &&
+			Liferay.ThemeDisplay.getDefaultLanguageId() === languageId
+		) {
+			delete localizedValue[languageId];
+		}
 
 		Object.keys(localizedValue)
 			.filter(
@@ -59,17 +64,6 @@ export default function setDataRecord(
 				delete localizedValue[languageId];
 			});
 
-		if (localizedValue) {
-			availableLanguageIds = Object.keys(localizedValue);
-		}
-		else {
-			availableLanguageIds = [];
-		}
-
-		if (!availableLanguageIds.includes(languageId)) {
-			availableLanguageIds.push(languageId);
-		}
-
 		dataRecordValues[dataRecordValueKey] = {...localizedValue};
 
 		if (edited) {
@@ -78,7 +72,10 @@ export default function setDataRecord(
 				[languageId]: _value,
 			};
 		}
-		else if (preserveValue) {
+		else if (
+			preserveValue &&
+			Liferay.ThemeDisplay.getDefaultLanguageId() !== languageId
+		) {
 			dataRecordValues[dataRecordValueKey] = {
 				...localizedValue,
 				[languageId]: value,

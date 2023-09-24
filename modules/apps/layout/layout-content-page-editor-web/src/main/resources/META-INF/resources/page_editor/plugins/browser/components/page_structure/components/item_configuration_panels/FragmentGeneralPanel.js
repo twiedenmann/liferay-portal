@@ -87,11 +87,13 @@ export function FragmentGeneralPanel({item}) {
 		<>
 			{selectedViewportSize === VIEWPORT_SIZES.desktop &&
 				fieldSets.map((fieldSet, index) => {
+					const fields = fieldSet.fields;
+
 					return (
 						<div className="mb-1 panel-group-sm" key={index}>
 							<FieldSet
 								description={fieldSet.description}
-								fields={fieldSet.fields}
+								fields={fields}
 								fragmentEntryLinks={
 									fragmentEntryLinksRef.current
 								}

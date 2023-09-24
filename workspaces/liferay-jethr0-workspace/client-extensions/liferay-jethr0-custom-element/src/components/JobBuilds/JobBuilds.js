@@ -6,7 +6,9 @@
 import ClayPanel from '@clayui/panel';
 import {useState} from 'react';
 
+import {toLocaleString} from '../../services/DateUtil';
 import useSpringBootData from '../../services/useSpringBootData';
+import Jethr0Table from '../Jethr0Table/Jethr0Table';
 
 function JobBuilds({jobId}) {
 	const [jobBuilds, setJobBuilds] = useState(null);
@@ -30,13 +32,14 @@ function JobBuilds({jobId}) {
 			showCollapseIcon={true}
 		>
 			<ClayPanel.Body>
-				<table className="table table-bordered table-hover table-sm">
+				<Jethr0Table>
 					<thead>
 						<tr>
 							<th>ID</th>
 							<th>Name</th>
 							<th>Create Date</th>
 							<th>State</th>
+							<th>Initial Build</th>
 							<th>Jenkins Build</th>
 						</tr>
 					</thead>
@@ -52,8 +55,15 @@ function JobBuilds({jobId}) {
 											{jobBuild.id}
 										</th>
 										<td>{jobBuild.name}</td>
-										<td>{jobBuild.dateCreated}</td>
+										<td>
+											{toLocaleString(
+												jobBuild.dateCreated
+											)}
+										</td>
 										<td>{jobBuild.state.name}</td>
+										<td>
+											{jobBuild.initialBuild.toString()}
+										</td>
 										<td>
 											{jobBuild.latestJenkinsBuildURL ? (
 												<a
@@ -71,7 +81,7 @@ function JobBuilds({jobId}) {
 								);
 							})}
 					</tbody>
-				</table>
+				</Jethr0Table>
 			</ClayPanel.Body>
 		</ClayPanel>
 	);

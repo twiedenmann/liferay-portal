@@ -13,6 +13,7 @@ EditKBArticleDisplayContext editKBArticleDisplayContext = new EditKBArticleDispl
 if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 	portletDisplay.setShowBackIcon(true);
 	portletDisplay.setURLBack(editKBArticleDisplayContext.getRedirect());
+	portletDisplay.setURLBackTitle(portletDisplay.getTitle());
 
 	renderResponse.setTitle(editKBArticleDisplayContext.getHeaderTitle());
 }
@@ -59,16 +60,35 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 
 						<c:choose>
 							<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-188060") %>'>
-								<clay:dropdown-menu
-									cssClass="c-mr-3"
-									displayType="primary"
-									dropdownItems="<%= editKBArticleDisplayContext.getEditKBArticleActionDropdownItems() %>"
-									icon="caret-bottom"
-									id='<%= liferayPortletResponse.getNamespace() + "publishDropdown" %>'
-									label="<%= editKBArticleDisplayContext.getPublishButtonLabel() %>"
-									name="publishDropdown"
-									small="<%= true %>"
-								/>
+								<c:choose>
+									<c:when test="<%= editKBArticleDisplayContext.isScheduled() %>">
+										<span class="lfr-portal-tooltip">
+											<clay:button
+												cssClass="c-mr-3"
+												displayType="primary"
+												icon="time"
+												id='<%= liferayPortletResponse.getNamespace() + "scheduledButton" %>'
+												label="scheduled"
+												small="<%= true %>"
+												title='<%= LanguageUtil.format(request, "this-article-will-be-published-on-x", editKBArticleDisplayContext.getUserFormattedDisplayDateString()) %>'
+												type="button"
+											/>
+										</span>
+									</c:when>
+									<c:otherwise>
+										<clay:dropdown-menu
+											cssClass="c-mr-3"
+											displayType="primary"
+											dropdownItems="<%= editKBArticleDisplayContext.getEditKBArticleActionDropdownItems() %>"
+											icon="caret-bottom"
+											id='<%= liferayPortletResponse.getNamespace() + "publishDropdown" %>'
+											label="<%= editKBArticleDisplayContext.getPublishButtonLabel() %>"
+											name="publishDropdown"
+											small="<%= true %>"
+											swapIconSide="<%= true %>"
+										/>
+									</c:otherwise>
+								</c:choose>
 							</c:when>
 							<c:otherwise>
 								<clay:button
@@ -343,6 +363,8 @@ if (editKBArticleDisplayContext.isPortletTitleBasedNavigation()) {
 
 <portlet:renderURL var="scheduleModalURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
 	<portlet:param name="mvcPath" value="/admin/common/schedule_modal.jsp" />
+	<portlet:param name="displayDate" value="<%= editKBArticleDisplayContext.getDatePickerFormattedDisplayDate() %>" />
+	<portlet:param name="scheduled" value="<%= String.valueOf(editKBArticleDisplayContext.isScheduled()) %>" />
 </portlet:renderURL>
 
 <liferay-frontend:component

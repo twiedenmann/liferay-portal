@@ -262,6 +262,45 @@ public class PoshiProperties extends Properties {
 		return _poshiProperties;
 	}
 
+	public static void validateProperties(Properties properties) {
+		for (String propertyName : properties.stringPropertyNames()) {
+			String propertyValue = properties.getProperty(propertyName);
+
+			if (propertyValue.contains(",")) {
+				for (String additionalPropertyValue :
+						ListUtil.newListFromString(propertyValue)) {
+
+					validateProperty(propertyName, additionalPropertyValue);
+				}
+			}
+			else {
+				validateProperty(propertyName, propertyValue);
+			}
+		}
+	}
+
+	public static void validateProperty(
+		String propertyName, String propertyValue) {
+
+		if (!_validPoshiPropertyValues.containsKey(propertyName)) {
+			return;
+		}
+
+		String[] validPoshiPropertyValues = _validPoshiPropertyValues.get(
+			propertyName);
+
+		for (String validPoshiPropertyValue : validPoshiPropertyValues) {
+			if (validPoshiPropertyValue.equals(propertyValue.trim())) {
+				return;
+			}
+		}
+
+		throw new IllegalArgumentException(
+			"Illegal property value \"" + propertyValue +
+				"\" for property name: " + propertyName +
+					"\nValid property values: " + validPoshiPropertyValues);
+	}
+
 	public PoshiProperties() {
 	}
 
@@ -269,6 +308,8 @@ public class PoshiProperties extends Properties {
 		super(properties);
 
 		printProperties(false);
+
+		validateProperties(properties);
 	}
 
 	public void printProperties(boolean update) {
@@ -411,6 +452,43 @@ public class PoshiProperties extends Properties {
 	private static final Map<String, PoshiProperties>
 		_threadBasedPoshiProperties = Collections.synchronizedMap(
 			new HashMap<>());
+	private static final Map<String, String[]> _validPoshiPropertyValues =
+		new HashMap<String, String[]>() {
+			{
+				put(
+					BROWSER_TYPE,
+					new String[] {
+						"android", "androidchrome", "chrome", "edge", "firefox",
+						"internetexplorer", "iossafari", "safari"
+					});
+				put(DEBUG_STACKTRACE, new String[] {"false", "true"});
+				put(GENERATE_COMMAND_SIGNATURE, new String[] {"false", "true"});
+				put(PROXY_SERVER_ENABLED, new String[] {"false", "true"});
+				put(REPORT_TYPE, new String[] {"test-properties", "usage"});
+				put(SAVE_SCREENSHOT, new String[] {"false", "true"});
+				put(SAVE_WEB_PAGE, new String[] {"false", "true"});
+				put(TCAT_ENABLED, new String[] {"false", "true"});
+				put(TEST_ASSERT_CONSOLE_ERRORS, new String[] {"false", "true"});
+				put(
+					TEST_ASSERT_JAVASCRIPT_ERRORS,
+					new String[] {"false", "true"});
+				put(
+					TEST_ASSERT_WARNING_EXCEPTIONS,
+					new String[] {"false", "true"});
+				put(TEST_BATCH_RUN_TYPE, new String[] {"sequential", "single"});
+				put(
+					TEST_POSHI_SCRIPT_VALIDATION,
+					new String[] {"false", "true"});
+				put(TEST_RUN_LOCALLY, new String[] {"false", "true"});
+				put(
+					TEST_RUN_TYPE,
+					new String[] {"parallel", "sequential", "single"});
+				put(TEST_SKIP_TEAR_DOWN, new String[] {"false", "true"});
+				put(
+					VALIDATION_RESOURCE_FILE_TYPES,
+					new String[] {"function", "macro", "path", "testcase"});
+			}
+		};
 
 	static {
 		Class<?> clazz = PoshiProperties.class;

@@ -32,7 +32,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 /**
  * @author Sergio Jiménez del Coso
  */
-@FeatureFlags({"LPS-167253", "LPS-184413", "LPS-186757"})
+@FeatureFlags({"LPS-167253", "LPS-178642"})
 public class APIEndpointRelevantObjectEntryModelListenerTest
 	extends BaseTestCase {
 
@@ -200,6 +200,33 @@ public class APIEndpointRelevantObjectEntryModelListenerTest
 			JSONUtil.put(
 				"status", "BAD_REQUEST"
 			).put(
+				"title",
+				"Path must contain a path parameter between curly braces."
+			).toString(),
+			HTTPTestUtil.invokeToJSONObject(
+				JSONUtil.put(
+					"httpMethod", "get"
+				).put(
+					"name", RandomTestUtil.randomString()
+				).put(
+					"path",
+					StringBundler.concat(
+						StringPool.FORWARD_SLASH, RandomTestUtil.randomString(),
+						StringPool.FORWARD_SLASH, StringPool.OPEN_CURLY_BRACE)
+				).put(
+					"pathParameter", "externalReferenceCode"
+				).put(
+					"retrieveType", "singleElement"
+				).put(
+					"scope", "company"
+				).toString(),
+				"headless-builder/endpoints", Http.Method.POST
+			).toString(),
+			JSONCompareMode.STRICT);
+		JSONAssert.assertEquals(
+			JSONUtil.put(
+				"status", "BAD_REQUEST"
+			).put(
 				"title", "Path must start with the \"/\" character."
 			).toString(),
 			HTTPTestUtil.invokeToJSONObject(
@@ -220,7 +247,6 @@ public class APIEndpointRelevantObjectEntryModelListenerTest
 				"headless-builder/endpoints", Http.Method.POST
 			).toString(),
 			JSONCompareMode.STRICT);
-
 		JSONAssert.assertEquals(
 			JSONUtil.put(
 				"status", "BAD_REQUEST"
@@ -305,7 +331,11 @@ public class APIEndpointRelevantObjectEntryModelListenerTest
 					"name", RandomTestUtil.randomString()
 				).put(
 					"path",
-					StringPool.FORWARD_SLASH + RandomTestUtil.randomString()
+					StringBundler.concat(
+						StringPool.FORWARD_SLASH, RandomTestUtil.randomString(),
+						StringPool.FORWARD_SLASH, StringPool.OPEN_CURLY_BRACE,
+						RandomTestUtil.randomString(),
+						StringPool.CLOSE_CURLY_BRACE)
 				).put(
 					"pathParameter", "ID"
 				).put(

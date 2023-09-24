@@ -5,12 +5,14 @@
 
 import {API, getLocalizableLabel} from '@liferay/object-js-components-web';
 import React, {useEffect, useState} from 'react';
+import {FlowElement} from 'react-flow-renderer';
 
 import {KeyValuePair} from '../ObjectDetails/EditObjectDetails';
 import {ModalAddObjectDefinition} from '../ViewObjectDefinitions/ModalAddObjectDefinition';
 import {ModalEditObjectFolder} from '../ViewObjectDefinitions/ModalEditObjectFolder';
 import Diagram from './Diagram/Diagram';
 import EditObjectFolderHeader from './EditObjectFolderHeader/EditObjectFolderHeader';
+import {ModalPublishObjectDefinitions} from './EditObjectFolderHeader/ModalPublishObjectDefinitions';
 import LeftSidebar from './LeftSidebar/LeftSidebar';
 import {useObjectFolderContext} from './ModelBuilderContext/objectFolderContext';
 import {TYPES} from './ModelBuilderContext/typesEnum';
@@ -18,18 +20,23 @@ import {RightSideBar} from './RightSidebar/index';
 
 interface EditObjectFolder {
 	companyKeyValuePairs: KeyValuePair[];
-	objectFolderName: string;
 	objectRelationshipDeletionTypes: LabelValueObject[];
 	siteKeyValuePairs: KeyValuePair[];
 }
+
 export default function EditObjectFolder({
 	companyKeyValuePairs,
-	objectFolderName,
 	objectRelationshipDeletionTypes,
 	siteKeyValuePairs,
 }: EditObjectFolder) {
 	const [
-		{objectDefinitionsStorageTypes, rightSidebarType, selectedObjectFolder},
+		{
+			elements,
+			objectDefinitionsStorageTypes,
+			objectFolderName,
+			rightSidebarType,
+			selectedObjectFolder,
+		},
 		dispatch,
 	] = useObjectFolderContext();
 
@@ -42,10 +49,18 @@ export default function EditObjectFolder({
 		editObjectDefinitionExternalReferenceCode: false,
 		editObjectFolder: false,
 		moveObjectDefinition: false,
+		publishObjectDefinitions: false,
 		redirectToEditObjectDefinitionDetails: false,
 	});
 
 	useEffect(() => {
+		dispatch({
+			payload: {
+				isLoadingObjectFolder: true,
+			},
+			type: TYPES.SET_LOADING_OBJECT_FOLDER,
+		});
+
 		const makeFetch = async () => {
 			const objectFolders = await API.getAllObjectFolders();
 
@@ -157,12 +172,19 @@ export default function EditObjectFolder({
 				},
 				type: TYPES.CREATE_MODEL_BUILDER_STRUCTURE,
 			});
+
+			dispatch({
+				payload: {
+					isLoadingObjectFolder: false,
+				},
+				type: TYPES.SET_LOADING_OBJECT_FOLDER,
+			});
 		};
 
 		makeFetch();
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [objectFolderName]);
 
 	return (
 		<>
@@ -211,16 +233,31 @@ export default function EditObjectFolder({
 				/>
 			)}
 
+			{showModal.publishObjectDefinitions && (
+				<ModalPublishObjectDefinitions
+					disableAutoClose={false}
+					dispatch={dispatch}
+					elements={elements}
+					handleOnClose={() => {
+						setShowModal((previousState) => ({
+							...previousState,
+							publishObjectDefinitions: false,
+						}));
+					}}
+				/>
+			)}
+
 			<EditObjectFolderHeader
-				hasDraftObjectDefinitions={false}
+				hasDraftObjectDefinitions={elements.some(
+					(element) =>
+						(element as FlowElement<ObjectDefinitionNodeData>).data
+							?.status?.code === 2
+				)}
 				selectedObjectFolder={selectedObjectFolder}
 				setShowModal={setShowModal}
 			/>
 			<div className="lfr-objects__model-builder-diagram-container">
-				<LeftSidebar
-					selectedObjectFolderName={selectedObjectFolder.name}
-					setShowModal={setShowModal}
-				/>
+				<LeftSidebar setShowModal={setShowModal} />
 
 				<Diagram setShowModal={setShowModal} />
 

@@ -28,9 +28,14 @@ function formatCartItem(
 
 	return {
 		options: JSON.stringify(optionsJSON),
-		quantity: cpInstance.quantity,
+		quantity: Number(
+			Number(cpInstance.quantity).toFixed(
+				cpInstance.skuUnitOfMeasure?.precision || 0
+			)
+		),
 		replacedSkuId: cpInstance.replacedSkuId ?? 0,
 		skuId: cpInstance.skuId,
+		skuUnitOfMeasure: cpInstance.skuUnitOfMeasure,
 	};
 }
 
@@ -72,7 +77,10 @@ export async function addToCart(
 		const includedCartItem = updatedCartItems.find((cartItem) => {
 			const optionsJSON = JSON.parse(cartItem.options);
 
-			let includedCartItem = cartItem.skuId === cpInstance.skuId;
+			let includedCartItem =
+				cartItem.skuId === cpInstance.skuId &&
+				cartItem.skuUnitOfMeasure?.key ===
+					cpInstance.skuUnitOfMeasure?.key;
 
 			if (includedCartItem) {
 				optionsJSON.forEach((optionJSON) => {
@@ -98,7 +106,11 @@ export async function addToCart(
 		});
 
 		if (includedCartItem) {
-			includedCartItem.quantity += cpInstance.quantity;
+			includedCartItem.quantity = Number(
+				Number(includedCartItem.quantity + cpInstance.quantity).toFixed(
+					cpInstance.skuUnitOfMeasure?.precision || 0
+				)
+			);
 		}
 		else {
 			updatedCartItems.push(

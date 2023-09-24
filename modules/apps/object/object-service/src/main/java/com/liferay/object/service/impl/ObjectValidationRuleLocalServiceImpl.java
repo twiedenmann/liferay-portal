@@ -9,12 +9,14 @@ import com.liferay.dynamic.data.mapping.expression.CreateExpressionRequest;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.object.constants.ObjectValidationRuleConstants;
 import com.liferay.object.constants.ObjectValidationRuleSettingConstants;
+import com.liferay.object.definition.util.ObjectDefinitionUtil;
 import com.liferay.object.exception.ObjectValidationRuleEngineException;
 import com.liferay.object.exception.ObjectValidationRuleNameException;
 import com.liferay.object.exception.ObjectValidationRuleOutputTypeException;
 import com.liferay.object.exception.ObjectValidationRuleScriptException;
 import com.liferay.object.exception.ObjectValidationRuleSettingNameException;
 import com.liferay.object.exception.ObjectValidationRuleSettingValueException;
+import com.liferay.object.exception.ObjectValidationRuleSystemException;
 import com.liferay.object.internal.action.util.ObjectEntryVariablesUtil;
 import com.liferay.object.internal.validation.rule.FunctionObjectValidationRuleEngineImpl;
 import com.liferay.object.model.ObjectDefinition;
@@ -81,9 +83,13 @@ public class ObjectValidationRuleLocalServiceImpl
 	public ObjectValidationRule addObjectValidationRule(
 			long userId, long objectDefinitionId, boolean active, String engine,
 			Map<Locale, String> errorLabelMap, Map<Locale, String> nameMap,
-			String outputType, String script,
+			String outputType, String script, boolean system,
 			List<ObjectValidationRuleSetting> objectValidationRuleSettings)
 		throws PortalException {
+
+		_validateInvokerBundle(
+			"Only allowed bundles can create system object validation rules",
+			system);
 
 		User user = _userLocalService.getUser(userId);
 
@@ -106,6 +112,7 @@ public class ObjectValidationRuleLocalServiceImpl
 		objectValidationRule.setNameMap(nameMap);
 		objectValidationRule.setOutputType(outputType);
 		objectValidationRule.setScript(script);
+		objectValidationRule.setSystem(system);
 
 		objectValidationRule = objectValidationRulePersistence.update(
 			objectValidationRule);
@@ -134,7 +141,12 @@ public class ObjectValidationRuleLocalServiceImpl
 	@Override
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public ObjectValidationRule deleteObjectValidationRule(
-		ObjectValidationRule objectValidationRule) {
+			ObjectValidationRule objectValidationRule)
+		throws PortalException {
+
+		_validateInvokerBundle(
+			"Only allowed bundles can delete system object validation rules",
+			objectValidationRule.isSystem());
 
 		objectValidationRule = objectValidationRulePersistence.remove(
 			objectValidationRule);
@@ -248,6 +260,10 @@ public class ObjectValidationRuleLocalServiceImpl
 		ObjectValidationRule objectValidationRule =
 			objectValidationRulePersistence.findByPrimaryKey(
 				objectValidationRuleId);
+
+		_validateInvokerBundle(
+			"Only allowed bundles can edit system object validation rules",
+			objectValidationRule.isSystem());
 
 		_validate(
 			objectValidationRule.getCompanyId(), engine, nameMap, outputType,
@@ -538,13 +554,26 @@ public class ObjectValidationRuleLocalServiceImpl
 		for (ObjectValidationRuleSetting objectValidationRuleSetting :
 				objectValidationRuleSettings) {
 
-			if (StringUtil.equals(
+			if (FeatureFlagManagerUtil.isEnabled("LPS-187854") &&
+				!(objectValidationRuleSetting.compareName(
+					ObjectValidationRuleSettingConstants.
+						NAME_KEY_OBJECT_FIELD_ID) ||
+				  objectValidationRuleSetting.compareName(
+					  ObjectValidationRuleSettingConstants.
+						  NAME_OUTPUT_OBJECT_FIELD_ID))) {
+
+				throw new ObjectValidationRuleSettingNameException.
+					NotAllowedName(objectValidationRuleSetting.getName());
+			}
+
+			if (!FeatureFlagManagerUtil.isEnabled("LPS-187854") &&
+				(StringUtil.equals(
 					outputType,
 					ObjectValidationRuleConstants.
 						OUTPUT_TYPE_FULL_VALIDATION) ||
-				!objectValidationRuleSetting.compareName(
-					ObjectValidationRuleSettingConstants.
-						NAME_OUTPUT_OBJECT_FIELD_ID)) {
+				 !objectValidationRuleSetting.compareName(
+					 ObjectValidationRuleSettingConstants.
+						 NAME_OUTPUT_OBJECT_FIELD_ID))) {
 
 				throw new ObjectValidationRuleSettingNameException.
 					NotAllowedName(objectValidationRuleSetting.getName());
@@ -560,6 +589,16 @@ public class ObjectValidationRuleLocalServiceImpl
 						objectValidationRuleSetting.getValue());
 			}
 		}
+	}
+
+	private void _validateInvokerBundle(String message, boolean system)
+		throws PortalException {
+
+		if (!system || ObjectDefinitionUtil.isInvokerBundleAllowed()) {
+			return;
+		}
+
+		throw new ObjectValidationRuleSystemException(message);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

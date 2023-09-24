@@ -22,7 +22,7 @@ import {
 	GetStatusNameFn,
 	GetStepFn,
 	GetTicksFn,
-	GetVariantLabel,
+	GetVariantLabels,
 	MakeAllRefetchFn,
 	MergedVariantsFn,
 	ModalCompleteFn,
@@ -34,6 +34,7 @@ import {
 	TooltipMetric
 } from './types';
 import {getDate as getDateUtil} from 'shared/util/date';
+import {IActionProps} from 'shared/components/base-page/Header';
 import {round} from 'lodash';
 import {toRounded, toThousands, toThousandsBase} from 'shared/util/numbers';
 import {useStateValue} from 'experiments/state';
@@ -349,25 +350,40 @@ export const useAddRefetch = (refetch: Function) => {
 	}, [refetch]);
 };
 
-export const getVariantLabel: GetVariantLabel = (
-	status,
+export const getVariantLabels: GetVariantLabels = ({
 	bestVariant,
-	winnerVariantId,
-	variantId
-) => {
-	let label = undefined;
+	dxpVariantId,
+	publishedDXPVariantId,
+	status,
+	winnerDXPVariantId
+}) => {
+	const labels = [];
 
-	if (
-		bestVariant &&
-		status === 'RUNNING' &&
-		bestVariant.dxpVariantId === variantId
-	) {
-		label = Liferay.Language.get('current-best');
-	} else if (status === 'FINISHED_WINNER' && winnerVariantId === variantId) {
-		label = Liferay.Language.get('winner');
+	if (status === 'RUNNING' && bestVariant?.dxpVariantId === dxpVariantId) {
+		labels.push({
+			status: 'success',
+			value: Liferay.Language.get('current-best')
+		});
 	}
 
-	return label;
+	if (
+		winnerDXPVariantId === dxpVariantId &&
+		(status === 'COMPLETED' || status === 'FINISHED_WINNER')
+	) {
+		labels.push({
+			status: 'success',
+			value: Liferay.Language.get('winner')
+		});
+	}
+
+	if (publishedDXPVariantId === dxpVariantId) {
+		labels.push({
+			status: 'info',
+			value: Liferay.Language.get('published')
+		});
+	}
+
+	return labels;
 };
 
 export const getTicks: GetTicksFn = maxValue => {
@@ -442,3 +458,107 @@ export const sortOrderExperiment: SortOrderExperiment = (
 	{control: experimentControlA},
 	{control: experimentControlB}
 ) => Number(experimentControlB) - Number(experimentControlA);
+
+export const getActions = (
+	status: string,
+	{id, onDelete, pageURL, publishable} = null
+): IActionProps[] => {
+	const deleteButton = {
+		displayType: 'secondary',
+		label: Liferay.Language.get('delete'),
+		onClick: onDelete
+	};
+
+	switch (status) {
+		case 'COMPLETED': {
+			return [deleteButton];
+		}
+		case 'DRAFT': {
+			return [
+				{
+					displayType: 'primary',
+					label: Liferay.Language.get('review'),
+					redirectURL: getExperimentLink({
+						action: 'reviewAndRun',
+						id,
+						pageURL
+					})
+				},
+				{
+					displayType: 'secondary',
+					label: Liferay.Language.get('delete'),
+					redirectURL: getExperimentLink({
+						action: 'delete',
+						id,
+						pageURL
+					})
+				}
+			];
+		}
+		case 'FINISHED_NO_WINNER':
+		case 'FINISHED_WINNER': {
+			return [
+				{
+					displayType: 'primary',
+					label: Liferay.Language.get('publish'),
+					redirectURL: getExperimentLink({
+						action: 'publish',
+						id,
+						pageURL
+					})
+				},
+				{
+					displayType: 'secondary',
+					label: Liferay.Language.get('delete'),
+					redirectURL: getExperimentLink({
+						action: 'delete',
+						id,
+						pageURL
+					})
+				}
+			];
+		}
+		case 'TERMINATED': {
+			if (publishable) {
+				return [
+					{
+						displayType: 'primary',
+						label: Liferay.Language.get('publish'),
+						redirectURL: getExperimentLink({
+							action: 'publish',
+							id,
+							pageURL
+						})
+					},
+					{
+						displayType: 'secondary',
+						label: Liferay.Language.get('delete'),
+						redirectURL: getExperimentLink({
+							action: 'delete',
+							id,
+							pageURL
+						})
+					}
+				];
+			}
+
+			return [deleteButton];
+		}
+		case 'RUNNING': {
+			return [
+				{
+					displayType: 'secondary',
+					label: Liferay.Language.get('terminate'),
+					redirectURL: getExperimentLink({
+						action: 'terminate',
+						id,
+						pageURL
+					})
+				}
+			];
+		}
+		default: {
+			return [];
+		}
+	}
+};

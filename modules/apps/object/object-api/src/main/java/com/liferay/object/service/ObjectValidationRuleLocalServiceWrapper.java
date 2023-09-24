@@ -36,7 +36,7 @@ public class ObjectValidationRuleLocalServiceWrapper
 				String engine,
 				java.util.Map<java.util.Locale, String> errorLabelMap,
 				java.util.Map<java.util.Locale, String> nameMap,
-				String outputType, String script,
+				String outputType, String script, boolean system,
 				java.util.List
 					<com.liferay.object.model.ObjectValidationRuleSetting>
 						objectValidationRuleSettings)
@@ -44,7 +44,7 @@ public class ObjectValidationRuleLocalServiceWrapper
 
 		return _objectValidationRuleLocalService.addObjectValidationRule(
 			userId, objectDefinitionId, active, engine, errorLabelMap, nameMap,
-			outputType, script, objectValidationRuleSettings);
+			outputType, script, system, objectValidationRuleSettings);
 	}
 
 	/**
@@ -122,12 +122,14 @@ public class ObjectValidationRuleLocalServiceWrapper
 	 *
 	 * @param objectValidationRule the object validation rule
 	 * @return the object validation rule that was removed
+	 * @throws PortalException
 	 */
 	@Override
 	public com.liferay.object.model.ObjectValidationRule
-		deleteObjectValidationRule(
-			com.liferay.object.model.ObjectValidationRule
-				objectValidationRule) {
+			deleteObjectValidationRule(
+				com.liferay.object.model.ObjectValidationRule
+					objectValidationRule)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectValidationRuleLocalService.deleteObjectValidationRule(
 			objectValidationRule);
