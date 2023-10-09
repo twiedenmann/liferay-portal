@@ -20,7 +20,6 @@ import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.service.ObjectValidationRuleService;
 import com.liferay.object.service.ObjectValidationRuleSettingLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -28,7 +27,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -177,23 +175,9 @@ public class ObjectValidationRuleResourceImpl
 			Long objectDefinitionId, ObjectValidationRule objectValidationRule)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187846") &&
-			(ArrayUtil.isNotEmpty(
-				objectValidationRule.getObjectValidationRuleSettings()) ||
-			 Validator.isNotNull(
-				 objectValidationRule.getOutputTypeAsString()))) {
-
-			throw new UnsupportedOperationException();
-		}
-
-		boolean system = false;
-
-		if (FeatureFlagManagerUtil.isEnabled("LPS-193355")) {
-			system = GetterUtil.getBoolean(objectValidationRule.getSystem());
-		}
-
 		return _toObjectValidationRule(
 			_objectValidationRuleService.addObjectValidationRule(
+				objectValidationRule.getExternalReferenceCode(),
 				objectDefinitionId,
 				GetterUtil.getBoolean(objectValidationRule.getActive()),
 				objectValidationRule.getEngine(),
@@ -204,7 +188,8 @@ public class ObjectValidationRuleResourceImpl
 				GetterUtil.getString(
 					objectValidationRule.getOutputTypeAsString(),
 					ObjectValidationRuleConstants.OUTPUT_TYPE_FULL_VALIDATION),
-				objectValidationRule.getScript(), system,
+				objectValidationRule.getScript(),
+				GetterUtil.getBoolean(objectValidationRule.getSystem()),
 				_toObjectValidationRuleSettings(
 					objectDefinitionId, _objectFieldLocalService,
 					_objectValidationRuleSettingLocalService,
@@ -217,15 +202,6 @@ public class ObjectValidationRuleResourceImpl
 			ObjectValidationRule objectValidationRule)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187846") &&
-			(ArrayUtil.isNotEmpty(
-				objectValidationRule.getObjectValidationRuleSettings()) ||
-			 Validator.isNotNull(
-				 objectValidationRule.getOutputTypeAsString()))) {
-
-			throw new UnsupportedOperationException();
-		}
-
 		com.liferay.object.model.ObjectValidationRule
 			serviceBuilderObjectValidationRule =
 				_objectValidationRuleLocalService.getObjectValidationRule(
@@ -233,6 +209,7 @@ public class ObjectValidationRuleResourceImpl
 
 		return _toObjectValidationRule(
 			_objectValidationRuleService.updateObjectValidationRule(
+				objectValidationRule.getExternalReferenceCode(),
 				objectValidationRuleId, objectValidationRule.getActive(),
 				objectValidationRule.getEngine(),
 				LocalizedMapUtil.getLocalizedMap(
@@ -255,9 +232,7 @@ public class ObjectValidationRuleResourceImpl
 		ObjectValidationRule objectValidationRule,
 		ObjectValidationRule existingObjectValidationRule) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187846") ||
-			(objectValidationRule.getObjectValidationRuleSettings() == null)) {
-
+		if (objectValidationRule.getObjectValidationRuleSettings() == null) {
 			return;
 		}
 

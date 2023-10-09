@@ -78,6 +78,11 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeJavaAccountPortletKeysCheck() throws Exception {
+		test("upgrade/UpgradeJavaAccountPortletKeysCheck.testjava");
+	}
+
+	@Test
 	public void testUpgradeJavaAddAddressMethodCheck() throws Exception {
 		test(
 			"upgrade/UpgradeJavaAddAddressMethodCheck.testjava",
@@ -126,6 +131,11 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeJavaBaseModelListenerCheck() throws Exception {
+		test("upgrade/UpgradeJavaBaseModelListenerCheck.testjava");
+	}
+
+	@Test
 	public void testUpgradeJavaBasePanelAppExtendedClassesCheck()
 		throws Exception {
 
@@ -150,6 +160,20 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testUpgradeJavaCommerceCountryServiceCheck() throws Exception {
 		test("upgrade/UpgradeJavaCommerceCountryServiceCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaCommerceOrderItemServicesCheck()
+		throws Exception {
+
+		test(
+			"upgrade/UpgradeJavaCommerceOrderItemServicesCheck.testjava",
+			StringBundler.concat(
+				"Unable to format methods addCommerceOrderItem and ",
+				"deleteCommerceOrderItems from CommerceOrderItemLocalService, ",
+				"CommerceOrderItemLocalServiceUtil, CommerceOrderItemService, ",
+				"CommerceOrderItemServiceUtil. Fill the new parameters ",
+				"manually, see LPS-196580"));
 	}
 
 	@Test
@@ -204,12 +228,34 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeJavaFetchAssetCategoryByExternalReferenceCodeCheck()
+		throws Exception {
+
+		test(
+			"upgrade/UpgradeJavaFetchAssetCategoryByExternalReference" +
+				"CodeCheck.testjava",
+			StringBundler.concat(
+				"The fetchAssetCategoryByExternalReferenceCode method from ",
+				"AssetCategoryLocalService and AssetCategoryLocalServiceUtil ",
+				"no longer uses companyId as a parameter and has changed the ",
+				"order of its parameters. Fill the new parameters manually, ",
+				"see LPS-194134."));
+	}
+
+	@Test
 	public void testUpgradeJavaFetchCPDefinitionByCProductExternalReferenceCodeCheck()
 		throws Exception {
 
 		test(
 			"upgrade/UpgradeJavaFetchCPDefinitionByCProductExternal" +
 				"ReferenceCodeCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaGetFDSTableSchemaParameterCheck()
+		throws Exception {
+
+		test("upgrade/UpgradeJavaGetFDSTableSchemaParameterCheck.testjava");
 	}
 
 	@Test
@@ -235,6 +281,11 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		throws Exception {
 
 		test("upgrade/UpgradeJavaGetLayoutDisplayPageProviderCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaGetLeftCategoryIdMethodCheck() throws Exception {
+		test("upgrade/UpgradeJavaGetLeftCategoryIdMethodCheck.testjava");
 	}
 
 	@Test
@@ -269,11 +320,6 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 			"upgrade/UpgradeJavaMultiVMPoolUtilCheck.testjava",
 			"Could not resolve types for MultiVMPool.getPortalCache(). " +
 				"Replace 'TO_BE_REPLACED' with the correct type");
-	}
-
-	@Test
-	public void testUpgradeJavaOnAfterUpdateParameterCheck() throws Exception {
-		test("upgrade/UpgradeJavaOnAfterUpdateParameterCheck.testjava");
 	}
 
 	@Test
@@ -343,11 +389,20 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	public void testUpgradeJavaUserLocalServiceUtilCheck() throws Exception {
 		test(
 			"upgrade/UpgradeJavaUserLocalServiceUtilCheck.testjava",
-			StringBundler.concat(
-				"Could not resolve types of updateStatus method. The method ",
-				"signature has changed to updateStatus(long userId,",
-				"int status, ServiceContext serviceContext). Fill the new ",
-				"parameter manually."));
+			new String[] {
+				StringBundler.concat(
+					"Unable to format method addUser from UserLocalService, ",
+					"UserLocalServiceUtil, UserService and UserServiceUtil. ",
+					"Fill the new parameter manually, see LPS-192661 and ",
+					"LPS-196617."),
+				StringBundler.concat(
+					"Unable to format method updateStatus from ",
+					"UserLocalService, UserLocalServiceUtil, UserService and ",
+					"UserServiceUtil. The method signature has changed to ",
+					"updateStatus(long userId, int status, ServiceContext ",
+					"serviceContext). Fill the new parameter manually, see ",
+					"LPS-191999.")
+			});
 	}
 
 	@Test

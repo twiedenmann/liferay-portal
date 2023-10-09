@@ -22,13 +22,13 @@ import {deleteObjectField} from './deleteObjectFieldUtil';
 
 interface ItemData {
 	id: number;
+	localized: boolean;
 	required: boolean;
 	system?: boolean;
 }
 
 interface FieldsProps extends IFDSTableProps {
 	baseResourceURL: string;
-	objectFieldTypes: ObjectFieldType[];
 }
 
 export default function Fields({
@@ -39,7 +39,6 @@ export default function Fields({
 	id,
 	items,
 	objectDefinitionExternalReferenceCode,
-	objectFieldTypes,
 	style,
 	url,
 }: FieldsProps) {
@@ -99,6 +98,16 @@ export default function Fields({
 		);
 	}
 
+	function objectFieldLocalizedDataRenderer({
+		itemData,
+	}: {
+		itemData: ItemData;
+	}) {
+		return itemData.localized
+			? Liferay.Language.get('yes')
+			: Liferay.Language.get('no');
+	}
+
 	function objectFieldMandatoryDataRenderer({
 		itemData,
 	}: {
@@ -116,6 +125,7 @@ export default function Fields({
 		customDataRenderers: {
 			FDSSourceDataRenderer,
 			objectFieldLabelDataRenderer,
+			objectFieldLocalizedDataRenderer,
 			objectFieldMandatoryDataRenderer,
 		},
 		formName,
@@ -212,6 +222,14 @@ export default function Fields({
 							localizeLabel: true,
 							sortable: false,
 						},
+						{
+							contentRenderer: 'objectFieldLocalizedDataRenderer',
+							expand: false,
+							fieldName: 'localized',
+							label: Liferay.Language.get('translatable'),
+							localizeLabel: true,
+							sortable: false,
+						},
 					],
 				},
 				thumbnail: 'table',
@@ -225,14 +243,17 @@ export default function Fields({
 
 			{showAddFieldModal && (
 				<ModalAddObjectField
-					apiURL={apiURL as string}
+					baseResourceURL={baseResourceURL}
 					creationLanguageId={
 						creationLanguageId as Liferay.Language.Locale
 					}
 					objectDefinitionExternalReferenceCode={
 						objectDefinitionExternalReferenceCode
 					}
-					objectFieldTypes={objectFieldTypes}
+					onAfterSubmit={() => {
+						setShowAddFieldModal(false);
+						window.location.reload();
+					}}
 					setVisibility={setShowAddFieldModal}
 				/>
 			)}
@@ -240,9 +261,14 @@ export default function Fields({
 			{showDeletionModal && (
 				<ModalDeleteObjectField
 					objectField={deletedObjectField as ObjectField}
+					onAfterSubmit={() => {
+						setTimeout(() => window.location.reload(), 1500);
+					}}
 					setModalVisibility={setShowDeletionModal}
 					setObjectField={setDeletedObjectField}
-					showDeletionNotAllowedModal={showDeletionNotAllowedModal}
+					showObjectFieldDeletionNotAllowedModal={
+						showDeletionNotAllowedModal
+					}
 				/>
 			)}
 		</>

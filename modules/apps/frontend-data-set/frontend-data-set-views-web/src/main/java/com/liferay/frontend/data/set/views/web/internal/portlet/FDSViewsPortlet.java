@@ -22,7 +22,6 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -126,19 +125,14 @@ public class FDSViewsPortlet extends MVCPortlet {
 			ObjectFieldConstants.DB_TYPE_STRING, true, false, null, label, name,
 			false);
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-172017")) {
-			objectField.setLocalized(true);
-		}
-
 		_objectFieldLocalService.addCustomObjectField(
 			objectField.getExternalReferenceCode(), userId,
 			objectField.getListTypeDefinitionId(),
 			objectDefinition.getObjectDefinitionId(),
 			objectField.getBusinessType(), objectField.getDBType(),
 			objectField.isIndexed(), objectField.isIndexedAsKeyword(),
-			objectField.getIndexedLanguageId(), objectField.getLabelMap(),
-			objectField.isLocalized(), objectField.getName(),
-			objectField.getReadOnly(),
+			objectField.getIndexedLanguageId(), objectField.getLabelMap(), true,
+			objectField.getName(), objectField.getReadOnly(),
 			objectField.getReadOnlyConditionExpression(),
 			objectField.isRequired(), objectField.isState(),
 			objectField.getObjectFieldSettings());
@@ -211,7 +205,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			fdsActionObjectDefinition.getObjectDefinitionId(), 0,
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 			LocalizedMapUtil.getLocalizedMap("FDSView FDSAction Relationship"),
-			"fdsViewFDSActionRelationship",
+			"fdsViewFDSActionRelationship", false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
@@ -240,11 +234,13 @@ public class FDSViewsPortlet extends MVCPortlet {
 						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
 						_language.get(
 							locale, "fds-filter-client-extension-erc"),
-						"fdsFilterClientExtensionERC", true),
-					ObjectFieldUtil.createObjectField(
-						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-						_language.get(locale, "name"), "name", true)));
+						"fdsFilterClientExtensionERC", true)));
+
+		_enableLocalization(fdsClientExtensionFilterObjectDefinition);
+
+		_addLocalizedCustomObjectField(
+			_language.get(locale, "label"), "label",
+			fdsClientExtensionFilterObjectDefinition, userId);
 
 		_objectDefinitionLocalService.publishSystemObjectDefinition(
 			userId,
@@ -256,7 +252,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 			LocalizedMapUtil.getLocalizedMap(
 				"FDSView FDSClientExtensionFilter"),
-			"fdsViewFDSClientExtensionFilter",
+			"fdsViewFDSClientExtensionFilter", false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
@@ -289,11 +285,13 @@ public class FDSViewsPortlet extends MVCPortlet {
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-						_language.get(locale, "name"), "name", true),
-					ObjectFieldUtil.createObjectField(
-						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
 						_language.get(locale, "type"), "type", false)));
+
+		_enableLocalization(fdsDateFilterObjectDefinition);
+
+		_addLocalizedCustomObjectField(
+			_language.get(locale, "label"), "label",
+			fdsDateFilterObjectDefinition, userId);
 
 		_objectDefinitionLocalService.publishSystemObjectDefinition(
 			userId, fdsDateFilterObjectDefinition.getObjectDefinitionId());
@@ -304,7 +302,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 			LocalizedMapUtil.getLocalizedMap(
 				"FDSView FDSDateFilter Relationship"),
-			"fdsViewFDSDateFilterRelationship",
+			"fdsViewFDSDateFilterRelationship", false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
@@ -328,18 +326,14 @@ public class FDSViewsPortlet extends MVCPortlet {
 						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
 						_language.get(locale, "field-name"), "fieldName", true),
 					ObjectFieldUtil.createObjectField(
-						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-						_language.get(locale, "name"), "name", true),
-					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_BOOLEAN,
 						ObjectFieldConstants.DB_TYPE_BOOLEAN, true, false, null,
 						_language.get(locale, "include"), "include", false),
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 						ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-						_language.get(locale, "list-type-definition-id"),
-						"listTypeDefinitionId", false),
+						_language.get(locale, "list-type-definition-erc"),
+						"listTypeDefinitionERC", false),
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_BOOLEAN,
 						ObjectFieldConstants.DB_TYPE_BOOLEAN, true, false, null,
@@ -350,6 +344,12 @@ public class FDSViewsPortlet extends MVCPortlet {
 						_language.get(locale, "preselected-values"),
 						"preselectedValues", false)));
 
+		_enableLocalization(fdsDynamicFilterObjectDefinition);
+
+		_addLocalizedCustomObjectField(
+			_language.get(locale, "label"), "label",
+			fdsDynamicFilterObjectDefinition, userId);
+
 		_objectDefinitionLocalService.publishSystemObjectDefinition(
 			userId, fdsDynamicFilterObjectDefinition.getObjectDefinitionId());
 
@@ -359,7 +359,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 			LocalizedMapUtil.getLocalizedMap(
 				"FDSView FDSDynamicFilter Relationship"),
-			"fdsViewFDSDynamicFilterRelationship",
+			"fdsViewFDSDynamicFilterRelationship", false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
@@ -452,7 +452,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			fdsFieldObjectDefinition.getObjectDefinitionId(), 0,
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 			LocalizedMapUtil.getLocalizedMap("FDSView FDSField Relationship"),
-			"fdsViewFDSFieldRelationship",
+			"fdsViewFDSFieldRelationship", false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
@@ -488,7 +488,7 @@ public class FDSViewsPortlet extends MVCPortlet {
 			fdsSortObjectDefinition.getObjectDefinitionId(), 0,
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 			LocalizedMapUtil.getLocalizedMap("FDSView FDSSort Relationship"),
-			"fdsViewFDSSortRelationship",
+			"fdsViewFDSSortRelationship", false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 	}
 
@@ -565,20 +565,16 @@ public class FDSViewsPortlet extends MVCPortlet {
 			fdsViewObjectDefinition.getObjectDefinitionId(), 0,
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 			LocalizedMapUtil.getLocalizedMap("FDSEntry FDSView Relationship"),
-			"fdsEntryFDSViewRelationship",
+			"fdsEntryFDSViewRelationship", false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
 
 		return fdsViewObjectDefinition;
 	}
 
 	private void _enableLocalization(ObjectDefinition objectDefinition) {
-		if (FeatureFlagManagerUtil.isEnabled("LPS-172017")) {
-			objectDefinition.setEnableLocalization(true);
+		objectDefinition.setEnableLocalization(true);
 
-			objectDefinition =
-				_objectDefinitionLocalService.updateObjectDefinition(
-					objectDefinition);
-		}
+		_objectDefinitionLocalService.updateObjectDefinition(objectDefinition);
 	}
 
 	private synchronized void _generate(

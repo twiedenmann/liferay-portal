@@ -30,6 +30,53 @@ interface ItemData {
 	id: number;
 	label: LocalizedValue<string>;
 	status: Status;
+	system: boolean;
+}
+
+function ObjectActionActiveDataRenderer({itemData}: {itemData: ItemData}) {
+	return itemData.active
+		? Liferay.Language.get('yes')
+		: Liferay.Language.get('no');
+}
+
+function ObjectActionLastExecutionDataRenderer({
+	itemData,
+}: {
+	itemData: ItemData;
+}) {
+	return (
+		<strong
+			className={classNames(
+				'label',
+				itemData.status.label === 'never-ran'
+					? 'label-info'
+					: itemData.status.label === 'failed'
+					? 'label-danger'
+					: 'label-success'
+			)}
+		>
+			{itemData.status.label === 'never-ran'
+				? Liferay.Language.get('never-ran')
+				: itemData.status.label === 'failed'
+				? Liferay.Language.get('failed')
+				: Liferay.Language.get('success')}
+		</strong>
+	);
+}
+
+function ObjectActionSourceDataRenderer({itemData}: {itemData: ItemData}) {
+	return (
+		<strong
+			className={classNames(
+				itemData.system ? 'label-info' : 'label-warning',
+				'label'
+			)}
+		>
+			{itemData.system
+				? Liferay.Language.get('system')
+				: Liferay.Language.get('custom')}
+		</strong>
+	);
 }
 
 export default function Actions({
@@ -41,13 +88,7 @@ export default function Actions({
 	style,
 	url,
 }: IFDSTableProps) {
-	function objectActionActiveDataRenderer({itemData}: {itemData: ItemData}) {
-		return itemData.active
-			? Liferay.Language.get('yes')
-			: Liferay.Language.get('no');
-	}
-
-	function objectActionLabelDataRenderer({
+	function ObjectActionLabelDataRenderer({
 		itemData,
 		openSidePanel,
 		value,
@@ -67,39 +108,15 @@ export default function Actions({
 		);
 	}
 
-	function objectActionLastExecutionDataRenderer({
-		itemData,
-	}: {
-		itemData: ItemData;
-	}) {
-		return (
-			<strong
-				className={classNames(
-					'label',
-					itemData.status.label === 'never-ran'
-						? 'label-info'
-						: itemData.status.label === 'failed'
-						? 'label-danger'
-						: 'label-success'
-				)}
-			>
-				{itemData.status.label === 'never-ran'
-					? Liferay.Language.get('never-ran')
-					: itemData.status.label === 'failed'
-					? Liferay.Language.get('failed')
-					: Liferay.Language.get('success')}
-			</strong>
-		);
-	}
-
 	const dataSetProps = {
 		...defaultDataSetProps,
 		apiURL,
 		creationMenu,
 		customDataRenderers: {
-			objectActionActiveDataRenderer,
-			objectActionLabelDataRenderer,
-			objectActionLastExecutionDataRenderer,
+			ObjectActionActiveDataRenderer,
+			ObjectActionLabelDataRenderer,
+			ObjectActionLastExecutionDataRenderer,
+			ObjectActionSourceDataRenderer,
 		},
 		formName,
 		id,
@@ -117,7 +134,7 @@ export default function Actions({
 				schema: {
 					fields: [
 						{
-							contentRenderer: 'objectActionLabelDataRenderer',
+							contentRenderer: 'ObjectActionLabelDataRenderer',
 							expand: false,
 							fieldName: 'label',
 							label: Liferay.Language.get('label'),
@@ -132,7 +149,7 @@ export default function Actions({
 							sortable: false,
 						},
 						{
-							contentRenderer: 'objectActionActiveDataRenderer',
+							contentRenderer: 'ObjectActionActiveDataRenderer',
 							expand: false,
 							fieldName: 'active',
 							label: Liferay.Language.get('active'),
@@ -140,8 +157,16 @@ export default function Actions({
 							sortable: false,
 						},
 						{
+							contentRenderer: 'ObjectActionSourceDataRenderer',
+							expand: false,
+							fieldName: 'source',
+							label: Liferay.Language.get('source'),
+							localizeLabel: true,
+							sortable: false,
+						},
+						{
 							contentRenderer:
-								'objectActionLastExecutionDataRenderer',
+								'ObjectActionLastExecutionDataRenderer',
 							expand: false,
 							fieldName: 'status',
 							label: Liferay.Language.get('last-execution'),

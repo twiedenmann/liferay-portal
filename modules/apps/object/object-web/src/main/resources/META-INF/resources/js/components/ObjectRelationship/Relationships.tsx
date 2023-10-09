@@ -27,13 +27,49 @@ import {ModalDeleteObjectRelationship} from './ModalDeleteObjectRelationship';
 interface ItemData {
 	id: number;
 	reverse: boolean;
+	system?: boolean;
 }
 
 interface RelationshipsProps extends IFDSTableProps {
 	baseResourceURL: string;
 	isApproved: boolean;
+	objectDefinitionExternalReferenceCode: string;
 	objectRelationshipTypes: string[];
 	parameterRequired: boolean;
+}
+
+function ObjectFieldHierarchyDataRenderer({itemData}: {itemData: ItemData}) {
+	return (
+		<strong
+			className={classNames(
+				itemData.reverse ? 'label-info' : 'label-success',
+				'label'
+			)}
+		>
+			{itemData.reverse
+				? Liferay.Language.get('child')
+				: Liferay.Language.get('parent')}
+		</strong>
+	);
+}
+
+function ObjectRelationshipSourceDataRenderer({
+	itemData,
+}: {
+	itemData: ItemData;
+}) {
+	return (
+		<strong
+			className={classNames(
+				itemData.system ? 'label-info' : 'label-warning',
+				'label'
+			)}
+		>
+			{itemData.system
+				? Liferay.Language.get('system')
+				: Liferay.Language.get('custom')}
+		</strong>
+	);
 }
 
 export default function Relationships({
@@ -82,26 +118,7 @@ export default function Relationships({
 		makeFetch();
 	}, [objectDefinitionExternalReferenceCode]);
 
-	function ObjectFieldHierarchyDataRenderer({
-		itemData,
-	}: {
-		itemData: ItemData;
-	}) {
-		return (
-			<strong
-				className={classNames(
-					itemData.reverse ? 'label-info' : 'label-success',
-					'label'
-				)}
-			>
-				{itemData.reverse
-					? Liferay.Language.get('child')
-					: Liferay.Language.get('parent')}
-			</strong>
-		);
-	}
-
-	function objectFieldLabelDataRenderer({
+	function ObjectFieldLabelDataRenderer({
 		itemData,
 		openSidePanel,
 		value,
@@ -127,7 +144,8 @@ export default function Relationships({
 		creationMenu,
 		customDataRenderers: {
 			ObjectFieldHierarchyDataRenderer,
-			objectFieldLabelDataRenderer,
+			ObjectFieldLabelDataRenderer,
+			ObjectRelationshipSourceDataRenderer,
 		},
 		formName,
 		id,
@@ -170,7 +188,7 @@ export default function Relationships({
 				schema: {
 					fields: [
 						{
-							contentRenderer: 'objectFieldLabelDataRenderer',
+							contentRenderer: 'ObjectFieldLabelDataRenderer',
 							expand: false,
 							fieldName: 'label',
 							label: Liferay.Language.get('label'),
@@ -199,6 +217,15 @@ export default function Relationships({
 							localizeLabel: true,
 							sortable: false,
 						},
+						{
+							contentRenderer:
+								'ObjectRelationshipSourceDataRenderer',
+							expand: false,
+							fieldName: 'source',
+							label: Liferay.Language.get('source'),
+							localizeLabel: true,
+							sortable: false,
+						},
 					],
 				},
 				thumbnail: 'table',
@@ -222,10 +249,10 @@ export default function Relationships({
 				<ModalAddObjectRelationship
 					baseResourceURL={baseResourceURL}
 					handleOnClose={() => setShowAddModal(false)}
-					objectDefinitionExternalReferenceCode={
+					objectDefinitionExternalReferenceCode1={
 						objectDefinitionExternalReferenceCode
 					}
-					parameterRequired={parameterRequired}
+					objectRelationshipParameterRequired={parameterRequired}
 				/>
 			)}
 

@@ -226,6 +226,14 @@ public class ObjectEntryDTOConverter
 										objectDefinition.
 											getTitleObjectFieldId());
 
+								if (objectField == null) {
+									objectField =
+										_objectFieldLocalService.getObjectField(
+											objectDefinition.
+												getObjectDefinitionId(),
+											"id");
+								}
+
 								values.put(
 									objectField.getName(),
 									ObjectEntryValuesUtil.getTitleFieldValue(
@@ -626,9 +634,7 @@ public class ObjectEntryDTOConverter
 				continue;
 			}
 
-			if (FeatureFlagManagerUtil.isEnabled("LPS-172017") &&
-				objectField.isLocalized()) {
-
+			if (objectField.isLocalized()) {
 				map.put(
 					objectField.getI18nObjectFieldName(),
 					values.get(objectField.getI18nObjectFieldName()));
