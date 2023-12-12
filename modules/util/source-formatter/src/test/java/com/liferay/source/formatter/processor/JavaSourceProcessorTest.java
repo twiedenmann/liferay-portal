@@ -359,6 +359,23 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testIncorrectReferenceCardinality() throws Exception {
+		test(
+			SourceProcessorTestParameters.create(
+				"IncorrectReferenceCardinality.testjava"
+			).addExpectedMessage(
+				"Use Snapshot instead of 'cardinality = ReferenceCardinality." +
+					"OPTIONAL', see LPS-184625",
+				20
+			).addExpectedMessage(
+				"When using 'cardinality = ReferenceCardinality.OPTIONAL' " +
+					"and 'policyOption = ReferencePolicyOption.GREEDY', " +
+						"always use 'policy = ReferencePolicy.DYNAMIC' as well",
+				20
+			));
+	}
+
+	@Test
 	public void testIncorrectVariableNames() throws Exception {
 		test(
 			SourceProcessorTestParameters.create(
@@ -473,6 +490,18 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testMethodEquals() throws Exception {
+		test(
+			SourceProcessorTestParameters.create(
+				"MethodEquals.testjava"
+			).addExpectedMessage(
+				"Use 'Objects.equals' instead of calling 'equals' on method", 15
+			).addExpectedMessage(
+				"Use 'Objects.equals' instead of calling 'equals' on method", 21
+			));
+	}
+
+	@Test
 	public void testMissingAuthor() throws Exception {
 		test("MissingAuthor.testjava", "Missing author", 11);
 	}
@@ -560,16 +589,6 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 		test(
 			"MissingEmptyLinesInInstanceInit.testjava",
 			"There should be an empty line after line '18'", 18);
-	}
-
-	@Test
-	public void testMissingReferencePolicyDynamic() throws Exception {
-		test(
-			"MissingReferencePolicyDynamic.testjava",
-			"When using 'cardinality = ReferenceCardinality.OPTIONAL' and " +
-				"'policyOption = ReferencePolicyOption.GREEDY', always use " +
-					"'policy = ReferencePolicy.DYNAMIC' as well",
-			21);
 	}
 
 	@Test

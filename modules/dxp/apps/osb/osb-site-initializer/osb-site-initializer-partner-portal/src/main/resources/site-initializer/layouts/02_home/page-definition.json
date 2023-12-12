@@ -1832,6 +1832,7 @@
 										},
 										{
 											"columnViewportDefinition": {
+												"size": 12
 											},
 											"id": "tablet"
 										}
@@ -1843,7 +1844,7 @@
 										"definition": {
 											"widgetInstance": {
 												"widgetConfig": {
-													"properties": "route=revenue-chart"
+													"properties": "path=revenue-chart"
 												},
 												"widgetName": "com_liferay_client_extension_web_internal_portlet_ClientExtensionEntryPortlet_[$COMPANY_ID$]_LXC_liferay_partner_custom_element"
 											}
@@ -1869,6 +1870,7 @@
 										},
 										{
 											"columnViewportDefinition": {
+												"size": 12
 											},
 											"id": "tablet"
 										}
@@ -1880,7 +1882,7 @@
 										"definition": {
 											"widgetInstance": {
 												"widgetConfig": {
-													"properties": "route=deals-chart"
+													"properties": "path=mdf-requests-chart"
 												},
 												"widgetName": "com_liferay_client_extension_web_internal_portlet_ClientExtensionEntryPortlet_[$COMPANY_ID$]_LXC_liferay_partner_custom_element"
 											}
@@ -1906,6 +1908,55 @@
 										},
 										{
 											"columnViewportDefinition": {
+												"size": 12
+											},
+											"id": "tablet"
+										}
+									],
+									"size": 4
+								},
+								"pageElements": [
+									{
+										"definition": {
+											"indexed": true,
+											"layout": {
+											}
+										},
+										"pageElements": [
+											{
+												"definition": {
+													"widgetInstance": {
+														"widgetConfig": {
+															"properties": "path=level-chart"
+														},
+														"widgetName": "com_liferay_client_extension_web_internal_portlet_ClientExtensionEntryPortlet_[$COMPANY_ID$]_LXC_liferay_partner_custom_element"
+													}
+												},
+												"type": "Widget"
+											}
+										],
+										"type": "Section"
+									}
+								],
+								"type": "Column"
+							},
+							{
+								"definition": {
+									"columnViewports": [
+										{
+											"columnViewportDefinition": {
+												"size": 12
+											},
+											"id": "landscapeMobile"
+										},
+										{
+											"columnViewportDefinition": {
+											},
+											"id": "portraitMobile"
+										},
+										{
+											"columnViewportDefinition": {
+												"size": 12
 											},
 											"id": "tablet"
 										}
@@ -1917,7 +1968,7 @@
 										"definition": {
 											"widgetInstance": {
 												"widgetConfig": {
-													"properties": "route=mdf-requests-chart"
+													"properties": "path=deals-chart"
 												},
 												"widgetName": "com_liferay_client_extension_web_internal_portlet_ClientExtensionEntryPortlet_[$COMPANY_ID$]_LXC_liferay_partner_custom_element"
 											}
@@ -1943,44 +1994,8 @@
 										},
 										{
 											"columnViewportDefinition": {
-											},
-											"id": "tablet"
-										}
-									],
-									"size": 4
-								},
-								"pageElements": [
-									{
-										"definition": {
-											"widgetInstance": {
-												"widgetConfig": {
-													"properties": "route=level-chart"
-												},
-												"widgetName": "com_liferay_client_extension_web_internal_portlet_ClientExtensionEntryPortlet_[$COMPANY_ID$]_LXC_liferay_partner_custom_element"
-											}
-										},
-										"type": "Widget"
-									}
-								],
-								"type": "Column"
-							},
-							{
-								"definition": {
-									"columnViewports": [
-										{
-											"columnViewportDefinition": {
 												"size": 12
 											},
-											"id": "landscapeMobile"
-										},
-										{
-											"columnViewportDefinition": {
-											},
-											"id": "portraitMobile"
-										},
-										{
-											"columnViewportDefinition": {
-											},
 											"id": "tablet"
 										}
 									],
@@ -1991,7 +2006,7 @@
 										"definition": {
 											"widgetInstance": {
 												"widgetConfig": {
-													"properties": "route=renewals-chart"
+													"properties": "path=renewals-chart"
 												},
 												"widgetName": "com_liferay_client_extension_web_internal_portlet_ClientExtensionEntryPortlet_[$COMPANY_ID$]_LXC_liferay_partner_custom_element"
 											}

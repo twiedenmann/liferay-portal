@@ -9,9 +9,9 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLProcessorConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
+import com.liferay.document.library.kernel.processor.DLProcessor;
+import com.liferay.document.library.kernel.processor.PDFProcessorUtil;
 import com.liferay.document.library.kernel.service.DLAppService;
-import com.liferay.document.library.kernel.util.DLProcessor;
-import com.liferay.document.library.kernel.util.PDFProcessorUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -386,7 +386,7 @@ public class PDFProcessorTest {
 	public void testShouldCreateNewPreviewOnAddWithCorrectNumberOfPagesConfiguration()
 		throws Exception {
 
-		_withPDFPreviewSystemConfiguration(
+		_withDLFileEntrySystemConfiguration(
 			10,
 			() -> {
 				FileEntry fileEntry = _dlAppService.addFileEntry(
@@ -410,7 +410,7 @@ public class PDFProcessorTest {
 	public void testShouldCreateNewPreviewOnAddWithCorrectNumberOfPagesLimitedByConfiguration()
 		throws Exception {
 
-		_withPDFPreviewSystemConfiguration(
+		_withDLFileEntrySystemConfiguration(
 			1,
 			() -> {
 				FileEntry fileEntry = _dlAppService.addFileEntry(
@@ -516,10 +516,6 @@ public class PDFProcessorTest {
 		final AtomicBoolean cleanUp = new AtomicBoolean(false);
 
 		DLProcessor cleanUpDLProcessor = new DLProcessor() {
-
-			@Override
-			public void afterPropertiesSet() throws Exception {
-			}
 
 			@Override
 			public void cleanUp(FileEntry fileEntry) {
@@ -641,7 +637,7 @@ public class PDFProcessorTest {
 
 	}
 
-	private void _withPDFPreviewSystemConfiguration(
+	private void _withDLFileEntrySystemConfiguration(
 			int maxNumberOfPages, UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
@@ -652,8 +648,8 @@ public class PDFProcessorTest {
 
 		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
 				new ConfigurationTemporarySwapper(
-					"com.liferay.document.library.preview.pdf.internal." +
-						"configuration.PDFPreviewConfiguration",
+					"com.liferay.document.library.configuration." +
+						"DLFileEntryConfiguration",
 					dictionary)) {
 
 			unsafeRunnable.run();

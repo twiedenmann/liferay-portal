@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.service.LayoutServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
@@ -135,14 +136,23 @@ public class SelectLayoutTag extends IncludeTag {
 
 		String[] selectedLayoutIds = ParamUtil.getStringValues(
 			httpServletRequest, "layoutUuid");
+		long selPlid = ParamUtil.getLong(
+			httpServletRequest, "selPlid", LayoutConstants.DEFAULT_PLID);
 
 		return HashMapBuilder.<String, Object>put(
 			"checkDisplayPage", _checkDisplayPage
 		).put(
 			"config",
 			HashMapBuilder.<String, Object>put(
+				"findLayoutsURL",
+				HttpComponentsUtil.addParameter(
+					themeDisplay.getPathMain() + "/portal/find_layouts",
+					"selPlid", selPlid)
+			).put(
 				"loadMoreItemsURL",
-				themeDisplay.getPathMain() + "/portal/get_layouts"
+				HttpComponentsUtil.addParameter(
+					themeDisplay.getPathMain() + "/portal/get_layouts",
+					"selPlid", selPlid)
 			).put(
 				"maxPageSize",
 				GetterUtil.getInteger(
@@ -159,7 +169,8 @@ public class SelectLayoutTag extends IncludeTag {
 		).put(
 			"namespace", _namespace
 		).put(
-			"nodes", _getLayoutsJSONArray(selectedLayoutIds, themeDisplay)
+			"nodes",
+			_getLayoutsJSONArray(selectedLayoutIds, selPlid, themeDisplay)
 		).put(
 			"privateLayout", _privateLayout
 		).put(
@@ -168,7 +179,7 @@ public class SelectLayoutTag extends IncludeTag {
 	}
 
 	private JSONArray _getLayoutsJSONArray(
-			String[] selectedLayoutIds, ThemeDisplay themeDisplay)
+			String[] selectedLayoutIds, long selPlid, ThemeDisplay themeDisplay)
 		throws Exception {
 
 		Group group = themeDisplay.getScopeGroup();
@@ -186,7 +197,7 @@ public class SelectLayoutTag extends IncludeTag {
 					_checkDisplayPage, _enableCurrentPage,
 					themeDisplay.getScopeGroupId(), getRequest(),
 					_itemSelectorReturnType, _privateLayout, 0,
-					selectedLayoutIds, 0,
+					selectedLayoutIds, selPlid, 0,
 					GetterUtil.getInteger(
 						PropsValues.LAYOUT_MANAGE_PAGES_INITIAL_CHILDREN))
 			).put(

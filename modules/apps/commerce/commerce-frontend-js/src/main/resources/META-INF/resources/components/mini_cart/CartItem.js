@@ -25,7 +25,7 @@ import {
 	REMOVAL_TIMEOUT,
 	UNEXPECTED_ERROR,
 } from './util/constants';
-import {generateProductPageURL, parseOptions} from './util/index';
+import {filterOptions, generateProductPageURL, hasOptions} from './util/index';
 
 const CartResource = ServiceProvider.DeliveryCartAPI('v1');
 
@@ -78,8 +78,9 @@ function CartItem({
 	const [itemState, setItemState] = useState(INITIAL_ITEM_STATE);
 	const [selectorQuantity, setSelectorQuantity] = useState(cartItemQuantity);
 	const hasChildItems = !!childItems?.length;
+	const hasSkuUnitOfMeasure = !!skuUnitOfMeasure?.key;
 	const isMounted = useIsMounted();
-	const options = parseOptions(rawOptions);
+	const options = filterOptions(rawOptions);
 
 	useEffect(() => {
 		setSelectorQuantity(cartItemQuantity);
@@ -170,7 +171,9 @@ function CartItem({
 
 	const getClassName = (className) => {
 		return classnames(className, {
-			'mini-cart-item-alignment': Liferay.FeatureFlags['COMMERCE-9599'],
+			'mini-cart-item-alignment':
+				Liferay.FeatureFlags['COMMERCE-9599'] ||
+				Liferay.FeatureFlags['COMMERCE-11287'],
 		});
 	};
 
@@ -182,7 +185,8 @@ function CartItem({
 				'is-removed': isRemoved,
 			})}
 		>
-			{Liferay.FeatureFlags['COMMERCE-9599'] ? (
+			{Liferay.FeatureFlags['COMMERCE-9599'] ||
+			Liferay.FeatureFlags['COMMERCE-11287'] ? (
 				<div className="mini-cart-item-details position-relative">
 					<a
 						className="h-100 mini-cart-item-anchor position-absolute w-100"
@@ -316,7 +320,10 @@ function CartItem({
 			</div>
 
 			<div className={getClassName('mini-cart-item-actions')}>
-				{Liferay.FeatureFlags['COMMERCE-9599'] && hasChildItems ? (
+				{(Liferay.FeatureFlags['COMMERCE-9599'] &&
+					hasOptions(rawOptions)) ||
+				(Liferay.FeatureFlags['COMMERCE-11287'] &&
+					hasSkuUnitOfMeasure) ? (
 					<ClayDropDown
 						closeOnClick
 						trigger={
@@ -338,7 +345,14 @@ function CartItem({
 						<ClayDropDown.ItemList>
 							<ClayDropDown.Item
 								onClick={() =>
-									setEditedItem({cartItemId, name, productId})
+									setEditedItem({
+										cartItemId,
+										name,
+										productId,
+										type: hasSkuUnitOfMeasure
+											? 'uom'
+											: 'options',
+									})
 								}
 							>
 								{Liferay.Language.get('edit')}

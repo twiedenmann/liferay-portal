@@ -6,15 +6,15 @@
 package com.liferay.client.extension.type.internal.factory;
 
 import com.liferay.client.extension.exception.ClientExtensionEntryTypeSettingsException;
-import com.liferay.client.extension.model.ClientExtensionEntry;
 import com.liferay.client.extension.type.ThemeCSSCET;
-import com.liferay.client.extension.type.factory.CETImplFactory;
 import com.liferay.client.extension.type.internal.ThemeCSSCETImpl;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.Date;
 import java.util.Properties;
 
 import javax.portlet.PortletRequest;
@@ -22,62 +22,65 @@ import javax.portlet.PortletRequest;
 /**
  * @author Iván Zaera Avellón
  */
-public class ThemeCSSCETImplFactoryImpl implements CETImplFactory<ThemeCSSCET> {
+public class ThemeCSSCETImplFactoryImpl
+	extends BaseCETImplFactoryImpl<ThemeCSSCET> {
 
-	@Override
-	public ThemeCSSCET create(ClientExtensionEntry clientExtensionEntry)
-		throws PortalException {
-
-		return new ThemeCSSCETImpl(clientExtensionEntry);
-	}
-
-	@Override
-	public ThemeCSSCET create(PortletRequest portletRequest)
-		throws PortalException {
-
-		return new ThemeCSSCETImpl(portletRequest);
+	public ThemeCSSCETImplFactoryImpl() {
+		super(ThemeCSSCET.class);
 	}
 
 	@Override
 	public ThemeCSSCET create(
-			String baseURL, long companyId, String description,
-			String externalReferenceCode, String name, Properties properties,
-			String sourceCodeURL, UnicodeProperties unicodeProperties)
-		throws PortalException {
+		String baseURL, long companyId, Date createDate, String description,
+		String externalReferenceCode, Date modifiedDate, String name,
+		Properties properties, boolean readOnly, String sourceCodeURL,
+		int status, UnicodeProperties typeSettingsUnicodeProperties) {
 
 		return new ThemeCSSCETImpl(
-			baseURL, companyId, description, externalReferenceCode, name,
-			properties, sourceCodeURL, unicodeProperties);
+			baseURL, companyId, createDate, description, externalReferenceCode,
+			modifiedDate, name, properties, readOnly, sourceCodeURL, status,
+			typeSettingsUnicodeProperties);
 	}
 
 	@Override
-	public void validate(
-			UnicodeProperties newTypeSettingsUnicodeProperties,
-			UnicodeProperties oldTypeSettingsUnicodeProperties)
-		throws PortalException {
+	public UnicodeProperties getUnicodeProperties(
+		PortletRequest portletRequest) {
 
-		ThemeCSSCET newThemeCSSCET = new ThemeCSSCETImpl(
-			StringPool.BLANK, newTypeSettingsUnicodeProperties);
+		return UnicodePropertiesBuilder.create(
+			true
+		).put(
+			"clayURL", ParamUtil.getString(portletRequest, "clayURL")
+		).put(
+			"mainURL", ParamUtil.getString(portletRequest, "mainURL")
+		).build();
+	}
+
+	@Override
+	public void validate(ThemeCSSCET newThemeCSSCET, ThemeCSSCET oldThemeCSSCET)
+		throws PortalException {
 
 		String baseURL = newThemeCSSCET.getBaseURL();
 
 		if (!Validator.isBlank(baseURL) && !Validator.isUrl(baseURL, true)) {
 			throw new ClientExtensionEntryTypeSettingsException(
-				"please-enter-a-valid-base-url");
+				"Invalid base URL: " + baseURL, "base-url-x-is-invalid",
+				baseURL);
 		}
 
 		String clayURL = newThemeCSSCET.getClayURL();
 
 		if (!Validator.isBlank(clayURL) && !Validator.isUrl(clayURL, true)) {
 			throw new ClientExtensionEntryTypeSettingsException(
-				"please-enter-a-valid-clay-url");
+				"Invalid Clay CSS URL: " + clayURL, "clay-css-url-x-is-invalid",
+				clayURL);
 		}
 
 		String mainURL = newThemeCSSCET.getMainURL();
 
 		if (!Validator.isBlank(mainURL) && !Validator.isUrl(mainURL, true)) {
 			throw new ClientExtensionEntryTypeSettingsException(
-				"please-enter-a-valid-main-url");
+				"Invalid Main CSS URL: " + mainURL, "main-css-url-x-is-invalid",
+				mainURL);
 		}
 	}
 

@@ -24,6 +24,8 @@ public interface Build {
 
 	public static final String DEPENDENCIES_URL_TOKEN = "${dependencies.url}";
 
+	public void addInvocation(Invocation invocation);
+
 	public void addTimelineData(TimelineData timelineData);
 
 	public void archive();
@@ -54,6 +56,8 @@ public interface Build {
 
 	public JSONObject getBuildJSONObject();
 
+	public JSONObject getBuildJSONObject(String tree);
+
 	public String getBuildName();
 
 	public int getBuildNumber();
@@ -65,6 +69,8 @@ public interface Build {
 	public String getBuildURLRegex();
 
 	public String getConsoleText();
+
+	public Invocation getCurrentInvocation();
 
 	public Long getDelayTime();
 
@@ -87,6 +93,8 @@ public interface Build {
 
 	public String getInvocationURL();
 
+	public int getInvokedBatchSize();
+
 	public Long getInvokedTime();
 
 	public JenkinsCohort getJenkinsCohort();
@@ -105,13 +113,19 @@ public interface Build {
 
 	public TestResult getLongestRunningTest();
 
+	public int getMaximumSlavesPerHost();
+
 	public Map<String, String> getMetricLabels();
+
+	public int getMinimumSlaveRAM();
 
 	public Map<String, String> getParameters();
 
 	public String getParameterValue(String name);
 
 	public Build getParentBuild();
+
+	public Invocation getPreviousInvocation();
 
 	public String getResult();
 
@@ -157,11 +171,7 @@ public interface Build {
 
 	public boolean hasGenericCIFailure();
 
-	public Invocation invoke();
-
-	public boolean isApplyReinvokeRules();
-
-	public boolean isApplySlaveOfflineRules();
+	public boolean hasMaximumInvocationCount();
 
 	public boolean isBuildModified();
 
@@ -177,17 +187,25 @@ public interface Build {
 
 	public boolean isUniqueFailure();
 
-	public void reinvoke();
-
-	public void reinvoke(ReinvokeRule reinvokeRule);
-
 	public String replaceBuildURL(String text);
+
+	public void reset();
 
 	public void setArchiveName(String archiveName);
 
 	public void setArchiveRootDir(File archiveRootDir);
 
+	public void setBuildURL(String buildURL);
+
 	public void setCompareToUpstream(boolean compareToUpstream);
+
+	public void setJenkinsCohort(JenkinsCohort jenkinsCohort);
+
+	public void setJenkinsMaster(JenkinsMaster jenkinsMaster);
+
+	public void setResult(String result);
+
+	public void setStatus(String status);
 
 	public void takeSlaveOffline(SlaveOfflineRule slaveOfflineRule);
 
@@ -221,17 +239,32 @@ public interface Build {
 
 	public class Invocation {
 
-		public Invocation(JenkinsMaster jenkinsMaster) {
+		public Invocation(Build build) {
+			_build = build;
+		}
+
+		public Invocation(Build build, JenkinsMaster jenkinsMaster) {
+			_build = build;
 			_jenkinsMaster = jenkinsMaster;
 		}
 
-		public Invocation(JenkinsMaster jenkinsMaster, long queueId) {
+		public Invocation(
+			Build build, JenkinsMaster jenkinsMaster, long queueId) {
+
+			_build = build;
 			_jenkinsMaster = jenkinsMaster;
 			_queueId = queueId;
 		}
 
-		public int getBuildNumber() {
-			return _buildNumber;
+		public String getBuildURL() {
+			if (JenkinsResultsParserUtil.isURL(_buildURL)) {
+				return _buildURL;
+			}
+
+			_buildURL = JenkinsResultsParserUtil.getBuildURL(
+				_build.getJobName(), getJenkinsMaster(), getQueueId());
+
+			return _buildURL;
 		}
 
 		public JenkinsMaster getJenkinsMaster() {
@@ -242,16 +275,21 @@ public interface Build {
 			return _queueId;
 		}
 
-		public void setBuildNumber(int buildNumber) {
-			_buildNumber = buildNumber;
+		public void setBuildURL(String buildURL) {
+			_buildURL = buildURL;
+		}
+
+		public void setJenkinsMaster(JenkinsMaster jenkinsMaster) {
+			_jenkinsMaster = jenkinsMaster;
 		}
 
 		public void setQueueId(long queueId) {
 			_queueId = queueId;
 		}
 
-		private int _buildNumber;
-		private final JenkinsMaster _jenkinsMaster;
+		private final Build _build;
+		private String _buildURL;
+		private JenkinsMaster _jenkinsMaster;
 		private long _queueId;
 
 	}

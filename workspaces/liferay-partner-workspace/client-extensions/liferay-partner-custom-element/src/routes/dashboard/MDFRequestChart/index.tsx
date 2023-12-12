@@ -12,7 +12,13 @@ import DonutChart from '../../../common/components/dashboard/components/DonutCha
 import {mdfChartColumnColors} from '../../../common/components/dashboard/utils/constants/chartColumnsColors';
 import getChartColumns from '../../../common/components/dashboard/utils/getChartColumns';
 import {siteURL} from '../../../common/components/dashboard/utils/siteURL';
+import {ObjectActionName} from '../../../common/enums/objectActionName';
+import {PermissionActionType} from '../../../common/enums/permissionActionType';
+import {PRMPageRoute} from '../../../common/enums/prmPageRoute';
+import usePermissionActions from '../../../common/hooks/usePermissionActions';
 import {Liferay} from '../../../common/services/liferay';
+import {LiferayAPIs} from '../../../common/services/liferay/common/enums/apis';
+import {retry} from '../../../common/utils/retry';
 
 const MDFRequestChart = () => {
 	const [columnsMDFChart, setColumnsMDFChart] = useState([]);
@@ -21,29 +27,59 @@ const MDFRequestChart = () => {
 	const [currencyData, setCurrencyData] = useState('');
 
 	const [loading, setLoading] = useState(false);
+	const actions = usePermissionActions(ObjectActionName.MDF_REQUEST);
 
 	const getMDFRequests = async () => {
 		setLoading(true);
 
 		// eslint-disable-next-line @liferay/portal/no-global-fetch
-		const response = await fetch(
-			`/o/c/mdfrequests?nestedFields=accountEntry,mdfReqToActs,actToBgts,mdfReqToMDFClms&nestedFieldsDepth=2&pageSize=9999&filter=mdfRequestStatus ne 'draft'`,
-			{
+		const response = await retry<Response>(() =>
+			fetch(
+				`/o/c/mdfrequests?nestedFields=accountEntry,mdfReqToActs,actToBgts,mdfReqToMDFClms&nestedFieldsDepth=2&pageSize=9999&filter=mdfRequestStatus ne 'draft'`,
+				{
+					headers: {
+						'accept': 'application/json',
+						'x-csrf-token': Liferay.authToken,
+					},
+				}
+			)
+		);
+
+		const myUserAccountResponse = await retry<Response>(() =>
+			fetch(`/o/${LiferayAPIs.HEADERLESS_ADMIN_USER}/my-user-account`, {
 				headers: {
 					'accept': 'application/json',
 					'x-csrf-token': Liferay.authToken,
 				},
-			}
+			})
 		);
+		const myUserAccount = await myUserAccountResponse.json();
 
-		if (response.ok) {
+		const accountResponse =
+			myUserAccount.accountBriefs[0]?.externalReferenceCode &&
+			(await retry<Response>(() =>
+				fetch(
+					`/o/${LiferayAPIs.HEADERLESS_ADMIN_USER}/accounts/by-external-reference-code/${myUserAccount.accountBriefs[0]?.externalReferenceCode}`,
+					{
+						headers: {
+							'accept': 'application/json',
+							'x-csrf-token': Liferay.authToken,
+						},
+					}
+				)
+			));
+
+		const account = await accountResponse?.json();
+
+		const currency = account ? account.currency : 'USD';
+
+		if (response.ok && currency) {
 			const mdfRequests = await response.json();
 
-			const mdfCurrency = mdfRequests?.items[0]?.currency?.key;
-			setCurrencyData(mdfCurrency);
+			setCurrencyData(currency);
 
 			getChartColumns(
-				mdfCurrency,
+				currency,
 				mdfRequests,
 				setColumnsMDFChart,
 				setTitleChart,
@@ -55,10 +91,6 @@ const MDFRequestChart = () => {
 			return;
 		}
 
-		Liferay.Util.openToast({
-			message: 'An unexpected error occured.',
-			type: 'danger',
-		});
 		setLoading(false);
 	};
 
@@ -74,32 +106,37 @@ const MDFRequestChart = () => {
 
 	return (
 		<Container
-			className="dashboard-mdf-request-chart"
+			className="dashboard-mdf-chart justify-content-between"
 			footer={
-				<>
+				<div className="mt-n2">
 					<ClayButton
-						className="border-brand-primary-darken-1 mr-4 text-brand-primary-darken-1"
+						className="bg-neutral-0 border-brand-primary-darken-1 text-brand-primary-darken-1"
 						displayType="secondary"
 						onClick={() =>
 							Liferay.Util.navigate(
 								`${siteURL}/marketing/mdf-requests`
 							)
 						}
+						size="sm"
 					>
 						View all
 					</ClayButton>
 
-					<ClayButton
-						displayType="primary"
-						onClick={() =>
-							Liferay.Util.navigate(
-								`${siteURL}/marketing/mdf-requests/new`
-							)
-						}
-					>
-						New MDF Request
-					</ClayButton>
-				</>
+					{actions?.includes(PermissionActionType.CREATE) && (
+						<ClayButton
+							className="btn btn-primary ml-4"
+							displayType="primary"
+							onClick={() =>
+								Liferay.Util.navigate(
+									`${siteURL}/${PRMPageRoute.CREATE_MDF_REQUEST}`
+								)
+							}
+							size="sm"
+						>
+							New MDF Request
+						</ClayButton>
+					)}
+				</div>
 			}
 			title="Market Development Funds"
 		>

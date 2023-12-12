@@ -111,6 +111,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -1042,30 +1043,18 @@ public class JournalArticleLocalServiceImpl
 		targetArticle.setStatusByUserName(user.getFullName());
 		targetArticle.setStatusDate(modifiedDate);
 
-		int uniqueUrlTitleCount = _getUniqueUrlTitleCount(
-			groupId, targetArticleId,
-			JournalUtil.getUrlTitle(id, sourceArticle.getUrlTitle()));
-
 		Map<Locale, String> newTitleMap = sourceArticle.getTitleMap();
 		Map<Locale, String> newUniqueURLTitleMap = new HashMap<>();
 
 		for (Map.Entry<Locale, String> entry : newTitleMap.entrySet()) {
 			Locale locale = entry.getKey();
-			String title = entry.getValue();
 
-			newTitleMap.put(
-				locale,
-				StringBundler.concat(
-					title, StringPool.SPACE, StringPool.OPEN_PARENTHESIS,
-					_language.get(locale, "copy"), StringPool.SPACE,
-					uniqueUrlTitleCount, StringPool.CLOSE_PARENTHESIS));
+			String uniqueUrlTitle = _getUniqueUrlTitle(
+				groupId, targetArticleId, entry.getValue());
+
+			newTitleMap.put(locale, uniqueUrlTitle);
 			newUniqueURLTitleMap.put(
-				locale,
-				getUniqueUrlTitle(
-					id, groupId, targetArticleId,
-					StringBundler.concat(
-						title, StringPool.SPACE, _language.get(locale, "copy"),
-						StringPool.SPACE, uniqueUrlTitleCount)));
+				locale, JournalUtil.getUrlTitle(id, uniqueUrlTitle));
 		}
 
 		DDMFormValues ddmFormValues = sourceArticle.getDDMFormValues();
@@ -1123,23 +1112,29 @@ public class JournalArticleLocalServiceImpl
 
 		// Asset
 
-		long[] assetCategoryIds = _assetCategoryLocalService.getCategoryIds(
-			JournalArticle.class.getName(), sourceArticle.getResourcePrimKey());
-		String[] assetTagNames = _assetTagLocalService.getTagNames(
-			JournalArticle.class.getName(), sourceArticle.getResourcePrimKey());
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			JournalArticle.class.getName(), sourceArticle.getId());
 
-		AssetEntry oldAssetEntry = _assetEntryLocalService.getEntry(
-			JournalArticle.class.getName(), sourceArticle.getResourcePrimKey());
+		if (assetEntry == null) {
+			assetEntry = _assetEntryLocalService.getEntry(
+				JournalArticle.class.getName(),
+				sourceArticle.getResourcePrimKey());
+		}
+
+		long[] assetCategoryIds = _assetCategoryLocalService.getCategoryIds(
+			JournalArticle.class.getName(), assetEntry.getClassPK());
+		String[] assetTagNames = _assetTagLocalService.getTagNames(
+			JournalArticle.class.getName(), assetEntry.getClassPK());
 
 		List<AssetLink> assetLinks = _assetLinkLocalService.getDirectLinks(
-			oldAssetEntry.getEntryId(), false);
+			assetEntry.getEntryId(), false);
 
 		long[] assetLinkEntryIds = ListUtil.toLongArray(
 			assetLinks, AssetLink.ENTRY_ID2_ACCESSOR);
 
 		updateAsset(
 			userId, targetArticle, assetCategoryIds, assetTagNames,
-			assetLinkEntryIds, oldAssetEntry.getPriority());
+			assetLinkEntryIds, assetEntry.getPriority());
 
 		AssetDisplayPageEntry assetDisplayPageEntry =
 			_assetDisplayPageEntryLocalService.fetchAssetDisplayPageEntry(
@@ -1366,16 +1361,36 @@ public class JournalArticleLocalServiceImpl
 
 		// System event
 
-		if (articleResource != null) {
-			_systemEventLocalService.addSystemEvent(
-				0, article.getGroupId(), article.getModelClassName(),
-				article.getPrimaryKey(), articleResource.getUuid(), null,
-				SystemEventConstants.TYPE_DELETE,
-				JSONUtil.put(
-					"uuid", article.getUuid()
-				).put(
-					"version", article.getVersion()
-				).toString());
+		if (FeatureFlagManagerUtil.isEnabled(
+				article.getCompanyId(), "LPS-165481")) {
+
+			if (articleResource != null) {
+				_systemEventLocalService.addSystemEvent(
+					0, article.getGroupId(), article.getModelClassName(),
+					article.getPrimaryKey(), articleResource.getUuid(), null,
+					SystemEventConstants.TYPE_DELETE,
+					JSONUtil.put(
+						"assetTitle",
+						article.getTitle(article.getDefaultLanguageId())
+					).put(
+						"uuid", article.getUuid()
+					).put(
+						"version", article.getVersion()
+					).toString());
+			}
+		}
+		else {
+			if (articleResource != null) {
+				_systemEventLocalService.addSystemEvent(
+					0, article.getGroupId(), article.getModelClassName(),
+					article.getPrimaryKey(), articleResource.getUuid(), null,
+					SystemEventConstants.TYPE_DELETE,
+					JSONUtil.put(
+						"uuid", article.getUuid()
+					).put(
+						"version", article.getVersion()
+					).toString());
+			}
 		}
 
 		return article;
@@ -1432,12 +1447,16 @@ public class JournalArticleLocalServiceImpl
 			_journalArticleResourceLocalService.fetchArticleResource(
 				groupId, articleId);
 
+		String assetTitle = StringPool.BLANK;
+
 		try {
 			List<JournalArticle> articles = journalArticlePersistence.findByG_A(
 				groupId, articleId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				new ArticleVersionComparator(true));
 
 			for (JournalArticle article : articles) {
+				assetTitle = article.getTitle(article.getDefaultLanguageId());
+
 				journalArticleLocalService.deleteArticle(
 					article, null, serviceContext);
 			}
@@ -1446,11 +1465,26 @@ public class JournalArticleLocalServiceImpl
 			SystemEventHierarchyEntryThreadLocal.pop(JournalArticle.class);
 		}
 
-		if (articleResource != null) {
-			_systemEventLocalService.addSystemEvent(
-				0, groupId, JournalArticle.class.getName(),
-				articleResource.getResourcePrimKey(), articleResource.getUuid(),
-				null, SystemEventConstants.TYPE_DELETE, StringPool.BLANK);
+		if (FeatureFlagManagerUtil.isEnabled("LPS-165481")) {
+			if (articleResource != null) {
+				_systemEventLocalService.addSystemEvent(
+					0, groupId, JournalArticle.class.getName(),
+					articleResource.getResourcePrimKey(),
+					articleResource.getUuid(), null,
+					SystemEventConstants.TYPE_DELETE,
+					JSONUtil.put(
+						"assetTitle", assetTitle
+					).toString());
+			}
+		}
+		else {
+			if (articleResource != null) {
+				_systemEventLocalService.addSystemEvent(
+					0, groupId, JournalArticle.class.getName(),
+					articleResource.getResourcePrimKey(),
+					articleResource.getUuid(), null,
+					SystemEventConstants.TYPE_DELETE, StringPool.BLANK);
+			}
 		}
 	}
 
@@ -3002,6 +3036,12 @@ public class JournalArticleLocalServiceImpl
 	@Override
 	public int getArticlesCount(long groupId, String articleId) {
 		return journalArticlePersistence.countByG_A(groupId, articleId);
+	}
+
+	@Override
+	public int getArticlesCountByResourcePrimKey(long resourcePrimKey) {
+		return journalArticlePersistence.countByResourcePrimKey(
+			resourcePrimKey);
 	}
 
 	@Override
@@ -5108,15 +5148,16 @@ public class JournalArticleLocalServiceImpl
 
 		return journalArticleLocalService.updateArticle(
 			userId, groupId, folderId, articleId, version, titleMap,
-			descriptionMap, null, content, article.getDDMTemplateKey(),
-			layoutUuid, displayDateMonth, displayDateDay, displayDateYear,
-			displayDateHour, displayDateMinute, expirationDateMonth,
-			expirationDateDay, expirationDateYear, expirationDateHour,
-			expirationDateMinute, neverExpire, reviewDateMonth, reviewDateDay,
-			reviewDateYear, reviewDateHour, reviewDateMinute, neverReview,
-			article.isIndexable(), article.isSmallImage(),
-			article.getSmallImageId(), article.getSmallImageSource(),
-			article.getSmallImageURL(), null, null, null, serviceContext);
+			descriptionMap, article.getFriendlyURLMap(), content,
+			article.getDDMTemplateKey(), layoutUuid, displayDateMonth,
+			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire,
+			reviewDateMonth, reviewDateDay, reviewDateYear, reviewDateHour,
+			reviewDateMinute, neverReview, article.isIndexable(),
+			article.isSmallImage(), article.getSmallImageId(),
+			article.getSmallImageSource(), article.getSmallImageURL(), null,
+			null, null, serviceContext);
 	}
 
 	/**
@@ -7128,11 +7169,10 @@ public class JournalArticleLocalServiceImpl
 				_classNameLocalService.getClassNameId(JournalArticle.class),
 				article.getResourcePrimKey());
 
-		FriendlyURLEntry newFriendlyURLEntry =
-			friendlyURLEntryLocalService.addFriendlyURLEntry(
-				article.getGroupId(),
-				_classNameLocalService.getClassNameId(JournalArticle.class),
-				article.getResourcePrimKey(), urlTitleMap, serviceContext);
+		friendlyURLEntryLocalService.addFriendlyURLEntry(
+			article.getGroupId(),
+			_classNameLocalService.getClassNameId(JournalArticle.class),
+			article.getResourcePrimKey(), urlTitleMap, serviceContext);
 
 		for (Map.Entry<String, String> entry : urlTitleMap.entrySet()) {
 			if (Validator.isNull(entry.getValue())) {
@@ -7153,17 +7193,6 @@ public class JournalArticleLocalServiceImpl
 					}
 				}
 			}
-		}
-
-		for (FriendlyURLEntry friendlyURLEntry : friendlyURLEntries) {
-			if (newFriendlyURLEntry.getFriendlyURLEntryId() ==
-					friendlyURLEntry.getFriendlyURLEntryId()) {
-
-				continue;
-			}
-
-			friendlyURLEntryLocalService.deleteFriendlyURLEntry(
-				friendlyURLEntry);
 		}
 	}
 
@@ -7791,11 +7820,12 @@ public class JournalArticleLocalServiceImpl
 		return JournalArticleConstants.SMALL_IMAGE_SOURCE_USER_COMPUTER;
 	}
 
-	private int _getUniqueUrlTitleCount(
+	private String _getUniqueUrlTitle(
 		long groupId, String articleId, String urlTitle) {
 
-		String copy = _language.get(LocaleUtil.getMostRelevantLocale(), "copy");
+		String copy = _language.get(LocaleUtil.getSiteDefault(), "copy");
 		String prefix = urlTitle;
+		String title = urlTitle;
 
 		for (int i = 1;; i++) {
 			JournalArticle article = fetchArticleByUrlTitle(groupId, urlTitle);
@@ -7803,11 +7833,25 @@ public class JournalArticleLocalServiceImpl
 			if ((article == null) ||
 				Objects.equals(articleId, article.getArticleId())) {
 
-				return i - 1;
+				return title;
 			}
 
+			if (i == 1) {
+				title = StringBundler.concat(
+					prefix, StringPool.SPACE, StringPool.OPEN_PARENTHESIS, copy,
+					StringPool.CLOSE_PARENTHESIS);
+				urlTitle = StringBundler.concat(
+					prefix, StringPool.DASH, copy, StringPool.DASH);
+
+				continue;
+			}
+
+			title = StringBundler.concat(
+				prefix, StringPool.SPACE, StringPool.OPEN_PARENTHESIS, copy,
+				StringPool.SPACE, i - 1, StringPool.CLOSE_PARENTHESIS);
 			urlTitle = StringBundler.concat(
-				prefix, StringPool.DASH, copy, StringPool.DASH, i);
+				prefix, StringPool.DASH, copy, StringPool.DASH, i - 1,
+				StringPool.DASH);
 		}
 	}
 

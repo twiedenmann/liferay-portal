@@ -7,6 +7,7 @@ import {API, Input, SidebarCategory} from '@liferay/object-js-components-web';
 import classNames from 'classnames';
 import React, {ElementType, useEffect, useState} from 'react';
 
+import {AutoIncrementFormBase} from '../../AutoIncrementFormBase';
 import {ObjectFieldErrors} from '../../ObjectFieldFormBase';
 import {AggregationFilterContainer} from './AggregationFilterContainer';
 import {BasicInfoContainer} from './BasicInfoContainer';
@@ -30,6 +31,7 @@ export interface AggregationFilters {
 }
 
 interface BasicInfoTabProps {
+	baseResourceURL: string;
 	containerWrapper: ElementType;
 	errors: ObjectFieldErrors;
 	filterOperators: TFilterOperators;
@@ -45,10 +47,11 @@ interface BasicInfoTabProps {
 	setValues: (values: Partial<ObjectField>) => void;
 	sidebarElements: SidebarCategory[];
 	values: Partial<ObjectField>;
-	workflowStatusJSONArray: LabelValueObject[];
+	workflowStatuses: LabelValueObject[];
 }
 
 export function BasicInfoTab({
+	baseResourceURL,
 	containerWrapper: ContainerWrapper,
 	errors,
 	filterOperators,
@@ -64,7 +67,7 @@ export function BasicInfoTab({
 	setValues,
 	sidebarElements,
 	values,
-	workflowStatusJSONArray,
+	workflowStatuses,
 }: BasicInfoTabProps) {
 	const [objectDefinition, setObjectDefinition] = useState<
 		Partial<ObjectDefinition>
@@ -105,6 +108,7 @@ export function BasicInfoTab({
 				title={Liferay.Language.get('basic-info')}
 			>
 				<BasicInfoContainer
+					baseResourceURL={baseResourceURL}
 					creationLanguageId2={creationLanguageId2}
 					errors={errors}
 					handleChange={handleChange}
@@ -128,6 +132,28 @@ export function BasicInfoTab({
 				/>
 			</ContainerWrapper>
 
+			{Liferay.FeatureFlags['LPS-196724'] &&
+				values.businessType === 'AutoIncrement' && (
+					<ContainerWrapper
+						collapsable
+						defaultExpanded
+						displayTitle={Liferay.Language.get(
+							'increment-configuration'
+						)}
+						displayType="unstyled"
+						title={Liferay.Language.get('increment-configuration')}
+					>
+						<AutoIncrementFormBase
+							disabled={isApproved}
+							errors={errors}
+							modelBuilder={modelBuilder}
+							onSubmit={onSubmit}
+							setValues={setValues}
+							values={values}
+						/>
+					</ContainerWrapper>
+				)}
+
 			{values.businessType === 'Aggregation' &&
 				objectDefinitionExternalReferenceCode !==
 					objectDefinitionExternalReferenceCode2 && (
@@ -145,7 +171,7 @@ export function BasicInfoTab({
 						setCreationLanguageId2={setCreationLanguageId2}
 						setValues={setValues}
 						values={values}
-						workflowStatusJSONArray={workflowStatusJSONArray}
+						workflowStatuses={workflowStatuses}
 					/>
 				)}
 
@@ -182,10 +208,10 @@ export function BasicInfoTab({
 					<SearchableContainer
 						isApproved={isApproved}
 						modelBuilder={modelBuilder}
-						objectField={values}
 						onSubmit={onSubmit}
 						readOnly={readOnly}
 						setValues={setValues}
+						values={values}
 					/>
 				</ContainerWrapper>
 			)}

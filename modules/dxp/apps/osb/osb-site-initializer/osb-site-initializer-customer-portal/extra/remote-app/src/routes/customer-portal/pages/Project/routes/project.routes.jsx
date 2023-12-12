@@ -4,7 +4,7 @@
  */
 
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import {HashRouter, Route, Routes} from 'react-router-dom';
 import {useAppPropertiesContext} from '~/common/contexts/AppPropertiesContext';
 import getKebabCase from '../../../../../common/utils/getKebabCase';
@@ -18,6 +18,7 @@ import {getWebContents} from '../../../utils/getWebContents';
 import Commerce from '../ActivationKeys/Commerce';
 import EnterpriseSearch from '../ActivationKeys/EnterpriseSearch';
 import AnalyticsCloud from '../AnalyticsCloud';
+import Attachments from '../Attachments';
 import DXP from '../DXP';
 import DXPCloud from '../DXPCloud';
 import LiferayExperienceCloud from '../LiferayExperienceCloud';
@@ -30,6 +31,8 @@ import ProductOutlet from './Outlets/ProductOutlet';
 const ProjectRoutes = () => {
 	const [{project, subscriptionGroups}, dispatch] = useCustomerPortal();
 	const {featureFlags} = useAppPropertiesContext();
+
+	const [hasKeyComplimentary, setHasKeyComplimentary] = useState(false);
 
 	useEffect(() => {
 		if (project && subscriptionGroups) {
@@ -89,12 +92,27 @@ const ProjectRoutes = () => {
 							}
 							path={getKebabCase(PRODUCT_TYPES.portal)}
 						>
-							<Route element={<Portal />} index />
+							<Route
+								element={
+									<Portal
+										hasKeyComplimentary={
+											hasKeyComplimentary
+										}
+									/>
+								}
+								index
+							/>
 
 							<Route
 								element={
 									<GenerateNewKey
+										hasKeyComplimentary={
+											hasKeyComplimentary
+										}
 										productGroupName={PRODUCT_TYPES.portal}
+										setHasKeyComplimentary={
+											setHasKeyComplimentary
+										}
 									/>
 								}
 								path="new"
@@ -119,12 +137,27 @@ const ProjectRoutes = () => {
 							}
 							path={getKebabCase(PRODUCT_TYPES.dxp)}
 						>
-							<Route element={<DXP />} index />
+							<Route
+								element={
+									<DXP
+										hasKeyComplimentary={
+											hasKeyComplimentary
+										}
+									/>
+								}
+								index
+							/>
 
 							<Route
 								element={
 									<GenerateNewKey
+										hasKeyComplimentary={
+											hasKeyComplimentary
+										}
 										productGroupName={PRODUCT_TYPES.dxp}
+										setHasKeyComplimentary={
+											setHasKeyComplimentary
+										}
 									/>
 								}
 								path="new"
@@ -174,6 +207,10 @@ const ProjectRoutes = () => {
 							<Route element={<EnterpriseSearch />} index />
 						</Route>
 					</Route>
+
+					{featureFlags.includes('ISSD-119') && (
+						<Route element={<Attachments />} path="attachments" />
+					)}
 
 					<Route element={<TeamMembers />} path="team-members" />
 

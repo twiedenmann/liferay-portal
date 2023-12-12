@@ -272,6 +272,9 @@ export function openToast({
 
 export function openWindow(config: object, callback?: Function): void;
 
+export {default as openCategorySelectionModal} from './liferay/modal/commands/openCategorySelectionModal';
+export {default as openTagSelectionModal} from './liferay/modal/commands/openTagSelectionModal';
+
 /**
  * Registers a portlet client with the portlet hub.
  */
@@ -891,10 +894,4 @@ export function isReducedMotion(): boolean;
 /**
  * Renderer API
  */
-export {default as getRenderer} from './renderer/getRenderer';
-
-export type {
-	IClientExtensionRenderer,
-	IInternalRenderer,
-	TRenderer,
-} from './renderer/types';
+export {getModuleAndSymbolNames, loadModule} from './module';

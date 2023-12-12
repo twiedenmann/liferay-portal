@@ -3,8 +3,8 @@ definition {
 
 	property app.server.types = "tomcat";
 	property ci.retries.disabled = "true";
-	property database.partition.enabled = "true";
 	property database.types = "mysql";
+	property liferay.online.properties = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
@@ -283,12 +283,10 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		PortalInstances.openVirtualInstancesAdmin();
-
-		PortalInstances.addCP(
-			mailDomain = "www.able.com",
-			virtualHost = "www.able.com",
-			webId = "www.able.com");
+		HeadlessPortalInstanceAPI.addPortalInstance(
+			domain = "www.able.com",
+			portalInstanceId = "www.able.com",
+			virtualHost = "www.able.com");
 
 		SignOut.signOut();
 
@@ -309,10 +307,7 @@ definition {
 
 		User.loginPG();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
+		PortalInstances.openVirtualInstancesAdmin();
 
 		PortalInstances.deleteCP(virtualHost = "www.able.com");
 
@@ -327,6 +322,8 @@ definition {
 	test CanScheduleJobInVariousCompaniesWhenAutoUpgradeIsEnabled {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property database.auto.upgrade.enabled = "true";
+		property database.partition.enabled = "true";
+		property liferay.online.properties = "false";
 		property osgi.module.configuration.file.names = "com.liferay.journal.configuration.JournalServiceConfiguration.config";
 		property osgi.module.configurations = "checkInterval=I\"1\"";
 		property test.liferay.virtual.instance = "false";
@@ -384,7 +381,7 @@ definition {
 
 		// Pausing 210 seconds due to LRQA-75909
 
-		Pause(locator1 = 210000);
+		Pause(value1 = 210000);
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "Guest");
 
@@ -409,12 +406,10 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		PortalInstances.openVirtualInstancesAdmin();
-
-		PortalInstances.addCP(
-			mailDomain = "www.able.com",
-			virtualHost = "www.able.com",
-			webId = "www.able.com");
+		HeadlessPortalInstanceAPI.addPortalInstance(
+			domain = "www.able.com",
+			portalInstanceId = "www.able.com",
+			virtualHost = "www.able.com");
 
 		User.firstLoginUI(
 			password = "test",
@@ -440,10 +435,7 @@ definition {
 
 		User.firstLoginPG();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
+		ServerAdministration.openServerAdmin();
 
 		ServerAdministration.executeServerResourcesActions(actionsDescription = "Clear the database cache.");
 
@@ -460,19 +452,15 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		PortalInstances.openVirtualInstancesAdmin();
+		HeadlessPortalInstanceAPI.addPortalInstance(
+			domain = "www.able.com",
+			portalInstanceId = "www.able.com",
+			virtualHost = "www.able.com");
 
-		PortalInstances.addCP(
-			mailDomain = "www.able.com",
-			virtualHost = "www.able.com",
-			webId = "www.able.com");
-
-		PortalInstances.openVirtualInstancesAdmin();
-
-		PortalInstances.addCP(
-			mailDomain = "www.baker.com",
-			virtualHost = "www.baker.com",
-			webId = "www.baker.com");
+		HeadlessPortalInstanceAPI.addPortalInstance(
+			domain = "www.baker.com",
+			portalInstanceId = "www.baker.com",
+			virtualHost = "www.baker.com");
 
 		User.firstLoginUI(
 			password = "test",
@@ -597,10 +585,7 @@ definition {
 		}
 
 		task ("Go to Control Panel > Virtual Instances and verify that the virtual instance is present in the UI") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			PortalInstances.viewCP(virtualHost = "www.able.com");
 		}
@@ -617,7 +602,7 @@ definition {
 		task ("Restart server") {
 			Portlet.shutdownServer();
 
-			Portlet.startServer(keepOsGiState = "true");
+			Portlet.startServer(deleteLiferayHome = "false");
 		}
 
 		task ("Access Virtual Instance and verify that is visible in the UI") {
@@ -629,6 +614,8 @@ definition {
 
 	@priority = 3
 	test ScheduleWebContentChangesWithDBPartitioningActivatedAcrossVariousCompanies {
+		property database.partition.enabled = "true";
+		property liferay.online.properties = "false";
 		property osgi.module.configuration.file.names = "com.liferay.journal.configuration.JournalServiceConfiguration.config";
 		property osgi.module.configurations = "checkInterval=I\"1\"";
 		property test.liferay.virtual.instance = "false";
@@ -698,7 +685,7 @@ definition {
 
 			// Pausing 210 seconds due to LRQA-75909
 
-			Pause(locator1 = 210000);
+			Pause(value1 = 210000);
 
 			ProductMenu.gotoPortlet(
 				category = "Content & Data",
@@ -715,7 +702,7 @@ definition {
 
 			// Pausing 150 seconds due to LRQA-75909
 
-			Pause(locator1 = 150000);
+			Pause(value1 = 150000);
 
 			ProductMenu.gotoPortlet(
 				category = "Content & Data",

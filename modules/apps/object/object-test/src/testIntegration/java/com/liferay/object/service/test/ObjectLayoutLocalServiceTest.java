@@ -7,7 +7,7 @@ package com.liferay.object.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
-import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationRegistry;
+import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationRegistryUtil;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectLayoutBoxConstants;
@@ -31,7 +31,7 @@ import com.liferay.object.service.persistence.ObjectLayoutBoxPersistence;
 import com.liferay.object.service.persistence.ObjectLayoutColumnPersistence;
 import com.liferay.object.service.persistence.ObjectLayoutRowPersistence;
 import com.liferay.object.service.persistence.ObjectLayoutTabPersistence;
-import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
+import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -99,7 +99,7 @@ public class ObjectLayoutLocalServiceTest {
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_SITE, null, 1,
 				_objectDefinitionLocalService,
-				Arrays.asList(
+				Collections.singletonList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 						ObjectFieldConstants.DB_TYPE_STRING,
@@ -364,7 +364,7 @@ public class ObjectLayoutLocalServiceTest {
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_SITE, null, 1,
 				_objectDefinitionLocalService,
-				Arrays.asList(
+				Collections.singletonList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 						ObjectFieldConstants.DB_TYPE_STRING,
@@ -447,7 +447,7 @@ public class ObjectLayoutLocalServiceTest {
 	@Test
 	public void testUpdateObjectLayout() throws Exception {
 		List<ScreenNavigationCategory> screenNavigationCategories =
-			_screenNavigationRegistry.getScreenNavigationCategories(
+			ScreenNavigationRegistryUtil.getScreenNavigationCategories(
 				_objectDefinition.getClassName(), TestPropsValues.getUser(),
 				null);
 
@@ -462,7 +462,7 @@ public class ObjectLayoutLocalServiceTest {
 			Collections.singletonList(objectLayoutTab1));
 
 		screenNavigationCategories =
-			_screenNavigationRegistry.getScreenNavigationCategories(
+			ScreenNavigationRegistryUtil.getScreenNavigationCategories(
 				_objectDefinition.getClassName(), TestPropsValues.getUser(),
 				null);
 
@@ -473,7 +473,7 @@ public class ObjectLayoutLocalServiceTest {
 		_addObjectLayout();
 
 		screenNavigationCategories =
-			_screenNavigationRegistry.getScreenNavigationCategories(
+			ScreenNavigationRegistryUtil.getScreenNavigationCategories(
 				_objectDefinition.getClassName(), TestPropsValues.getUser(),
 				null);
 
@@ -483,32 +483,45 @@ public class ObjectLayoutLocalServiceTest {
 
 		_objectLayoutLocalService.updateObjectLayout(
 			objectLayout.getObjectLayoutId(), false, objectLayout.getNameMap(),
-			Arrays.asList(objectLayoutTab1));
+			Collections.singletonList(objectLayoutTab1));
 
 		screenNavigationCategories =
-			_screenNavigationRegistry.getScreenNavigationCategories(
+			ScreenNavigationRegistryUtil.getScreenNavigationCategories(
 				_objectDefinition.getClassName(), TestPropsValues.getUser(),
 				null);
 
 		Assert.assertTrue(screenNavigationCategories.isEmpty());
 	}
 
-	private long _addObjectField() throws Exception {
-		String name = RandomTestUtil.randomString();
+	private long _addObjectField(boolean system) throws Exception {
+		ObjectField objectField = null;
 
-		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
-			new TextObjectFieldBuilder(
-			).userId(
-				TestPropsValues.getUserId()
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(name)
-			).name(
-				StringUtil.randomId()
-			).objectDefinitionId(
-				_objectDefinition.getObjectDefinitionId()
-			).required(
-				true
-			).build());
+		if (system) {
+			objectField = _objectFieldLocalService.addSystemObjectField(
+				null, TestPropsValues.getUserId(), 0,
+				_objectDefinition.getObjectDefinitionId(),
+				ObjectFieldConstants.BUSINESS_TYPE_TEXT, null, null,
+				ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				StringUtil.randomId(), ObjectFieldConstants.READ_ONLY_FALSE,
+				null, false, false, Collections.emptyList());
+		}
+		else {
+			objectField = ObjectFieldUtil.addCustomObjectField(
+				new TextObjectFieldBuilder(
+				).userId(
+					TestPropsValues.getUserId()
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					StringUtil.randomId()
+				).objectDefinitionId(
+					_objectDefinition.getObjectDefinitionId()
+				).required(
+					true
+				).build());
+		}
 
 		return objectField.getObjectFieldId();
 	}
@@ -544,11 +557,13 @@ public class ObjectLayoutLocalServiceTest {
 		return objectLayoutBox;
 	}
 
-	private ObjectLayoutColumn _addObjectLayoutColumn() throws Exception {
+	private ObjectLayoutColumn _addObjectLayoutColumn(boolean system)
+		throws Exception {
+
 		ObjectLayoutColumn objectLayoutColumn =
 			_objectLayoutColumnPersistence.create(0);
 
-		objectLayoutColumn.setObjectFieldId(_addObjectField());
+		objectLayoutColumn.setObjectFieldId(_addObjectField(system));
 		objectLayoutColumn.setPriority(0);
 
 		return objectLayoutColumn;
@@ -560,8 +575,8 @@ public class ObjectLayoutLocalServiceTest {
 		objectLayoutRow.setPriority(0);
 		objectLayoutRow.setObjectLayoutColumns(
 			Arrays.asList(
-				_addObjectLayoutColumn(), _addObjectLayoutColumn(),
-				_addObjectLayoutColumn(), _addObjectLayoutColumn()));
+				_addObjectLayoutColumn(false), _addObjectLayoutColumn(false),
+				_addObjectLayoutColumn(true), _addObjectLayoutColumn(true)));
 
 		return objectLayoutRow;
 	}
@@ -642,8 +657,5 @@ public class ObjectLayoutLocalServiceTest {
 
 	@Inject
 	private ObjectLayoutTabPersistence _objectLayoutTabPersistence;
-
-	@Inject
-	private ScreenNavigationRegistry _screenNavigationRegistry;
 
 }

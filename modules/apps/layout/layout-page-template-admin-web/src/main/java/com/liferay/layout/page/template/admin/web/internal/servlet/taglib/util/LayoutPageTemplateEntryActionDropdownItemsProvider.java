@@ -107,7 +107,7 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 							!Objects.equals(
 								_layoutPageTemplateEntry.getType(),
 								LayoutPageTemplateEntryTypeConstants.
-									TYPE_WIDGET_PAGE),
+									WIDGET_PAGE),
 						_getViewLayoutPageTemplateEntryActionUnsafeConsumer()
 					).build());
 				dropdownGroupItem.setSeparator(true);
@@ -197,7 +197,9 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 				editPageURL, "mvcRenderCommandName",
 				"/layout_admin/edit_layout", "redirect",
 				_themeDisplay.getURLCurrent(), "backURL",
-				_themeDisplay.getURLCurrent(), "portletResource",
+				_themeDisplay.getURLCurrent(), "backURLTitle",
+				LanguageUtil.get(_httpServletRequest, "page-templates"),
+				"portletResource",
 				LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
 				"selPlid", _layoutPageTemplateEntry.getPlid());
 			dropdownItem.setIcon("cog");
@@ -316,7 +318,7 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 
 		if (Objects.equals(
 				_layoutPageTemplateEntry.getType(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_WIDGET_PAGE)) {
+				LayoutPageTemplateEntryTypeConstants.WIDGET_PAGE)) {
 
 			LayoutPrototype layoutPrototype =
 				LayoutPrototypeLocalServiceUtil.fetchLayoutPrototype(
@@ -480,7 +482,7 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 
 		if (Objects.equals(
 				_layoutPageTemplateEntry.getType(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_WIDGET_PAGE)) {
+				LayoutPageTemplateEntryTypeConstants.WIDGET_PAGE)) {
 
 			LayoutPrototype layoutPrototype =
 				LayoutPrototypeServiceUtil.fetchLayoutPrototype(

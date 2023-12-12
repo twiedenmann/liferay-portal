@@ -18,16 +18,41 @@ interface AddObjectEntryDefinitions {
 	system?: boolean;
 }
 
+interface ObjectActionTriggerExecutorItem {
+	checked?: boolean;
+	description?: string;
+	disabled?: boolean;
+	label: string;
+	name?: string;
+	popover?: {body: string; header: string};
+	type?: string;
+	value?: string;
+}
+
 type DefinitionAction = {
 	href: string;
 	method: string;
 };
+
+interface DeletedObjectDefinition {
+	hasObjectRelationship: boolean;
+	id: number;
+	name: string;
+	objectEntriesCount: number;
+}
 
 type DefinitionActions = {
 	delete: DefinitionAction;
 	get: DefinitionAction;
 	permissions: DefinitionAction;
 	update: DefinitionAction;
+};
+
+type ObjectFieldDeleteInfoProps = {
+	deleteLastPublishedObjectDefinitionObjectField: boolean;
+	deleteObjectFieldObjectValidationRuleSetting: boolean;
+	showObjectFieldDeletionConfirmationModal: boolean;
+	showObjectFieldDeletionNotAllowedModal: boolean;
 };
 
 type ExcludesFilterOperator = {
@@ -49,14 +74,19 @@ type IncludesFilterOperator = {
 	in: string[] | number[];
 };
 
+interface LabelKeyObject {
+	key: string;
+	label: string;
+}
+
 interface LabelNameObject {
 	label: string;
 	name: string;
 }
 
-interface LabelValueObject {
+interface LabelValueObject<T = string> {
 	label: string;
-	value: string;
+	value: T;
 }
 
 interface ListTypeDefinition {
@@ -85,7 +115,7 @@ interface ModelBuilderModals
 	extends Omit<
 		ViewObjectDefinitionsModals,
 		| 'bindToRootObjectDefinition'
-		| 'deletionNotAllowed'
+		| 'objectFieldDeletionNotAllowed'
 		| 'unbindFromRootObjectDefinition'
 	> {
 	addObjectField: boolean;
@@ -202,6 +232,7 @@ interface ObjectDefinitionNodeData
 	linkedObjectDefinition: boolean;
 	objectFields: ObjectFieldNodeRow[];
 	selected: boolean;
+	showAllObjectFields: boolean;
 }
 
 interface ObjectEntry {
@@ -231,11 +262,11 @@ interface ObjectField {
 	DBType: string;
 	businessType: ObjectFieldBusinessType;
 	defaultValue?: string;
-	externalReferenceCode?: string;
+	externalReferenceCode: string;
 	id: number;
 	indexed: boolean;
 	indexedAsKeyword: boolean;
-	indexedLanguageId: Liferay.Language.Locale | null;
+	indexedLanguageId: Liferay.Language.Locale | string;
 	label: LocalizedValue<string>;
 	listTypeDefinitionExternalReferenceCode: string;
 	listTypeDefinitionId?: number;
@@ -254,6 +285,7 @@ interface ObjectField {
 type ObjectFieldBusinessType =
 	| 'Aggregation'
 	| 'Attachment'
+	| 'AutoIncrement'
 	| 'Date'
 	| 'DateTime'
 	| 'Decimal'
@@ -314,17 +346,20 @@ type ObjectFieldSettingName =
 	| 'fileSource'
 	| 'filters'
 	| 'function'
+	| 'initialValue'
 	| 'maxLength'
 	| 'maximumFileSize'
 	| 'objectDefinition1ShortName'
 	| 'objectFieldName'
 	| 'objectRelationshipName'
 	| 'output'
+	| 'prefix'
 	| 'script'
 	| 'showCounter'
 	| 'showFilesInDocumentsAndMedia'
 	| 'stateFlow'
 	| 'storageDLFolderPath'
+	| 'suffix'
 	| 'timeStorage'
 	| 'uniqueValues'
 	| 'uniqueValuesErrorMessage';
@@ -404,13 +439,17 @@ interface ObjectValidation {
 	id: number;
 	lineCount?: number;
 	name: LocalizedValue<string>;
-	objectValidationRuleSettings?: {
-		name: 'outputObjectFieldExternalReferenceCode';
-		value: string;
-	}[];
+	objectValidationRuleSettings?: ObjectValidationRuleSetting[];
 	outputType?: string;
 	script: string;
 	system?: boolean;
+}
+
+interface ObjectValidationRuleSetting {
+	name:
+		| 'compositeKeyObjectFieldExternalReferenceCode'
+		| 'outputObjectFieldExternalReferenceCode';
+	value: string;
 }
 
 type ObjectWebLearnResources = {
@@ -442,11 +481,6 @@ interface PickList {
 	name_i18n: LocalizedValue<string>;
 }
 
-type ObjectValidationType = {
-	label: string;
-	name: string;
-};
-
 interface PredefinedValue {
 	businessType: ObjectFieldBusinessType;
 	inputAsValue: boolean;
@@ -470,8 +504,8 @@ interface ViewObjectDefinitionsModals {
 	bindToRootObjectDefinition: boolean;
 	deleteObjectDefinition: boolean;
 	deleteObjectFolder: boolean;
-	deletionNotAllowed: boolean;
 	editObjectFolder: boolean;
 	moveObjectDefinition: boolean;
+	objectFieldDeletionNotAllowed: boolean;
 	unbindFromRootObjectDefinition: boolean;
 }

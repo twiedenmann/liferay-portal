@@ -17,13 +17,17 @@ import com.liferay.notification.service.NotificationRecipientSettingLocalService
 import com.liferay.notification.service.NotificationTemplateLocalService;
 import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.definition.notification.term.util.ObjectDefinitionNotificationTermUtil;
+import com.liferay.object.field.builder.AttachmentObjectFieldBuilder;
 import com.liferay.object.field.builder.BooleanObjectFieldBuilder;
 import com.liferay.object.field.builder.DateObjectFieldBuilder;
+import com.liferay.object.field.builder.DateTimeObjectFieldBuilder;
 import com.liferay.object.field.builder.IntegerObjectFieldBuilder;
 import com.liferay.object.field.builder.PicklistObjectFieldBuilder;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
+import com.liferay.object.field.setting.builder.ObjectFieldSettingBuilder;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
@@ -54,6 +58,7 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -65,12 +70,14 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.time.Month;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -105,10 +112,22 @@ public class BaseNotificationTypeTest {
 			"dateObjectField",
 			() -> {
 				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+					"yyyy-MM-dd");
+
+				return simpleDateFormat.format(RandomTestUtil.nextDate());
+			}
+		).put(
+			"dateTimeObjectField",
+			() -> {
+				SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
 					"yyyy-MM-dd 00:00:00.0");
 
 				return simpleDateFormat.format(RandomTestUtil.nextDate());
 			}
+		).put(
+			"emailTextObjectField",
+			StringUtil.toLowerCase(RandomTestUtil.randomString()) +
+				"@liferay.com"
 		).put(
 			"integerObjectField", RandomTestUtil.nextInt()
 		).put(
@@ -124,15 +143,22 @@ public class BaseNotificationTypeTest {
 		).build();
 
 		parentObjectEntryValues = LinkedHashMapBuilder.<String, Object>put(
+			"systemObjectField", RandomTestUtil.randomString()
+		).put(
 			"textObjectField", RandomTestUtil.randomString()
 		).build();
 
 		user1 = TestPropsValues.getUser();
 
+		dtoConverterContext = new DefaultDTOConverterContext(
+			false, Collections.emptyMap(),
+			BaseNotificationTypeTest._dtoConverterRegistry, null,
+			LocaleUtil.getDefault(), null, user1);
+
 		ListType prefixListType = _listTypeLocalService.getListType(
-			"dr", ListTypeConstants.CONTACT_PREFIX);
+			user1.getCompanyId(), "dr", ListTypeConstants.CONTACT_PREFIX);
 		ListType suffixListType = _listTypeLocalService.getListType(
-			"ii", ListTypeConstants.CONTACT_SUFFIX);
+			user1.getCompanyId(), "ii", ListTypeConstants.CONTACT_SUFFIX);
 
 		role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
@@ -162,6 +188,34 @@ public class BaseNotificationTypeTest {
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
 				Arrays.asList(
+					new AttachmentObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"attachmentObjectField"
+					).objectFieldSettings(
+						Arrays.asList(
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.
+									NAME_ACCEPTED_FILE_EXTENSIONS
+							).value(
+								"txt"
+							).build(),
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.NAME_FILE_SOURCE
+							).value(
+								ObjectFieldSettingConstants.VALUE_USER_COMPUTER
+							).build(),
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE
+							).value(
+								"100"
+							).build())
+					).build(),
 					new BooleanObjectFieldBuilder(
 					).labelMap(
 						LocalizedMapUtil.getLocalizedMap(
@@ -175,6 +229,22 @@ public class BaseNotificationTypeTest {
 							RandomTestUtil.randomString())
 					).name(
 						"dateObjectField"
+					).build(),
+					new DateTimeObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"dateTimeObjectField"
+					).objectFieldSettings(
+						Collections.singletonList(
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.NAME_TIME_STORAGE
+							).value(
+								ObjectFieldSettingConstants.
+									VALUE_USE_INPUT_AS_ENTERED
+							).build())
 					).build(),
 					new IntegerObjectFieldBuilder(
 					).labelMap(
@@ -191,6 +261,13 @@ public class BaseNotificationTypeTest {
 						"picklistObjectField"
 					).listTypeDefinitionId(
 						_listTypeDefinition.getListTypeDefinitionId()
+					).build(),
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"emailTextObjectField"
 					).build(),
 					new TextObjectFieldBuilder(
 					).labelMap(
@@ -219,6 +296,17 @@ public class BaseNotificationTypeTest {
 						LocalizedMapUtil.getLocalizedMap(
 							RandomTestUtil.randomString())
 					).name(
+						"systemObjectField"
+					).objectFieldSettings(
+						Collections.emptyList()
+					).system(
+						true
+					).build(),
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
 						"textObjectField"
 					).objectFieldSettings(
 						Collections.emptyList()
@@ -231,13 +319,13 @@ public class BaseNotificationTypeTest {
 
 		objectRelationship =
 			_objectRelationshipLocalService.addObjectRelationship(
-				TestPropsValues.getUserId(),
+				null, TestPropsValues.getUserId(),
 				parentObjectDefinition.getObjectDefinitionId(),
 				childObjectDefinition.getObjectDefinitionId(), 0,
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		_childAuthorTermValues = HashMapBuilder.<String, Object>put(
 			getTermName("AUTHOR_EMAIL_ADDRESS"), user2.getEmailAddress()
@@ -254,7 +342,15 @@ public class BaseNotificationTypeTest {
 		).put(
 			getTermName("AUTHOR_SUFFIX"), _getListType("SUFFIX", user2)
 		).build();
-		_currentUserTermValues = HashMapBuilder.<String, Object>put(
+		_generalTermValues = HashMapBuilder.<String, Object>put(
+			"[%CURRENT_DATE%]",
+			() -> {
+				DateFormat dateFormat =
+					DateFormatFactoryUtil.getSimpleDateFormat("yyyy-MM-dd");
+
+				return dateFormat.format(new Date());
+			}
+		).put(
 			"[%CURRENT_USER_EMAIL_ADDRESS%]", user2.getEmailAddress()
 		).put(
 			"[%CURRENT_USER_FIRST_NAME%]", user2.getFirstName()
@@ -346,7 +442,7 @@ public class BaseNotificationTypeTest {
 	protected String getObjectRelationshipObjectField2Name()
 		throws PortalException {
 
-		ObjectField objectField = _objectFieldLocalService.getObjectField(
+		ObjectField objectField = objectFieldLocalService.getObjectField(
 			objectRelationship.getObjectFieldId2());
 
 		return objectField.getName();
@@ -372,21 +468,24 @@ public class BaseNotificationTypeTest {
 	protected List<String> getTermNames() {
 		return ListUtil.concat(
 			ListUtil.fromMapKeys(_childAuthorTermValues),
-			ListUtil.fromMapKeys(_currentUserTermValues),
+			ListUtil.fromMapKeys(_generalTermValues),
 			ListUtil.fromMapKeys(_parentAuthorTermValues),
 			Arrays.asList(
 				getTermName("booleanObjectField"),
 				getTermName("dateObjectField"),
+				getTermName("dateTimeObjectField"),
+				getTermName("emailTextObjectField"),
 				getTermName("integerObjectField"),
 				getTermName("picklistObjectField"),
 				getTermName("textObjectField"),
+				getTermName(true, "systemObjectField"),
 				getTermName(true, "textObjectField")));
 	}
 
 	protected List<Object> getTermValues() {
 		return ListUtil.concat(
 			ListUtil.fromMapValues(_childAuthorTermValues),
-			ListUtil.fromMapValues(_currentUserTermValues),
+			ListUtil.fromMapValues(_generalTermValues),
 			ListUtil.fromMapValues(_parentAuthorTermValues),
 			ListUtil.fromMapValues(childObjectEntryValues),
 			ListUtil.fromMapValues(parentObjectEntryValues));
@@ -396,11 +495,10 @@ public class BaseNotificationTypeTest {
 	protected static ObjectDefinition childObjectDefinition;
 
 	protected static LinkedHashMap<String, Object> childObjectEntryValues;
-	protected static DTOConverterContext dtoConverterContext =
-		new DefaultDTOConverterContext(
-			false, Collections.emptyMap(),
-			BaseNotificationTypeTest._dtoConverterRegistry, null,
-			LocaleUtil.getDefault(), null, BaseNotificationTypeTest.user1);
+	protected static DTOConverterContext dtoConverterContext;
+
+	@Inject
+	protected static ObjectFieldLocalService objectFieldLocalService;
 
 	@DeleteAfterTestRun
 	protected static ObjectRelationship objectRelationship;
@@ -473,9 +571,6 @@ public class BaseNotificationTypeTest {
 	private static ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Inject
-	private static ObjectFieldLocalService _objectFieldLocalService;
-
-	@Inject
 	private static ObjectRelationshipLocalService
 		_objectRelationshipLocalService;
 
@@ -483,7 +578,7 @@ public class BaseNotificationTypeTest {
 	private static UserLocalService _userLocalService;
 
 	private Map<String, Object> _childAuthorTermValues;
-	private Map<String, Object> _currentUserTermValues;
+	private Map<String, Object> _generalTermValues;
 
 	@Inject
 	private NotificationRecipientSettingLocalService

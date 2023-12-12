@@ -11,7 +11,6 @@ import {WebDAV} from './common/context/WebDAV';
 import {AppRouteType} from './common/enums/appRouteType';
 import {PartnerOpportunitiesColumnKey} from './common/enums/partnerOpportunitiesColumnKey';
 import getIconSpriteMap from './common/utils/getIconSpriteMap';
-import handleError from './common/utils/handleError';
 import DealRegistrationForm from './routes/DealRegistrationForm';
 import DealRegistrationList from './routes/DealRegistrationList';
 import MDFClaimForm from './routes/MDFClaimForm';
@@ -42,9 +41,7 @@ const appRoutes: AppRouteComponent = {
 	[AppRouteType.DEAL_REGISTRATION_FORM]: <DealRegistrationForm />,
 	[AppRouteType.DEAL_REGISTRATION_LIST]: (
 		<DealRegistrationList
-			getFilteredItems={(items) =>
-				items.filter((item) => item.STATUS !== 'Qualified')
-			}
+			dealRegistrationFilter="leadStatus ne 'Qualified'"
 			sort="dateCreated:desc"
 		/>
 	),
@@ -62,6 +59,7 @@ const appRoutes: AppRouteComponent = {
 			]}
 			name="Partner Opportunities"
 			newButtonDeal={false}
+			renewalOpportunitiesFilter="type eq 'New Business' or type eq 'New Project Existing Business'"
 			sort="dateCreated:desc"
 		/>
 	),
@@ -75,7 +73,7 @@ const appRoutes: AppRouteComponent = {
 			]}
 			name="Renewal Opportunities"
 			newButtonDeal={false}
-			opportunityFilter="stage ne 'Closed Lost' and type eq 'Existing Business'"
+			renewalOpportunitiesFilter="stage ne 'Closed Lost' and type eq 'Existing Business'"
 			sort="closeDate:asc"
 		/>
 	),
@@ -90,10 +88,9 @@ const PartnerPortalApp = ({liferayWebDAV, route}: IProps) => {
 	return (
 		<SWRConfig
 			value={{
-				onError: (error) => handleError(error),
 				revalidateOnFocus: false,
 				revalidateOnReconnect: false,
-				shouldRetryOnError: false,
+				shouldRetryOnError: true,
 			}}
 		>
 			<WebDAV value={liferayWebDAV}>
@@ -117,7 +114,7 @@ class PartnerPortalRemoteAppComponent extends HTMLElement {
 					liferayWebDAV={
 						super.getAttribute('liferaywebdavurl') as string
 					}
-					route={super.getAttribute('route') as AppRouteType}
+					route={super.getAttribute('path') as AppRouteType}
 				/>
 			);
 		}

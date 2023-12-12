@@ -28,6 +28,10 @@ config = {
 	globals: {
 		...config.globals,
 		MODULE_PATH: true,
+		configuration: true,
+		fragmentElement: true,
+		fragmentNamespace: true,
+		layoutMode: true,
 	},
 	overrides: [
 		{
@@ -51,7 +55,6 @@ config = {
 		'@liferay/portal/no-global-storage': 'off',
 		'@liferay/portal/no-loader-import-specifier': 'off',
 		'@liferay/portal/no-localhost-reference': 'off',
-		'@liferay/portal/no-metal-plugins': 'off',
 		'@liferay/portal/no-react-dom-create-portal': 'off',
 		'@liferay/portal/no-react-dom-render': 'off',
 		'@liferay/portal/no-side-navigation': 'off',

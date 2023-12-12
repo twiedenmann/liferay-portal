@@ -14,16 +14,22 @@ import {
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useState} from 'react';
 
-import {BasicInfo} from './BasicInfo';
-import {Conditions} from './Conditions';
+import {BasicInfo, BasicInfoProps} from './BasicInfo';
+import {Conditions, ConditionsProps} from './Conditions';
+import {
+	UniqueCompositeKey,
+	UniqueCompositeKeyProps,
+} from './UniqueCompositeKey';
 import {
 	ObjectValidationErrors,
 	useObjectValidationForm,
 } from './useObjectValidationForm';
 
 interface EditObjectValidationProps {
+	baseResourceURL: string;
 	creationLanguageId: Liferay.Language.Locale;
 	learnResources: ObjectWebLearnResources;
+	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectValidationRuleElements: SidebarCategory[];
 	objectValidationRuleId: number;
@@ -41,16 +47,19 @@ interface ErrorDetails extends Error {
 	detail?: string;
 }
 
+type Tab = {
+	Component: (
+		params: BasicInfoProps | ConditionsProps | UniqueCompositeKeyProps
+	) => JSX.Element;
+	label: string;
+};
+
 const TABS = [
 	{
 		Component: BasicInfo,
 		label: Liferay.Language.get('basic-info'),
 	},
-	{
-		Component: Conditions,
-		label: Liferay.Language.get('conditions'),
-	},
-];
+] as Tab[];
 
 const initialValues: ObjectValidation = {
 	active: false,
@@ -63,8 +72,10 @@ const initialValues: ObjectValidation = {
 };
 
 export default function EditObjectValidation({
+	baseResourceURL,
 	creationLanguageId,
 	learnResources,
+	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	objectValidationRuleElements,
 	objectValidationRuleId,
@@ -74,7 +85,13 @@ export default function EditObjectValidation({
 	const [errorMessage, setErrorMessage] = useState<ObjectValidationErrors>(
 		{}
 	);
-	const [objectFields, setObjectFields] = useState<ObjectField[]>([]);
+	const [customObjectFields, setCustomObjectFields] = useState<ObjectField[]>(
+		[]
+	);
+	const [
+		showUniqueCompositeKeyAlert,
+		setShowUniqueCompositeKeyAlert,
+	] = useState(true);
 
 	const onSubmit = async (objectValidation: ObjectValidation) => {
 		delete objectValidation.lineCount;
@@ -117,6 +134,23 @@ export default function EditObjectValidation({
 		values,
 	} = useObjectValidationForm({initialValues, onSubmit});
 
+	if (TABS.length < 2) {
+		if (values.engine === 'compositeKey') {
+			TABS.push({
+				Component: UniqueCompositeKey,
+				label: Liferay.Language.get('unique-composite-key'),
+			} as Tab);
+		}
+		else if (values.engine !== '') {
+			TABS.push({
+				Component: Conditions,
+				label: Liferay.Language.get('conditions'),
+			} as Tab);
+		}
+	}
+
+	const disabled = readOnly || !!values?.system;
+
 	useEffect(() => {
 		if (Object.keys(errors).length) {
 			openToast({
@@ -142,12 +176,14 @@ export default function EditObjectValidation({
 						: validationResponseJSON.script,
 			};
 
-			const fieldsResponseJSON = await API.getObjectDefinitionObjectFields(
+			const objectFieldsResponseJSON = await API.getObjectDefinitionObjectFields(
 				objectDefinitionId
 			);
 
-			setObjectFields(
-				fieldsResponseJSON.filter((field) => !field.system)
+			setCustomObjectFields(
+				objectFieldsResponseJSON.filter(
+					(objectField) => !objectField.system
+				)
 			);
 			setValues(newObjectValidation);
 		};
@@ -155,8 +191,6 @@ export default function EditObjectValidation({
 		makeFetch();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectDefinitionId, objectValidationRuleId]);
-
-	const disabled = readOnly || !!values?.system;
 
 	return (
 		<SidePanelForm
@@ -184,8 +218,10 @@ export default function EditObjectValidation({
 					activeIndex === index ? (
 						<ClayTabs.TabPane key={index}>
 							<Component
+								baseResourceURL={baseResourceURL}
 								componentLabel={label}
 								creationLanguageId={creationLanguageId}
+								customObjectFields={customObjectFields ?? []}
 								disabled={disabled}
 								errors={
 									Object.keys(errors).length !== 0
@@ -194,11 +230,19 @@ export default function EditObjectValidation({
 								}
 								handleChange={handleChange}
 								learnResources={learnResources}
-								objectFields={objectFields ?? []}
+								objectDefinitionExternalReferenceCode={
+									objectDefinitionExternalReferenceCode
+								}
 								objectValidationRuleElements={
 									objectValidationRuleElements
 								}
+								setShowUniqueCompositeKeyAlert={
+									setShowUniqueCompositeKeyAlert
+								}
 								setValues={setValues}
+								showUniqueCompositeKeyAlert={
+									showUniqueCompositeKeyAlert
+								}
 								values={values}
 							/>
 						</ClayTabs.TabPane>

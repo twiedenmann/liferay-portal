@@ -39,7 +39,9 @@ public class UpstreamFailureUtil {
 		TopLevelBuildReport topLevelBuildReport =
 			getUpstreamTopLevelBuildReport(topLevelBuild);
 
-		if (topLevelBuildReport == null) {
+		if ((topLevelBuildReport == null) ||
+			(topLevelBuildReport.getDownstreamBuildReports() == null)) {
+
 			return upstreamFailures;
 		}
 
@@ -119,6 +121,8 @@ public class UpstreamFailureUtil {
 			return null;
 		}
 
+		int buildCount = 0;
+
 		String upstreamBranchName = topLevelBuild.getBranchName();
 
 		if (topLevelBuild instanceof PullRequestSubrepositoryTopLevelBuild) {
@@ -136,6 +140,12 @@ public class UpstreamFailureUtil {
 				upstreamBranchName, (File)null, "liferay-portal");
 
 		for (TestrayBuild testrayBuild : testrayRoutine.getTestrayBuilds()) {
+			if (buildCount > 25) {
+				break;
+			}
+
+			buildCount++;
+
 			if (!gitWorkingDirectory.refContainsSHA(
 					"HEAD", testrayBuild.getPortalSHA())) {
 
@@ -147,10 +157,14 @@ public class UpstreamFailureUtil {
 			TopLevelBuildReport topLevelBuildReport =
 				testrayBuild.getTopLevelBuildReport();
 
+			if (topLevelBuildReport == null) {
+				continue;
+			}
+
 			List<DownstreamBuildReport> downstreamBuildReports =
 				topLevelBuildReport.getDownstreamBuildReports();
 
-			if ((topLevelBuildReport == null) ||
+			if ((downstreamBuildReports == null) ||
 				downstreamBuildReports.isEmpty()) {
 
 				continue;

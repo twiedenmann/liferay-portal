@@ -45,7 +45,6 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.UserBag;
-import com.liferay.portal.kernel.security.permission.UserBagFactory;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -54,13 +53,17 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.security.permission.UserBagFactoryUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Collection;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -138,11 +141,13 @@ public class UserResourceDTOConverter
 						contact.getSuffixListTypeId(),
 						dtoConverterContext.getLocale());
 				id = user.getUserId();
+				imageId = user.getPortraitId();
 				jobTitle = user.getJobTitle();
 				keywords = ListUtil.toArray(
 					_assetTagLocalService.getTags(
 						User.class.getName(), user.getUserId()),
 					AssetTag.NAME_ACCESSOR);
+				languageId = user.getLanguageId();
 				lastLoginDate = user.getLastLoginDate();
 				name = user.getFullName();
 				organizationBriefs = TransformUtil.transformToArray(
@@ -211,6 +216,18 @@ public class UserResourceDTOConverter
 
 						return user.getPortraitURL(themeDisplay);
 					});
+				setLanguageDisplayName(
+					() -> {
+						if (Validator.isNull(user.getLanguageId())) {
+							return null;
+						}
+
+						Locale locale = LocaleUtil.fromLanguageId(
+							user.getLanguageId());
+
+						return locale.getDisplayName(
+							dtoConverterContext.getLocale());
+					});
 				setProfileURL(
 					() -> {
 						Group group = user.getGroup();
@@ -223,7 +240,7 @@ public class UserResourceDTOConverter
 					});
 				setRoleBriefs(
 					() -> {
-						UserBag userBag = _userBagFactory.create(
+						UserBag userBag = UserBagFactoryUtil.create(
 							user.getUserId());
 
 						return _toRoleBriefs(
@@ -418,9 +435,6 @@ public class UserResourceDTOConverter
 		target = "(model.class.name=com.liferay.portal.kernel.model.Role)"
 	)
 	private ModelResourcePermission<Role> _roleModelResourcePermission;
-
-	@Reference
-	private UserBagFactory _userBagFactory;
 
 	@Reference
 	private UserGroupLocalService _userGroupLocalService;

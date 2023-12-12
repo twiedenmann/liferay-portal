@@ -24,8 +24,8 @@
 			"name": "APISort",
 			"objectFields": [
 				{
-					"DBType": "String",
-					"businessType": "Text",
+					"DBType": "Clob",
+					"businessType": "LongText",
 					"externalReferenceCode": "ODATA_SORT",
 					"indexed": true,
 					"indexedAsKeyword": false,
@@ -33,6 +33,16 @@
 						"en_US": "OData Sort"
 					},
 					"name": "oDataSort",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": true
+						},
+						{
+							"name": "maxLength",
+							"value": 1000
+						}
+					],
 					"required": true,
 					"state": false,
 					"system": true,
@@ -59,8 +69,8 @@
 			"name": "APIFilter",
 			"objectFields": [
 				{
-					"DBType": "String",
-					"businessType": "Text",
+					"DBType": "Clob",
+					"businessType": "LongText",
 					"externalReferenceCode": "ODATA_FILTER",
 					"indexed": true,
 					"indexedAsKeyword": false,
@@ -68,6 +78,16 @@
 						"en_US": "OData Filter"
 					},
 					"name": "oDataFilter",
+					"objectFieldSettings": [
+						{
+							"name": "showCounter",
+							"value": true
+						},
+						{
+							"name": "maxLength",
+							"value": 1000
+						}
+					],
 					"required": true,
 					"state": false,
 					"system": true,
@@ -128,6 +148,17 @@
 									{
 										"key": "get",
 										"objectStateTransitions": [
+											{
+												"key": "post"
+											}
+										]
+									},
+									{
+										"key": "post",
+										"objectStateTransitions": [
+											{
+												"key": "get"
+											}
 										]
 									}
 								]
@@ -179,6 +210,21 @@
 						"en_US": "Path Parameter"
 					},
 					"name": "pathParameter",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "String"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "PATH_PARAMETER_DESCRIPTION",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Path Parameter Description"
+					},
+					"name": "pathParameterDescription",
 					"required": false,
 					"state": false,
 					"system": true,
@@ -244,18 +290,18 @@
 							"value": {
 								"objectStates": [
 									{
-										"key": "group",
+										"key": "company",
 										"objectStateTransitions": [
 											{
-												"key": "company"
+												"key": "site"
 											}
 										]
 									},
 									{
-										"key": "company",
+										"key": "site",
 										"objectStateTransitions": [
 											{
-												"key": "group"
+												"key": "company"
 											}
 										]
 									}
@@ -272,6 +318,7 @@
 			"objectRelationships": [
 				{
 					"deletionType": "cascade",
+					"externalReferenceCode": "L_API_ENDPOINT_TO_API_FILTERS",
 					"label": {
 						"en_US": "API Endpoint to API Filters"
 					},
@@ -282,10 +329,12 @@
 					"parameterObjectFieldId": 0,
 					"parameterObjectFieldName": "",
 					"reverse": false,
+					"system": true,
 					"type": "oneToMany"
 				},
 				{
 					"deletionType": "cascade",
+					"externalReferenceCode": "L_API_ENDPOINT_TO_API_SORTS",
 					"label": {
 						"en_US": "API Endpoint API Sorts"
 					},
@@ -296,6 +345,7 @@
 					"parameterObjectFieldId": 0,
 					"parameterObjectFieldName": "",
 					"reverse": false,
+					"system": true,
 					"type": "oneToMany"
 				}
 			],
@@ -385,6 +435,7 @@
 			"objectRelationships": [
 				{
 					"deletionType": "cascade",
+					"externalReferenceCode": "L_API_PROPERTIES_TO_API_PROPERTIES",
 					"label": {
 						"en_US": "API Properties to API Properties"
 					},
@@ -395,6 +446,7 @@
 					"parameterObjectFieldId": 0,
 					"parameterObjectFieldName": "",
 					"reverse": false,
+					"system": true,
 					"type": "manyToMany"
 				}
 			],
@@ -468,6 +520,7 @@
 			"objectRelationships": [
 				{
 					"deletionType": "cascade",
+					"externalReferenceCode": "L_API_SCHEMA_TO_API_PROPERTIES",
 					"label": {
 						"en_US": "API Schema to API Properties"
 					},
@@ -478,10 +531,12 @@
 					"parameterObjectFieldId": 0,
 					"parameterObjectFieldName": "",
 					"reverse": false,
+					"system": true,
 					"type": "oneToMany"
 				},
 				{
 					"deletionType": "disassociate",
+					"externalReferenceCode": "L_REQUEST_API_SCHEMA_TO_API_ENDPOINTS",
 					"label": {
 						"en_US": "Request API Schema to API Endpoints"
 					},
@@ -492,10 +547,12 @@
 					"parameterObjectFieldId": 0,
 					"parameterObjectFieldName": "",
 					"reverse": false,
+					"system": true,
 					"type": "oneToMany"
 				},
 				{
 					"deletionType": "disassociate",
+					"externalReferenceCode": "L_RESPONSE_API_SCHEMA_TO_API_ENDPOINTS",
 					"label": {
 						"en_US": "Response API Schema to API Endpoints"
 					},
@@ -506,6 +563,7 @@
 					"parameterObjectFieldId": 0,
 					"parameterObjectFieldName": "",
 					"reverse": false,
+					"system": true,
 					"type": "oneToMany"
 				}
 			],
@@ -652,6 +710,7 @@
 			"objectRelationships": [
 				{
 					"deletionType": "cascade",
+					"externalReferenceCode": "L_API_APPLICATION_TO_API_ENDPOINTS",
 					"label": {
 						"en_US": "API Application to API Endpoints"
 					},
@@ -662,10 +721,12 @@
 					"parameterObjectFieldId": 0,
 					"parameterObjectFieldName": "",
 					"reverse": false,
+					"system": true,
 					"type": "oneToMany"
 				},
 				{
 					"deletionType": "cascade",
+					"externalReferenceCode": "L_API_APPLICATION_TO_API_SCHEMAS",
 					"label": {
 						"en_US": "API Application to API Schemas"
 					},
@@ -676,6 +737,7 @@
 					"parameterObjectFieldId": 0,
 					"parameterObjectFieldName": "",
 					"reverse": false,
+					"system": true,
 					"type": "oneToMany"
 				}
 			],

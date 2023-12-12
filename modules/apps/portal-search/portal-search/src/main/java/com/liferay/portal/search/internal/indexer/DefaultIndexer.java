@@ -141,6 +141,13 @@ public class DefaultIndexer<T extends BaseModel<?>> implements Indexer<T> {
 	}
 
 	@Override
+	public Summary getSummary(Document document, Locale locale, String snippet)
+		throws SearchException {
+
+		return _indexerSummaryBuilder.getSummary(document, snippet, locale);
+	}
+
+	@Override
 	public Summary getSummary(
 			Document document, String snippet, PortletRequest portletRequest,
 			PortletResponse portletResponse)
@@ -175,7 +182,7 @@ public class DefaultIndexer<T extends BaseModel<?>> implements Indexer<T> {
 
 	@Override
 	public boolean isCommitImmediately() {
-		return _modelSearchSettings.isCommitImmediately();
+		return false;
 	}
 
 	@Override

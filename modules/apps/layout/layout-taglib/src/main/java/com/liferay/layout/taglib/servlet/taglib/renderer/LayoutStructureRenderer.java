@@ -30,6 +30,7 @@ import com.liferay.layout.constants.LayoutWebKeys;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
+import com.liferay.layout.list.retriever.ListObjectReference;
 import com.liferay.layout.responsive.ResponsiveLayoutStructureUtil;
 import com.liferay.layout.taglib.internal.display.context.RenderCollectionLayoutStructureItemDisplayContext;
 import com.liferay.layout.taglib.internal.display.context.RenderLayoutStructureDisplayContext;
@@ -52,7 +53,6 @@ import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.layoutconfiguration.util.RuntimePageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTemplate;
@@ -72,6 +72,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.layoutconfiguration.util.RuntimePageUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
@@ -79,6 +80,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -216,6 +218,25 @@ public class LayoutStructureRenderer {
 			collectionStyledLayoutStructureItem.getUniqueCssClass());
 		jspWriter.write(StringPool.SPACE);
 		jspWriter.write(collectionStyledLayoutStructureItem.getCssClass());
+		jspWriter.write("\"");
+
+		if (FeatureFlagManagerUtil.isEnabled("LRAC-14922")) {
+			ListObjectReference listObjectReference =
+				renderCollectionLayoutStructureItemDisplayContext.
+					getListObjectReference();
+
+			if (listObjectReference != null) {
+				jspWriter.write(" data-analytics-targetable-collection=\"");
+				jspWriter.write(
+					HtmlUtil.escape(listObjectReference.toString()));
+				jspWriter.write("\"");
+			}
+
+			jspWriter.write(" id=\"analytics-targetable-collection-");
+			jspWriter.write(collectionStyledLayoutStructureItem.getNamespace());
+			jspWriter.write("\"");
+		}
+
 		jspWriter.write("\" style=\"");
 		jspWriter.write(
 			_renderLayoutStructureDisplayContext.getStyle(
@@ -817,10 +838,9 @@ public class LayoutStructureRenderer {
 		throws Exception {
 
 		if ((infoForm == null) ||
-			(FeatureFlagManagerUtil.isEnabled("LPS-169923") &&
-			 !_hasAddPermission(
-				 PortalUtil.getClassName(
-					 formStyledLayoutStructureItem.getClassNameId())))) {
+			!_hasAddPermission(
+				PortalUtil.getClassName(
+					formStyledLayoutStructureItem.getClassNameId()))) {
 
 			return;
 		}
@@ -907,28 +927,25 @@ public class LayoutStructureRenderer {
 		jspWriter.write(
 			String.valueOf(formStyledLayoutStructureItem.getClassTypeId()));
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-183727")) {
-			LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
-				(LayoutDisplayPageObjectProvider<?>)
-					_httpServletRequest.getAttribute(
-						LayoutDisplayPageWebKeys.
-							LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER);
+		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
+			(LayoutDisplayPageObjectProvider<?>)
+				_httpServletRequest.getAttribute(
+					LayoutDisplayPageWebKeys.
+						LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER);
 
-			if ((layoutDisplayPageObjectProvider != null) &&
-				(layoutDisplayPageObjectProvider.getClassNameId() ==
-					formStyledLayoutStructureItem.getClassNameId())) {
+		if ((layoutDisplayPageObjectProvider != null) &&
+			(layoutDisplayPageObjectProvider.getClassNameId() ==
+				formStyledLayoutStructureItem.getClassNameId())) {
 
-				jspWriter.write(
-					"\"><input name=\"classPK\" type=\"hidden\" value=\"");
-				jspWriter.write(
-					String.valueOf(
-						layoutDisplayPageObjectProvider.getClassPK()));
-				jspWriter.write(
-					"\"><input name=\"externalReferenceCode\" type=\"hidden\"");
-				jspWriter.write(" value=\"");
-				jspWriter.write(
-					layoutDisplayPageObjectProvider.getExternalReferenceCode());
-			}
+			jspWriter.write(
+				"\"><input name=\"classPK\" type=\"hidden\" value=\"");
+			jspWriter.write(
+				String.valueOf(layoutDisplayPageObjectProvider.getClassPK()));
+			jspWriter.write(
+				"\"><input name=\"externalReferenceCode\" type=\"hidden\"");
+			jspWriter.write(" value=\"");
+			jspWriter.write(
+				layoutDisplayPageObjectProvider.getExternalReferenceCode());
 		}
 
 		jspWriter.write(
@@ -1092,9 +1109,16 @@ public class LayoutStructureRenderer {
 			List<String> childrenItemIds, InfoForm infoForm)
 		throws Exception {
 
+		Set<String> hiddenItemIds =
+			_renderLayoutStructureDisplayContext.getHiddenItemIds();
+
 		for (String childrenItemId : childrenItemIds) {
 			LayoutStructureItem layoutStructureItem =
 				_layoutStructure.getLayoutStructureItem(childrenItemId);
+
+			if (hiddenItemIds.contains(childrenItemId)) {
+				continue;
+			}
 
 			long start = System.currentTimeMillis();
 

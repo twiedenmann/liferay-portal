@@ -22,7 +22,6 @@ import {
 import {InputLocalized} from 'frontend-js-components-web';
 
 import {defaultLanguageId} from '../../../utils/constants';
-import {firstLetterUppercase} from '../../../utils/string';
 import {ModalDeleteObjectRelationship} from '../../ObjectRelationship/ModalDeleteObjectRelationship';
 import {
 	OBJECT_RELATIONSHIP_TYPES,
@@ -143,7 +142,7 @@ export function RightSidebarObjectRelationshipDetails({
 
 		makeFetch();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [selectedObjectRelationship?.id]);
 
 	const onSubmit = async (
 		editedObjectRelationship?: Partial<ObjectRelationship>
@@ -169,23 +168,65 @@ export function RightSidebarObjectRelationshipDetails({
 				openToast({message, type: 'danger'});
 			}
 
+			if (!objectRelationship || !objectRelationship?.id) {
+				return;
+			}
+
 			let newObjectRelationship = {};
 
+			const isSelfObjectRelationship =
+				objectRelationship.objectDefinitionId1 ===
+				objectRelationship.objectDefinitionId2;
+
 			const updatedElements = elements.map((element) => {
-				if (
-					isEdge(element) &&
-					(element as Edge<ObjectRelationshipEdgeData>).data
-						?.objectRelationshipId === objectRelationship?.id
-				) {
-					newObjectRelationship = {
-						...element.data,
-						deletionType: objectRelationship.deletionType,
-						label: getLocalizableLabel(
-							defaultLanguageId,
-							objectRelationship.label,
-							objectRelationship.name
-						),
-					};
+				if (isEdge(element)) {
+					const edgeData = (element as Edge<
+						ObjectRelationshipEdgeData
+					>).data;
+
+					const objectRelationshipId = edgeData?.objectRelationshipId;
+					const selfObjectRelationships =
+						edgeData?.selfObjectRelationships;
+
+					const newSelfObjectRelationships = selfObjectRelationships?.map(
+						(selfObjectRelationship) => {
+							if (
+								objectRelationship?.id ===
+								selfObjectRelationship.id
+							) {
+								return {
+									...selfObjectRelationship,
+									label: objectRelationship.label,
+								};
+							}
+
+							return selfObjectRelationship;
+						}
+					);
+
+					if (objectRelationshipId === objectRelationship?.id) {
+						newObjectRelationship = {
+							...edgeData,
+							deletionType: objectRelationship.deletionType,
+							label:
+								isSelfObjectRelationship &&
+								selfObjectRelationships &&
+								selfObjectRelationships.length > 1
+									? selfObjectRelationships.length.toString()
+									: getLocalizableLabel(
+											defaultLanguageId,
+											objectRelationship.label,
+											objectRelationship.name
+									  ),
+							selfObjectRelationships: newSelfObjectRelationships,
+						};
+					}
+					else {
+						newObjectRelationship = {
+							...edgeData,
+							selfObjectRelationships: newSelfObjectRelationships,
+						};
+					}
 
 					return {
 						...element,
@@ -297,22 +338,23 @@ export function RightSidebarObjectRelationshipDetails({
 				/>
 
 				<SingleSelect
-					disabled={readOnly}
+					className="lfr-objects__model-builder-left-sidebar-object-relationship-single-select"
+					disabled={
+						readOnly ||
+						(Liferay.FeatureFlags['LPS-187142'] && values.edge)
+					}
+					items={objectRelationshipDeletionTypes}
 					label={Liferay.Language.get('deletion-type')}
-					onBlur={(event) => {
-						event.stopPropagation();
+					onSelectionChange={(value) => {
+						setValues({deletionType: value as string});
 
-						onSubmit();
+						onSubmit({
+							...values,
+							deletionType: value as string,
+						});
 					}}
-					onChange={(deletionType) =>
-						setValues({deletionType: deletionType.value})
-					}
-					options={objectRelationshipDeletionTypes}
 					required
-					value={
-						values.deletionType &&
-						firstLetterUppercase(values.deletionType)
-					}
+					selectedKey={values.deletionType}
 				/>
 
 				{objectRelationshipParameterRequired &&

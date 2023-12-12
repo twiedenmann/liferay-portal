@@ -42,6 +42,7 @@ import com.liferay.commerce.model.impl.CPDefinitionInventoryModelImpl;
 import com.liferay.commerce.model.impl.CommerceAvailabilityEstimateModelImpl;
 import com.liferay.commerce.model.impl.CommerceOrderItemModelImpl;
 import com.liferay.commerce.model.impl.CommerceShipmentItemModelImpl;
+import com.liferay.commerce.model.impl.CommerceShippingMethodModelImpl;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
@@ -434,7 +435,8 @@ public class CommerceServiceUpgradeStepRegistrator
 
 		registry.register(
 			"8.4.1", "8.5.0",
-			new CommerceAddressTypeUpgradeProcess(_listTypeLocalService));
+			new CommerceAddressTypeUpgradeProcess(
+				_companyLocalService, _listTypeLocalService));
 
 		registry.register(
 			"8.5.0", "8.6.0",
@@ -652,6 +654,31 @@ public class CommerceServiceUpgradeStepRegistrator
 			UpgradeProcessFactory.alterColumnType(
 				CommerceShipmentItemModelImpl.TABLE_NAME, "quantity",
 				"BIGDECIMAL null"));
+
+		registry.register(
+			"11.2.0", "11.2.1",
+			new com.liferay.commerce.internal.upgrade.v11_2_1.
+				CommercePermissionUpgradeProcess(
+					_resourceActionLocalService,
+					_resourcePermissionLocalService));
+
+		registry.register(
+			"11.2.1", "11.3.0",
+			new com.liferay.commerce.internal.upgrade.v11_3_0.
+				CommerceOrderUpgradeProcess());
+
+		registry.register(
+			"11.3.0", "11.3.1",
+			new com.liferay.commerce.internal.upgrade.v11_3_1.
+				CommercePermissionUpgradeProcess(
+					_resourceActionLocalService,
+					_resourcePermissionLocalService));
+
+		registry.register(
+			"11.3.1", "11.4.0",
+			UpgradeProcessFactory.addColumns(
+				CommerceShippingMethodModelImpl.TABLE_NAME,
+				"typeSettings TEXT null"));
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce upgrade step registrator finished");

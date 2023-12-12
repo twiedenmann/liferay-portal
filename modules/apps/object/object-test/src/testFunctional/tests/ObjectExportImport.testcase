@@ -395,7 +395,7 @@ definition {
 				field = "ID",
 				fieldLabel = "Custom Aggregation",
 				fieldType = "Aggregation",
-				function = "Max",
+				functionType = "Max",
 				relationship = "Relationship");
 		}
 
@@ -489,11 +489,16 @@ definition {
 	@description = "LPS-142175 - Verify if it is possible to import the data structure to a custom objects"
 	@priority = 5
 	test CanImportDataStructure {
+		property custom.properties = "feature.flag.LPS-148856=true";
 		property portal.acceptance = "true";
 
 		ObjectExportImport.importObject(
 			objectFileName = "ImportedSimpleObject",
 			objectName = "ImportedSimpleObject146358");
+
+		AssertElementPresent(
+			folderLabel = "Uncategorized",
+			locator1 = "ObjectAdmin#FOLDER_LABEL");
 
 		AssertElementPresent(
 			key_labelName = "Imported Simple Object",
@@ -541,16 +546,26 @@ definition {
 	@description = "LPS-142175 - Verify it's possible to import object with Actions"
 	@priority = 4
 	test CanImportObjectWithAction {
-		task ("When import object with action") {
+		task ("When import an object definition with action") {
 			ObjectExportImport.importObject(
 				objectFileName = "ImportedObjectWithAction",
 				objectName = "ImportedObjectWithAction160652");
 		}
 
-		task ("Then assert the imported file is present") {
+		task ("and When assert that the imported file is present") {
 			AssertElementPresent(
 				key_labelName = "Imported Object With Action",
 				locator1 = "CreateObject#OBJECT_NAME");
+		}
+
+		task ("Then the action is present on the object") {
+			ObjectPortlet.selectCustomObject(label = "Imported Object With Action");
+
+			ObjectAdmin.goToActionsTab();
+
+			ObjectAdmin.assertObjectActions(
+				actionActive = "Yes",
+				actionLabel = "CanImportObjectWithAction");
 		}
 	}
 
@@ -589,13 +604,9 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = "Imported Object With Scope");
 
-		AssertTextEquals(
-			locator1 = "ObjectAdmin#SELECT_OBJECT_SCOPE",
-			value1 = "Company");
-
-		AssertTextEquals(
-			locator1 = "CreateObject#PANEL_LINK",
-			value1 = "Control Panel > Object");
+		CreateObject.assertValuesOnScope(
+			valuePanelCategory = "Object",
+			valueScope = "Company");
 	}
 
 	@description = "LPS-142175 - Verify it is possible to publish an imported custom object"

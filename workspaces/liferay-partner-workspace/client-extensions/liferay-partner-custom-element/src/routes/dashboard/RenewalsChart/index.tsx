@@ -15,6 +15,7 @@ import {status} from '../../../common/components/dashboard/utils/constants/statu
 import getFilteredRenewals from '../../../common/components/dashboard/utils/getFilteredRenewalsData';
 import {siteURL} from '../../../common/components/dashboard/utils/siteURL';
 import {Liferay} from '../../../common/services/liferay';
+import {retry} from '../../../common/utils/retry';
 
 export default function () {
 	const [data, setData] = useState();
@@ -22,16 +23,26 @@ export default function () {
 
 	const getRenewalsData = async () => {
 		setIsLoading(true);
+
+		const todayDate = new Date();
+		const todayDateISO = todayDate.toISOString().split('T')[0];
+
+		todayDate.setDate(todayDate.getDate() + 30);
+		const todayDate30Days = todayDate.toISOString().split('T')[0];
+
 		// eslint-disable-next-line @liferay/portal/no-global-fetch
-		const response = await fetch(
-			'/o/c/opportunitysfs?pageSize=200&sort=closeDate:asc',
-			{
-				headers: {
-					'accept': 'application/json',
-					'x-csrf-token': Liferay.authToken,
-				},
-			}
+		const response = await retry<Response>(() =>
+			fetch(
+				`/o/c/opportunitysfs?pageSize=200&sort=closeDate:asc&filter=type eq 'Existing Business' and stage ne 'Closed Lost' and stage ne 'Disqualified' and stage ne 'Rejected' and stage ne 'Rolled into another opportunity' and closeDate ge ${todayDateISO} and closeDate le ${todayDate30Days}`,
+				{
+					headers: {
+						'accept': 'application/json',
+						'x-csrf-token': Liferay.authToken,
+					},
+				}
+			)
 		);
+
 		if (response.ok) {
 			const renewalsData = await response.json();
 
@@ -40,11 +51,6 @@ export default function () {
 
 			return;
 		}
-
-		Liferay.Util.openToast({
-			message: 'An unexpected error occured.',
-			type: 'danger',
-		});
 	};
 
 	useEffect(() => {
@@ -67,13 +73,13 @@ export default function () {
 
 	const buildChart = () => {
 		if (isLoading) {
-			return <ClayLoadingIndicator className="mb-10 mt-9" size="md" />;
+			return <ClayLoadingIndicator className="mb-10 mt-10" size="md" />;
 		}
 
 		if (!renewalsData.length && !isLoading) {
 			return (
 				<ClayAlert
-					className="mb-8 mt-8 mx-auto text-center w-50"
+					className="h-75 mx-auto text-center"
 					displayType="info"
 					title="Info:"
 				>
@@ -83,7 +89,7 @@ export default function () {
 		}
 
 		return (
-			<div className="align-items-start d-flex flex-column justify-content-center mt-3">
+			<div className="align-items-center d-flex flex-column justify-content-center">
 				{renewalsData?.map((item, index) => {
 					getCurrentStatusColor(item);
 
@@ -105,9 +111,13 @@ export default function () {
 								</div>
 
 								<div>
-									Expires in &nbsp;
+									Expires &nbsp;
 									<span className="font-weight-semi-bold">
-										{item.expirationDays} days.
+										{item.expirationDays === 0
+											? 'today'
+											: item.expirationDays === 1
+											? `in ${item.expirationDays} day`
+											: `in ${item.expirationDays} days`}
 									</span>
 									&nbsp;
 									<span className="ml-2">
@@ -124,18 +134,21 @@ export default function () {
 
 	return (
 		<Container
-			className="renewal-chart-card-height"
+			className="dashboard-renewal-chart justify-content-between"
 			footer={
-				<ClayButton
-					className="border-brand-primary-darken-1 mt-2 text-brand-primary-darken-1"
-					displayType="secondary"
-					onClick={() =>
-						Liferay.Util.navigate(`${siteURL}/sales/renewals`)
-					}
-					type="button"
-				>
-					View all
-				</ClayButton>
+				<div className="pt-4">
+					<ClayButton
+						className="bg-neutral-0 border-brand-primary-darken-1 text-brand-primary-darken-1"
+						displayType="secondary"
+						onClick={() =>
+							Liferay.Util.navigate(`${siteURL}/sales/renewals`)
+						}
+						size="sm"
+						type="button"
+					>
+						View all
+					</ClayButton>
+				</div>
 			}
 			title="Renewals"
 		>

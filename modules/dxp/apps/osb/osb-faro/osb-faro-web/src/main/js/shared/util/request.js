@@ -1,4 +1,3 @@
-import fetch from './fetch';
 import ValidationError from 'shared/util/ValidationError';
 import {forEach, get, keys, mapValues} from 'lodash';
 import {reloadPage} from 'shared/util/router';
@@ -73,39 +72,54 @@ export default request => {
 		path
 	} = request;
 
-	const requestURL = `${baseURL}/${path}`;
+	let requestURL = `${baseURL}/${path}`;
 
-	const authData = {
+	// Remove undefined values from object authData
+
+	const authData = Object.entries({
 		...stringifyValues(data)
-	};
+	})
+		.filter(([, value]) => value !== undefined)
+		.reduce((obj, [key, value]) => {
+			obj[key] = value;
+			return obj;
+		}, {});
 
 	const config = {method};
 
 	if (method === 'GET') {
-		config.data = authData;
+		requestURL = `${requestURL}?${new URLSearchParams(authData)}`;
 	} else {
 		config.body = getFormData(authData);
 	}
 
-	return fetch(requestURL, config).then(({response, status}) => {
+	return fetch(requestURL, config).then(async response => {
+		const status = response.status;
+
 		if (status === 204) {
 			return {};
 		} else if (status === 400 || status === 500) {
-			const {field, localizedMessage, messageKey} = parseFromJSON(
-				response
-			);
+			try {
+				const {
+					field,
+					localizedMessage,
+					messageKey
+				} = await response.json();
 
-			if (field) {
-				throw new ValidationError(field, localizedMessage);
+				if (field) {
+					throw new ValidationError(field, localizedMessage);
+				}
+
+				if (messageKey) {
+					throw new Error(messageKey);
+				}
+
+				throw new Error(
+					localizedMessage ? localizedMessage : 'Request Error'
+				);
+			} catch (error) {
+				throw new Error('Request Error');
 			}
-
-			if (messageKey) {
-				throw new Error(messageKey);
-			}
-
-			throw new Error(
-				localizedMessage ? localizedMessage : 'Request Error'
-			);
 		} else if (status === 401) {
 			reloadPage();
 		} else if (status === 403) {
@@ -113,9 +127,9 @@ export default request => {
 		} else if (status >= 300) {
 			throw new Error('Request error');
 		} else if (contentType === 'json') {
-			return JSON.parse(response);
+			return response.json();
 		} else {
-			return response;
+			return response.text();
 		}
 	});
 };

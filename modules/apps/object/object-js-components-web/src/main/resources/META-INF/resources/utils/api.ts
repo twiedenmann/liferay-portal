@@ -73,6 +73,7 @@ export interface NotificationTemplate {
 	recipientType: RecipientType;
 	recipients: Recipient[];
 	subject: LocalizedValue<string>;
+	system: boolean;
 	to: LocalizedValue<string>;
 	type: NotificationTemplateType;
 }
@@ -318,6 +319,19 @@ export async function getObjectValidationRuleById<T>(
 	);
 }
 
+export async function patchObjectDefinitionById(
+	objectDefinition: Partial<ObjectDefinition>
+) {
+	return await fetch(
+		`/o/object-admin/v1.0/object-definitions/${objectDefinition.id}`,
+		{
+			body: JSON.stringify(objectDefinition),
+			headers,
+			method: 'PATCH',
+		}
+	);
+}
+
 export async function postListTypeEntry({
 	key,
 	listTypeDefinitionId,
@@ -345,6 +359,7 @@ export async function postObjectDefinitionPublish(objectDefinitionId: number) {
 	return await fetch(
 		`/o/object-admin/v1.0/object-definitions/${objectDefinitionId}/publish`,
 		{
+			headers,
 			method: 'POST',
 		}
 	);

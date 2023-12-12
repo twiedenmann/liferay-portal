@@ -20,27 +20,25 @@ import {UploadLogo} from '../../components/UploadLogo/UploadLogo';
 import {useAppContext} from '../../manage-app-state/AppManageState';
 import {TYPES} from '../../manage-app-state/actionTypes';
 import {
-	addExpandoValue,
 	createApp,
-	createAttachment,
+	createImage,
 	getCategories,
-	getChannels,
 	getVocabularies,
 	updateApp,
 } from '../../utils/api';
 import {submitBase64EncodedFile} from '../../utils/util';
 
 import './DefineAppProfilePage.scss';
-import {getCompanyId} from '../../liferay/constants';
+import {useMarketplaceContext} from '../../context/MarketplaceContext';
 
-interface DefineAppProfilePageProps {
+type DefineAppProfilePageProps = {
 	onClickBack: () => void;
 	onClickContinue: () => void;
-}
+};
 
-interface VocabDropdownItem extends Categories {
+type VocabDropdownItem = {
 	checked: boolean;
-}
+} & Categories;
 
 export function DefineAppProfilePage({
 	onClickBack,
@@ -58,6 +56,7 @@ export function DefineAppProfilePage({
 		},
 		dispatch,
 	] = useAppContext();
+	const {channel} = useMarketplaceContext();
 	const [categories, setCategories] = useState<VocabDropdownItem[]>([]);
 	const [productType, setProductType] = useState<Categories>();
 	const [tags, setTags] = useState<VocabDropdownItem[]>([]);
@@ -97,12 +96,6 @@ export function DefineAppProfilePage({
 		let product;
 		let response;
 
-		const channels = await getChannels();
-
-		const marketplaceChannel = channels.find(
-			(channel) => channel.name === 'Marketplace Channel'
-		);
-
 		if (appERC) {
 			response = await updateApp({
 				appDescription,
@@ -122,12 +115,12 @@ export function DefineAppProfilePage({
 				catalogId,
 				productChannels: [
 					{
-						channelId: marketplaceChannel?.id as number,
-						currencyCode: marketplaceChannel?.currencyCode as string,
-						externalReferenceCode: marketplaceChannel?.externalReferenceCode as string,
-						id: marketplaceChannel?.id as number,
-						name: marketplaceChannel?.name as string,
-						type: marketplaceChannel?.type as string,
+						channelId: channel?.id as number,
+						currencyCode: channel?.currencyCode as string,
+						externalReferenceCode: channel?.externalReferenceCode as string,
+						id: channel?.id as number,
+						name: channel?.name as string,
+						type: channel?.type as string,
 					},
 				],
 			});
@@ -148,22 +141,12 @@ export function DefineAppProfilePage({
 		}
 
 		if (appLogo) {
-			const attachmentId = await submitBase64EncodedFile({
+			await submitBase64EncodedFile({
 				appERC: appERC ?? product.externalReferenceCode,
 				file: appLogo.file,
-				requestFunction: createAttachment,
+				isAppIcon: true,
+				requestFunction: createImage,
 				title: appLogo.fileName,
-			});
-
-			addExpandoValue({
-				attributeValues: {
-					'App Icon': 'Yes',
-				},
-				className:
-					'com.liferay.commerce.product.model.CPAttachmentFileEntry',
-				classPK: attachmentId as number,
-				companyId: Number(getCompanyId()),
-				tableName: 'CUSTOM_FIELDS',
 			});
 		}
 

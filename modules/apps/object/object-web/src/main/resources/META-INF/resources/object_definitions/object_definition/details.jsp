@@ -26,11 +26,9 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 			HashMapBuilder.<String, Object>put(
 				"backURL", ParamUtil.getString(request, "backURL", String.valueOf(renderResponse.createRenderURL()))
 			).put(
-				"companyKeyValuePair", objectDefinitionsDetailsDisplayContext.getScopeKeyValuePairs("company")
+				"companies", objectDefinitionsDetailsDisplayContext.getScopeJSONArray("company")
 			).put(
 				"dbTableName", objectDefinition.getDBTableName()
-			).put(
-				"externalReferenceCode", objectDefinition.getExternalReferenceCode()
 			).put(
 				"hasPublishObjectPermission", objectDefinitionsDetailsDisplayContext.hasPublishObjectPermission()
 			).put(
@@ -44,6 +42,8 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 			).put(
 				"nonRelationshipObjectFieldsInfo", objectDefinitionsDetailsDisplayContext.getNonrelationshipObjectFieldsInfo()
 			).put(
+				"objectDefinitionExternalReferenceCode", objectDefinition.getExternalReferenceCode()
+			).put(
 				"objectDefinitionId", objectDefinition.getObjectDefinitionId()
 			).put(
 				"pluralLabel", LocalizationUtil.getLocalizationMap(objectDefinition.getPluralLabel())
@@ -52,7 +52,7 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 			).put(
 				"shortName", objectDefinition.getShortName()
 			).put(
-				"siteKeyValuePair", objectDefinitionsDetailsDisplayContext.getScopeKeyValuePairs("site")
+				"sites", objectDefinitionsDetailsDisplayContext.getScopeJSONArray("site")
 			).put(
 				"storageTypes", objectDefinitionsDetailsDisplayContext.getStorageTypesJSONArray()
 			).build()

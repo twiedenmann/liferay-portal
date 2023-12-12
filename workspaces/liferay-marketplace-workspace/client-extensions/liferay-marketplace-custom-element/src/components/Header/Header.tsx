@@ -9,7 +9,7 @@ import './Header.scss';
 
 interface HeaderProps {
 	description: ReactNode | string;
-	title: string;
+	title: ReactNode | string;
 }
 
 export function Header({description, title}: HeaderProps) {
@@ -17,7 +17,7 @@ export function Header({description, title}: HeaderProps) {
 		<div className="header-container">
 			<span className="header-title">{title}</span>
 
-			<p className="header-description">{description}</p>
+			<div className="header-description">{description}</div>
 		</div>
 	);
 }

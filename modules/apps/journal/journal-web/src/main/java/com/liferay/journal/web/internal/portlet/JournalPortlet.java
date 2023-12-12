@@ -8,7 +8,9 @@ package com.liferay.journal.web.internal.portlet;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.exception.AssetTagException;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.change.tracking.spi.constants.CTTimelineKeys;
+import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryException;
 import com.liferay.document.library.kernel.exception.FileSizeException;
 import com.liferay.dynamic.data.mapping.configuration.DDMWebConfiguration;
@@ -54,7 +56,6 @@ import com.liferay.journal.service.JournalFolderService;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.journal.util.JournalConverter;
 import com.liferay.journal.util.JournalHelper;
-import com.liferay.journal.web.internal.configuration.FFJournalAutoSaveDraftConfiguration;
 import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.journal.web.internal.helper.JournalDDMTemplateHelper;
 import com.liferay.journal.web.internal.portlet.action.ActionUtil;
@@ -141,6 +142,9 @@ public class JournalPortlet extends MVCPortlet {
 		renderRequest.setAttribute(
 			AssetDisplayPageFriendlyURLProvider.class.getName(),
 			_assetDisplayPageFriendlyURLProvider);
+		renderRequest.setAttribute(
+			AssetVocabularyLocalService.class.getName(),
+			_assetVocabularyLocalService);
 		renderRequest.setAttribute(TrashWebKeys.TRASH_HELPER, _trashHelper);
 
 		if (Objects.equals(
@@ -170,6 +174,9 @@ public class JournalPortlet extends MVCPortlet {
 		renderRequest.setAttribute(
 			JournalWebKeys.JOURNAL_CONVERTER, _journalConverter);
 		renderRequest.setAttribute(
+			SiteConnectedGroupGroupProvider.class.getName(),
+			_siteConnectedGroupGroupProvider);
+		renderRequest.setAttribute(
 			TranslationPermission.class.getName(), _translationPermission);
 		renderRequest.setAttribute(
 			TranslationURLProvider.class.getName(), _translationURLProvider);
@@ -179,10 +186,6 @@ public class JournalPortlet extends MVCPortlet {
 				DDMWebConfiguration.class.getName(),
 				_configurationProvider.getSystemConfiguration(
 					DDMWebConfiguration.class));
-			renderRequest.setAttribute(
-				FFJournalAutoSaveDraftConfiguration.class.getName(),
-				_configurationProvider.getSystemConfiguration(
-					FFJournalAutoSaveDraftConfiguration.class));
 			renderRequest.setAttribute(
 				JournalFileUploadsConfiguration.class.getName(),
 				_configurationProvider.getSystemConfiguration(
@@ -220,10 +223,6 @@ public class JournalPortlet extends MVCPortlet {
 		resourceRequest.setAttribute(TrashWebKeys.TRASH_HELPER, _trashHelper);
 
 		try {
-			resourceRequest.setAttribute(
-				FFJournalAutoSaveDraftConfiguration.class.getName(),
-				_configurationProvider.getSystemConfiguration(
-					FFJournalAutoSaveDraftConfiguration.class));
 			resourceRequest.setAttribute(
 				JournalWebConfiguration.class.getName(),
 				_configurationProvider.getSystemConfiguration(
@@ -361,6 +360,9 @@ public class JournalPortlet extends MVCPortlet {
 		_assetDisplayPageFriendlyURLProvider;
 
 	@Reference
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Reference
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
@@ -405,6 +407,9 @@ public class JournalPortlet extends MVCPortlet {
 		target = "(&(release.bundle.symbolic.name=com.liferay.journal.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
 	)
 	private Release _release;
+
+	@Reference
+	private SiteConnectedGroupGroupProvider _siteConnectedGroupGroupProvider;
 
 	@Reference
 	private TranslationPermission _translationPermission;

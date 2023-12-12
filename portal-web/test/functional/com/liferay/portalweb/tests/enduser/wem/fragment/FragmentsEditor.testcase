@@ -146,7 +146,7 @@ definition {
 				item = "Edit");
 
 			var htmlSnippet = '''[resources:''';
-			var fragmentHtml = '''[resources:Document_1.jpg''';
+			var fragmentHtml = '''[resources:Document_1''';
 
 			FragmentsEditor.typeHtmlEditor(content = "");
 
@@ -155,15 +155,15 @@ definition {
 				value1 = ${htmlSnippet});
 
 			AssertElementNotPresent(
-				autocompleteField = "Document_2.jpg",
+				autocompleteField = "Document_2",
 				locator1 = "FragmentEditor#AUTOCOMPLETE_FIELD");
 
 			AssertElementPresent(
-				autocompleteField = "Document_1.jpg",
+				autocompleteField = "Document_1",
 				locator1 = "FragmentEditor#AUTOCOMPLETE_FIELD");
 
 			Click(
-				autocompleteField = "Document_1.jpg",
+				autocompleteField = "Document_1",
 				locator1 = "FragmentEditor#AUTOCOMPLETE_FIELD");
 
 			AssertTextEquals.assertPartialText(
@@ -275,7 +275,7 @@ definition {
 		}
 
 		task ("Assert user is taken to the the Liferay Fragments Toolkit documentation page") {
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			AssertLocation(value1 = "https://github.com/liferay/generator-liferay-fragments#liferay-fragments-cli");
 		}

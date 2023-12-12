@@ -42,11 +42,16 @@ const ViewBuilderScreen: React.FC<{}> = () => {
 	const handleAddColumns = () => {
 		const parentWindow = Liferay.Util.getOpener();
 
-		parentWindow.Liferay.fire('openModalAddColumns', {
+		parentWindow.Liferay.fire('openModalSelectObjectFields', {
 			getName: ({label, name}: ObjectField) =>
 				getLocalizableLabel(creationLanguageId, label, name),
 			header: Liferay.Language.get('add-columns'),
-			items: objectFields,
+			items: objectFields.map((objectField) => {
+				return {
+					...objectField,
+					disableCheckbox: false,
+				};
+			}),
 			onSave: (selectedObjectFields: ObjectField[]) =>
 				dispatch({
 					payload: {
@@ -56,6 +61,7 @@ const ViewBuilderScreen: React.FC<{}> = () => {
 					type: TYPES.ADD_OBJECT_VIEW_COLUMN,
 				}),
 			selected,
+			showModal: true,
 			title: Liferay.Language.get('select-the-columns'),
 		});
 	};
@@ -86,6 +92,7 @@ const ViewBuilderScreen: React.FC<{}> = () => {
 		<>
 			<Card title={Liferay.Language.get('columns')}>
 				<BuilderScreen
+					builderScreenItems={objectViewColumns ?? []}
 					emptyState={{
 						buttonText: Liferay.Language.get('add-column'),
 						description: Liferay.Language.get(
@@ -95,7 +102,6 @@ const ViewBuilderScreen: React.FC<{}> = () => {
 					}}
 					firstColumnHeader={Liferay.Language.get('name')}
 					hasDragAndDrop
-					objectColumns={objectViewColumns ?? []}
 					onChangeColumnOrder={handleChangeColumnOrder}
 					onDeleteColumn={handleDeleteColumn}
 					onEditingObjectFieldName={setEditingObjectFieldName}

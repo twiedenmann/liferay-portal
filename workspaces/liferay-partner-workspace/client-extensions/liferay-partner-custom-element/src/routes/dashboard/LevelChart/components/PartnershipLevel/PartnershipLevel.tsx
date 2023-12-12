@@ -12,7 +12,6 @@ import SilverPartnerIcon from '../../../../../common/components/dashboard/compon
 import {ChartTypes} from '../../../../../common/components/dashboard/enums/chartTypes';
 import {PartnershipLevels} from '../../../../../common/components/dashboard/enums/partnershipLevels';
 import {partnerLevelProperties} from '../../../../../common/components/dashboard/mock';
-import AccountEntry from '../../../../../common/interfaces/accountEntry';
 import PartnerLevel from '../../../../../common/interfaces/partnerLevel';
 import CheckBoxItem from '../CheckBoxItem';
 import LevelProgressBar from '../LevelProgressBar';
@@ -25,13 +24,14 @@ interface IPropsPartnershipLevel {
 	aRRResults: {
 		[keys: string]: number;
 	};
-	account: AccountEntry;
 	checkedProperties: {
 		[keys: string]: boolean | undefined;
 	};
+	currency: string;
 	headcount: {
 		[keys: string]: number;
 	};
+	newProjectExistingBusiness: number;
 	partnerLevel: PartnerLevel;
 }
 
@@ -53,12 +53,17 @@ const PartnerIcon = ({level}: IPropsPartnerIcon) => {
 
 const PartnershipLevel = ({
 	aRRResults,
-	account,
 	checkedProperties,
+	currency,
 	headcount,
+	newProjectExistingBusiness,
 	partnerLevel,
 }: IPropsPartnershipLevel) => {
 	const getTotalARR = () => {
+		if (partnerLevel.partnerLevelType.key === PartnershipLevels.PLATINUM) {
+			return aRRResults.targetArr;
+		}
+
 		if (partnerLevel.partnerLevelType.key === PartnershipLevels.GOLD) {
 			return partnerLevelProperties[partnerLevel.partnerLevelType.key]
 				.goalARR;
@@ -122,6 +127,7 @@ const PartnershipLevel = ({
 							title="ARR"
 						>
 							<LevelProgressBar
+								currency={currency}
 								currentValue={aRRResults.aRRAmountTotal}
 								total={getTotalARR()}
 								type={ChartTypes.ARR}
@@ -135,8 +141,9 @@ const PartnershipLevel = ({
 									</div>
 
 									<LevelProgressBar
+										currency={currency}
 										currentValue={
-											account.newProjectExistingBusiness
+											newProjectExistingBusiness
 										}
 										total={
 											partnerLevelProperties[
@@ -163,12 +170,6 @@ const PartnershipLevel = ({
 					<CheckBoxItem
 						completed={checkedProperties.marketingPlan}
 						title="Marketing Plan"
-					/>
-
-					<CheckBoxItem
-						completed={checkedProperties.marketingPerformance}
-						text={`${account.marketingPerformance} Leads`}
-						title="Marketing Performance"
 					/>
 
 					<CheckBoxItem

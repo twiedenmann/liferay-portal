@@ -4,28 +4,36 @@
  */
 
 import {ClayRadio} from '@clayui/form';
+import ClayLabel from '@clayui/label';
 import ClaySticker from '@clayui/sticker';
 import classNames from 'classnames';
 
 import './RadioCard.scss';
+
+import {ReactNode} from 'react';
+
 import emptyPictureIcon from '../../../assets/icons/avatar.svg';
 
 interface RadioCardProps {
 	activeRadio: boolean | undefined;
-	description?: string;
+	description?: ReactNode;
+	disabled?: boolean;
 	imageURL?: string;
-	index: number;
+	index?: number;
+	label?: string;
 	leftRadio?: boolean;
 	selectRadio: () => void;
 	showImage?: boolean;
-	title: string;
+	title: ReactNode;
 }
 
 const NewRadioCard = ({
 	activeRadio,
 	description,
+	disabled,
 	imageURL,
 	index,
+	label,
 	leftRadio,
 	selectRadio,
 	showImage,
@@ -34,8 +42,10 @@ const NewRadioCard = ({
 	return (
 		<div
 			className={classNames(
-				'align-items-center d-flex justify-content-between form-control mb-5 cursor-pointer py-4 px-0',
+				'align-items-center cursor-pointer d-flex form-control justify-content-between mb-5 px-0 py-4 radio-card',
 				{
+					'bg-transparent': !activeRadio,
+					'radio-disabled': disabled,
 					'radio-selected': activeRadio,
 				}
 			)}
@@ -54,7 +64,7 @@ const NewRadioCard = ({
 								checked={activeRadio}
 								onChange={() => selectRadio()}
 								type="radio"
-								value={title}
+								value={String(title)}
 							/>
 						</div>
 					)}
@@ -79,14 +89,23 @@ const NewRadioCard = ({
 							</div>
 						)}
 
-						<h5
-							className={classNames('col-10 mb-0', {
+						<div
+							className={classNames('mt-2 col-10 mb-0', {
 								'pl-0': !leftRadio,
 							})}
 						>
 							{title}
-						</h5>
+						</div>
 					</div>
+
+					{label && (
+						<ClayLabel
+							className="radio-card-label"
+							displayType="info"
+						>
+							{label}
+						</ClayLabel>
+					)}
 				</div>
 
 				{description && (
@@ -110,7 +129,7 @@ const NewRadioCard = ({
 						checked={activeRadio}
 						onChange={() => selectRadio()}
 						type="radio"
-						value={title}
+						value={String(title)}
 					/>
 				</div>
 			)}

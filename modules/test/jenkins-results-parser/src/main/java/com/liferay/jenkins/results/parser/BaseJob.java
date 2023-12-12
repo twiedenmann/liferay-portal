@@ -5,6 +5,7 @@
 
 package com.liferay.jenkins.results.parser;
 
+import com.liferay.jenkins.results.parser.job.property.GlobJobProperty;
 import com.liferay.jenkins.results.parser.job.property.JobProperty;
 import com.liferay.jenkins.results.parser.job.property.JobPropertyFactory;
 import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
@@ -16,6 +17,8 @@ import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory
 
 import java.io.File;
 import java.io.IOException;
+
+import java.nio.file.PathMatcher;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +33,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -630,6 +634,56 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
+	public boolean isJUnitTestsModifiedOnly() {
+		if (_jUnitTestFileModifiedOnly != null) {
+			return _jUnitTestFileModifiedOnly;
+		}
+
+		if (!(this instanceof PortalTestClassJob)) {
+			_jUnitTestFileModifiedOnly = false;
+
+			return _jUnitTestFileModifiedOnly;
+		}
+
+		List<PathMatcher> jUnitIncludePathMatchers =
+			_getJUnitIncludePathMatchers();
+
+		if (jUnitIncludePathMatchers.isEmpty()) {
+			_jUnitTestFileModifiedOnly = false;
+
+			return _jUnitTestFileModifiedOnly;
+		}
+
+		PortalTestClassJob portalTestClassJob = (PortalTestClassJob)this;
+
+		PortalGitWorkingDirectory portalGitWorkingDirectory =
+			portalTestClassJob.getPortalGitWorkingDirectory();
+
+		List<File> modifiedFilesList =
+			portalGitWorkingDirectory.getModifiedFilesList();
+
+		if (modifiedFilesList.isEmpty()) {
+			_jUnitTestFileModifiedOnly = false;
+
+			return _jUnitTestFileModifiedOnly;
+		}
+
+		for (File modifiedFile : modifiedFilesList) {
+			if (!JenkinsResultsParserUtil.isFileIncluded(
+					null, jUnitIncludePathMatchers, modifiedFile)) {
+
+				_jUnitTestFileModifiedOnly = false;
+
+				return _jUnitTestFileModifiedOnly;
+			}
+		}
+
+		_jUnitTestFileModifiedOnly = true;
+
+		return _jUnitTestFileModifiedOnly;
+	}
+
+	@Override
 	public boolean isSegmentEnabled() {
 		JobProperty jobProperty = getJobProperty("test.batch.segment.enabled");
 
@@ -689,6 +743,20 @@ public abstract class BaseJob implements Job {
 	@Override
 	public boolean testRelevantChanges() {
 		JobProperty jobProperty = getJobProperty("test.relevant.changes");
+
+		if (jobProperty != null) {
+			recordJobProperty(jobProperty);
+
+			return Boolean.parseBoolean(jobProperty.getValue());
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean testRelevantChangesInStable() {
+		JobProperty jobProperty = getJobProperty(
+			"test.relevant.changes.in.stable");
 
 		if (jobProperty != null) {
 			recordJobProperty(jobProperty);
@@ -844,18 +912,26 @@ public abstract class BaseJob implements Job {
 		}
 
 		ParallelExecutor<BatchTestClassGroup> parallelExecutor =
-			new ParallelExecutor<>(callables, _executorService);
+			new ParallelExecutor<>(
+				callables, _executorService, "getBatchTestClassGroups");
 
-		List<BatchTestClassGroup> batchTestClassGroups =
-			parallelExecutor.execute();
+		List<BatchTestClassGroup> batchTestClassGroups;
 
-		for (List<Callable<BatchTestClassGroup>> testBaseDirCallables :
-				testBaseDirCallablesMap.values()) {
+		try {
+			batchTestClassGroups = parallelExecutor.execute();
 
-			parallelExecutor = new ParallelExecutor<>(
-				testBaseDirCallables, _executorService);
+			for (List<Callable<BatchTestClassGroup>> testBaseDirCallables :
+					testBaseDirCallablesMap.values()) {
 
-			batchTestClassGroups.addAll(parallelExecutor.execute());
+				parallelExecutor = new ParallelExecutor<>(
+					testBaseDirCallables, _executorService,
+					"getBatchTestClassGroups2");
+
+				batchTestClassGroups.addAll(parallelExecutor.execute());
+			}
+		}
+		catch (TimeoutException timeoutException) {
+			throw new RuntimeException(timeoutException);
 		}
 
 		batchTestClassGroups.removeAll(Collections.singleton(null));
@@ -927,6 +1003,14 @@ public abstract class BaseJob implements Job {
 
 		return JobPropertyFactory.newJobProperty(
 			basePropertyName, testSuiteName, batchName, this, null, null, true);
+	}
+
+	protected JobProperty getJobProperty(
+		String basePropertyName, String testSuiteName, String batchName,
+		JobProperty.Type type) {
+
+		return JobPropertyFactory.newJobProperty(
+			basePropertyName, testSuiteName, batchName, this, null, type, true);
 	}
 
 	protected Set<String> getRawBatchNames() {
@@ -1046,6 +1130,40 @@ public abstract class BaseJob implements Job {
 		return jobPropertiesMap;
 	}
 
+	private List<PathMatcher> _getJUnitIncludePathMatchers() {
+		List<PathMatcher> jUnitIncludePathMatchers = new ArrayList<>();
+
+		String testSuiteName = "default";
+
+		if (this instanceof TestSuiteJob) {
+			TestSuiteJob testSuiteJob = (TestSuiteJob)this;
+
+			testSuiteName = testSuiteJob.getTestSuiteName();
+		}
+
+		for (String jUnitBatchName : _JUNIT_BATCH_NAMES) {
+			JobProperty jobProperty = getJobProperty(
+				"test.batch.class.names.filter", testSuiteName, jUnitBatchName,
+				JobProperty.Type.INCLUDE_GLOB);
+
+			if (!(jobProperty instanceof GlobJobProperty)) {
+				continue;
+			}
+
+			String jobPropertyValue = jobProperty.getValue();
+
+			if (jobPropertyValue == null) {
+				continue;
+			}
+
+			GlobJobProperty globJobProperty = (GlobJobProperty)jobProperty;
+
+			jUnitIncludePathMatchers.addAll(globJobProperty.getPathMatchers());
+		}
+
+		return jUnitIncludePathMatchers;
+	}
+
 	private int _getSlaveRAMMinimumDefault() {
 		try {
 			String slaveRAMMinimumDefault =
@@ -1078,6 +1196,11 @@ public abstract class BaseJob implements Job {
 		return 2;
 	}
 
+	private static final String[] _JUNIT_BATCH_NAMES = {
+		"integration-jdk8", "modules-integration-jdk8", "modules-unit-jdk8",
+		"unit-jdk8"
+	};
+
 	private static final Integer _THREAD_COUNT = 20;
 
 	private static final ExecutorService _executorService =
@@ -1092,5 +1215,6 @@ public abstract class BaseJob implements Job {
 	private JobHistory _jobHistory;
 	private final String _jobName;
 	private final List<JobProperty> _jobProperties = new ArrayList<>();
+	private Boolean _jUnitTestFileModifiedOnly;
 
 }

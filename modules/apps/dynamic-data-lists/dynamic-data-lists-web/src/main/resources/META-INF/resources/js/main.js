@@ -109,8 +109,8 @@ AUI.add(
 					dataType: 'JSON',
 					method: 'POST',
 					on: {
-						success() {
-							callback();
+						success(data) {
+							callback(JSON.parse(data.details[1].response));
 						},
 					},
 				});
@@ -506,15 +506,11 @@ AUI.add(
 					}
 				},
 
-				_normalizeFieldData(item, record, normalized) {
+				_normalizeFieldData(item, record, normalized, field, update) {
 					const instance = this;
 
 					const type = item.type;
 					let value = record.get(item.name);
-
-					if (!record.changed[item.id] && value && !!value.length) {
-						return;
-					}
 
 					if (type === 'ddm-link-to-page') {
 						value = FormBuilder.Util.parseJSON(value);
@@ -545,20 +541,31 @@ AUI.add(
 						fieldValue['value'] = value;
 					}
 
-					normalized['fieldValues'].push(fieldValue);
+					if (field && !update) {
+						if (!field['nestedFieldValues']) {
+							field['nestedFieldValues'] = [];
+						}
 
-					if (isArray(item.fields)) {
-						item.fields.forEach((item) => {
+						field['nestedFieldValues'].push(fieldValue);
+					}
+					else {
+						normalized['fieldValues'].push(fieldValue);
+					}
+
+					if (isArray(item.fields) && !!item.fields.length) {
+						item.fields.forEach((nestedItem) => {
 							instance._normalizeFieldData(
-								item,
+								nestedItem,
 								record,
-								normalized
+								normalized,
+								fieldValue,
+								update
 							);
 						});
 					}
 				},
 
-				_normalizeRecordData(record) {
+				_normalizeRecordData(record, update) {
 					const instance = this;
 
 					const structure = instance.get('structure');
@@ -570,17 +577,13 @@ AUI.add(
 					};
 
 					structure.forEach((item) => {
-						instance._normalizeFieldData(item, record, normalized);
-
-						if (item.fields) {
-							item.fields.forEach((nestedField) =>
-								instance._normalizeFieldData(
-									nestedField,
-									record,
-									normalized
-								)
-							);
-						}
+						instance._normalizeFieldData(
+							item,
+							record,
+							normalized,
+							null,
+							update
+						);
 					});
 
 					delete normalized.displayIndex;
@@ -645,15 +648,13 @@ AUI.add(
 
 						const recordId = record.get('recordId');
 
-						const fieldsMap = instance._normalizeRecordData(record);
-
 						const recordIndex = data.indexOf(record);
 
 						if (recordId > 0) {
 							SpreadSheet.updateRecord(
 								recordId,
 								recordIndex,
-								fieldsMap,
+								instance._normalizeRecordData(record, true),
 								false,
 								instance.get('portletNamespace'),
 								instance.get('updateRecordURL')
@@ -669,7 +670,7 @@ AUI.add(
 										});
 									}
 								},
-								fieldsMap,
+								instance._normalizeRecordData(record, false),
 								recordIndex,
 								instance.get('portletNamespace'),
 								recordsetId

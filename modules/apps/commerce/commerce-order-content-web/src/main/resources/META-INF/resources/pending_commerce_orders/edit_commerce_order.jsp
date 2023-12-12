@@ -47,13 +47,6 @@ List<CommerceAddress> shippingAddresses = commerceOrderContentDisplayContext.get
 List<CommerceAddress> billingAddresses = commerceOrderContentDisplayContext.getBillingCommerceAddresses(accountEntry.getAccountEntryId());
 
 List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.COMMERCE_ORDER_ERROR_MESSAGES);
-
-String backURL = ParamUtil.getString(request, "backURL", null);
-
-if (backURL != null) {
-	portletDisplay.setShowBackIcon(true);
-	portletDisplay.setURLBack(backURL);
-}
 %>
 
 <c:if test="<%= (errorMessages != null) && !errorMessages.isEmpty() %>">
@@ -155,7 +148,7 @@ if (backURL != null) {
 		<div class="commerce-panel__content">
 			<div class="align-items-center row">
 				<div class="col-md-3">
-					<div class="commerce-order-title">
+					<div class="autofit-col-expand commerce-order-title">
 						<%= HtmlUtil.escape(accountEntry.getName()) %>
 					</div>
 				</div>
@@ -464,6 +457,7 @@ if (backURL != null) {
 			itemsPerPage="<%= 10 %>"
 			nestedItemsKey="orderItemId"
 			nestedItemsReferenceKey="orderItems"
+			propsTransformer="js/PendingOrderItemActionDropdownPropsTransformer"
 			style="stacked"
 		/>
 	</div>

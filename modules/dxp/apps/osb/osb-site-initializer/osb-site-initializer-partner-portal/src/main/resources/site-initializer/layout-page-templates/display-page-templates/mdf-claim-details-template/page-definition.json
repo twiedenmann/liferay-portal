@@ -236,7 +236,7 @@
 													{
 														"definition": {
 															"fragment": {
-																"key": "dialect-dialect-text"
+																"key": "DIALECT-dialect-text"
 															},
 															"fragmentConfig": {
 																"textType": "h1",
@@ -283,7 +283,7 @@
 													{
 														"definition": {
 															"fragment": {
-																"key": "dialect-dialect-text"
+																"key": "DIALECT-dialect-text"
 															},
 															"fragmentConfig": {
 																"textType": "h1",
@@ -331,7 +331,7 @@
 													{
 														"definition": {
 															"fragment": {
-																"key": "dialect-dialect-text"
+																"key": "DIALECT-dialect-text"
 															},
 															"fragmentConfig": {
 																"textType": "h1"
@@ -452,7 +452,7 @@
 																		},
 																		"text": {
 																			"mapping": {
-																				"fieldKey": "ObjectEntry_createDate",
+																				"fieldKey": "ObjectEntry_submitDate",
 																				"itemReference": {
 																					"contextSource": "DisplayPageItem"
 																				}

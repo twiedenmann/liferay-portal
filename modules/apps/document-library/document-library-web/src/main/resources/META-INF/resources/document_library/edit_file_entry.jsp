@@ -166,7 +166,7 @@ renderResponse.setTitle(headerTitle);
 			</c:when>
 			<c:otherwise>
 				<div class="alert alert-danger">
-					<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(PortalUtil.getUserName(lock.getUserId(), String.valueOf(lock.getUserId()))), dateFormatDateTime.format(lock.getCreateDate())} %>" key="you-cannot-modify-this-document-because-it-was-checked-out-by-x-on-x" translateArguments="<%= false %>" />
+					<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(PortalUtil.getUserName(lock.getUserId(), String.valueOf(lock.getUserId()))), dateTimeFormat.format(lock.getCreateDate())} %>" key="you-cannot-modify-this-document-because-it-was-checked-out-by-x-on-x" translateArguments="<%= false %>" />
 				</div>
 			</c:otherwise>
 		</c:choose>
@@ -438,7 +438,7 @@ renderResponse.setTitle(headerTitle);
 												).put(
 													"languageIds", DDMStructureUtil.getAvailableLanguageIds(themeDisplay)
 												).put(
-													"selectedLanguageId", themeDisplay.getLanguageId()
+													"selectedLanguageId", defaultLanguageId
 												).put(
 													"translatedLanguageIds", DDMStructureUtil.getTranslatedLanguageIds(ddmStructures, dlEditFileEntryDisplayContext, fileVersionId)
 												).build()

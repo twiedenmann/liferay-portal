@@ -32,10 +32,6 @@ public class UnlockLayoutsSessionAction extends SessionAction {
 
 	@Override
 	public void run(HttpSession httpSession) throws ActionException {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-180328")) {
-			return;
-		}
-
 		long userId = GetterUtil.getLong(
 			httpSession.getAttribute(WebKeys.USER_ID));
 
@@ -45,12 +41,20 @@ public class UnlockLayoutsSessionAction extends SessionAction {
 
 		User user = _userLocalService.fetchUser(userId);
 
-		if (user == null) {
+		if ((user == null) ||
+			!FeatureFlagManagerUtil.isEnabled(
+				user.getCompanyId(), "LPS-180328")) {
+
 			return;
 		}
 
-		_layoutLockManager.unlockLayoutsByUserId(
-			user.getCompanyId(), user.getUserId());
+		try {
+			_layoutLockManager.unlockLayoutsByUserId(
+				user.getCompanyId(), user.getUserId());
+		}
+		catch (Exception exception) {
+			throw new ActionException(exception);
+		}
 	}
 
 	@Reference

@@ -53,8 +53,11 @@ export default function ObjectDefinitionNodeHeader({
 					</div>
 
 					<ClayDropDownWithItems
-						className="lfr__object-web-view-object-definitions-actions"
 						items={dropDownItems}
+						menuElementAttrs={{
+							className:
+								'lfr-objects__model-builder-node-dropdown',
+						}}
 						trigger={
 							<ClayButtonWithIcon
 								aria-label={Liferay.Language.get(
@@ -64,7 +67,7 @@ export default function ObjectDefinitionNodeHeader({
 								onClick={(event) => {
 									event?.stopPropagation();
 								}}
-								size="sm"
+								size="xs"
 								symbol="ellipsis-v"
 							/>
 						}
@@ -78,11 +81,19 @@ export default function ObjectDefinitionNodeHeader({
 
 					<ClayLabel
 						displayType={
-							status?.label === 'approved' ? 'success' : 'info'
+							status?.label === 'approved'
+								? 'success'
+								: status?.label === 'pending'
+								? 'info'
+								: 'secondary'
 						}
 					>
 						{Liferay.Language.get(
-							status?.label === 'approved' ? 'approved' : 'draft'
+							status?.label === 'approved'
+								? 'approved'
+								: status?.label === 'pending'
+								? 'pending'
+								: 'draft'
 						)}
 					</ClayLabel>
 				</div>

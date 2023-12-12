@@ -39,7 +39,7 @@ public class CISystemStatusReportUtil {
 	public static void writeJenkinsDataJavaScriptFile(String filePath)
 		throws IOException {
 
-		JenkinsCohort jenkinsCohort = new JenkinsCohort(
+		JenkinsCohort jenkinsCohort = JenkinsCohort.getInstance(
 			JenkinsResultsParserUtil.getBuildProperty(
 				"ci.system.status.report.jenkins.cohort"));
 
@@ -119,9 +119,14 @@ public class CISystemStatusReportUtil {
 		}
 
 		ParallelExecutor<File> parallelExecutor = new ParallelExecutor<>(
-			callables, _executorService);
+			callables, _executorService, "writeTestrayDataJavaScriptFile");
 
-		parallelExecutor.execute();
+		try {
+			parallelExecutor.execute();
+		}
+		catch (TimeoutException timeoutException) {
+			throw new RuntimeException(timeoutException);
+		}
 
 		StringBuilder sb = new StringBuilder();
 

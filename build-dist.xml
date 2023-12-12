@@ -755,6 +755,54 @@ fi
 				</echo>
 			</then>
 		</if>
+
+		<echo file="${liferay.home}/glowroot/admin.json"><![CDATA[{
+	"roles": [
+		{
+			"name": "Administrator",
+			"permissions": [
+				"admin",
+				"agent:config",
+				"agent:error",
+				"agent:incident",
+				"agent:jvm",
+				"agent:transaction"
+			]
+		}
+	],
+	"storage": {
+		"fullQueryTextExpirationHours": 336,
+		"rollupCappedDatabaseSizesMb": [
+			500,
+			500,
+			500,
+			500
+		],
+		"rollupExpirationHours": [
+			72,
+			336,
+			2160,
+			2160
+		],
+		"traceCappedDatabaseSizeMb": 500,
+		"traceExpirationHours": 336
+	},
+	"users": [
+		{
+			"roles": [
+				"Administrator"
+			],
+			"username": "anonymous"
+		}
+	],
+	"web": {
+		"bindAddress": "127.0.0.1",
+		"contextPath": "/o/glowroot",
+		"port": 4000,
+		"sessionCookieName": "GLOWROOT_SESSION_ID",
+		"sessionTimeoutMinutes": 30
+	}
+}]]></echo>
 	</target>
 
 	<target name="unzip-jboss">
@@ -890,7 +938,7 @@ this task.
 		<replace
 			file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
 		>
-			<replacetoken><![CDATA[<jsp-config/>]]></replacetoken>
+			<replacetoken><![CDATA[<jsp-config />]]></replacetoken>
 			<replacevalue>
 				<![CDATA[<jsp-config development="true" source-vm="1.8" target-vm="1.8" />]]>
 			</replacevalue>
@@ -2586,7 +2634,7 @@ this task.
 		<replace
 			file="${app.server.wildfly.instance.dir}/configuration/standalone.xml"
 		>
-			<replacetoken><![CDATA[<jsp-config/>]]></replacetoken>
+			<replacetoken><![CDATA[<jsp-config />]]></replacetoken>
 			<replacevalue>
 				<![CDATA[<jsp-config development="true" source-vm="1.8" target-vm="1.8" />]]>
 			</replacevalue>
@@ -2750,6 +2798,20 @@ plugins.includes=</echo>
 				</if>
 
 				<if>
+					<available file="${zip.executable.dir}/../glowroot" />
+					<then>
+						<copy
+							preservelastmodified="true"
+							todir="dist/${tstamp.value}/liferay-portal-${lp.version}/glowroot"
+						>
+							<fileset
+								dir="${zip.executable.dir}/../glowroot"
+							/>
+						</copy>
+					</then>
+				</if>
+
+				<if>
 					<available file="${zip.executable.dir}/../osgi" />
 					<then>
 						<copy
@@ -2846,6 +2908,7 @@ plugins.includes=</echo>
 								<arg value="catalina.sh" />
 								<arg value="run" />
 								<env key="LIFERAY_CLEAN_OSGI_STATE" value="true" />
+								<redirector alwayslog="true" errorproperty="portal.startup.error" outputproperty="portal.startup.output" />
 							</exec>
 
 							<sequential>
@@ -2853,7 +2916,10 @@ plugins.includes=</echo>
 									<http url="http://localhost:8080" />
 								</waitfor>
 
-								<sleep seconds="5" />
+								<get
+									dest="${zip.executable.dir}/../homepage.html"
+									src="http://localhost:8080"
+								/>
 
 								<exec dir="dist/${tstamp.value}/liferay-portal-${lp.version}/tomcat-${app.server.tomcat.version}/bin" executable="sh">
 									<arg value="shutdown.sh" />
@@ -2868,6 +2934,15 @@ plugins.includes=</echo>
 								</delete>
 							</sequential>
 						</parallel>
+
+						<echo />
+						<echo>Portal Startup Output:</echo>
+						<echo />
+						<echo>${portal.startup.output}</echo>
+						<echo />
+						<echo>Portal Startup Error Output:</echo>
+						<echo />
+						<echo>${portal.startup.error}</echo>
 					</then>
 				</if>
 

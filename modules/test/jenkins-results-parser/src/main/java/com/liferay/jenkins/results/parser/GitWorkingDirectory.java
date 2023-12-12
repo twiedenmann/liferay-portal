@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -419,10 +420,9 @@ public class GitWorkingDirectory {
 	}
 
 	public String createPullRequest(
-			final String body, final String pullRequestBranchName,
-			final String receiverUserName, final String senderUserName,
-			final String title)
-		throws IOException {
+		final String body, final String pullRequestBranchName,
+		final String receiverUserName, final String senderUserName,
+		final String title) {
 
 		Retryable<String> retryable = new Retryable<String>(true, 5, 0, true) {
 
@@ -450,7 +450,8 @@ public class GitWorkingDirectory {
 						url, requestJSONObject.toString());
 				}
 				catch (IOException ioException) {
-					throw new RuntimeException(ioException);
+					throw new RuntimeException(
+						"Unable to create pull request", ioException);
 				}
 
 				String pullRequestURL = responseJSONObject.getString(
@@ -573,32 +574,34 @@ public class GitWorkingDirectory {
 		for (final Map.Entry<String, Set<String>> remoteURLBranchNamesEntry :
 				remoteURLGitBranchNameMap.entrySet()) {
 
-			Callable<Boolean> callable = new Callable<Boolean>() {
+			ParallelExecutor.SequentialCallable<Boolean> callable =
+				new ParallelExecutor.SequentialCallable<Boolean>(
+					remoteURLBranchNamesEntry.getKey()) {
 
-				@Override
-				public Boolean call() throws Exception {
-					Set<String> allBranchNames =
-						remoteURLBranchNamesEntry.getValue();
+					@Override
+					public Boolean call() throws Exception {
+						Set<String> allBranchNames =
+							remoteURLBranchNamesEntry.getValue();
 
-					if (allBranchNames.isEmpty()) {
+						if (allBranchNames.isEmpty()) {
+							return true;
+						}
+
+						String remoteURL = remoteURLBranchNamesEntry.getKey();
+
+						for (List<String> branchNames :
+								Lists.partition(
+									new ArrayList<String>(allBranchNames),
+									_BRANCHES_DELETE_BATCH_SIZE)) {
+
+							_deleteRemoteGitBranches(
+								remoteURL, branchNames.toArray(new String[0]));
+						}
+
 						return true;
 					}
 
-					String remoteURL = remoteURLBranchNamesEntry.getKey();
-
-					for (List<String> branchNames :
-							Lists.partition(
-								new ArrayList<String>(allBranchNames),
-								_BRANCHES_DELETE_BATCH_SIZE)) {
-
-						_deleteRemoteGitBranches(
-							remoteURL, branchNames.toArray(new String[0]));
-					}
-
-					return true;
-				}
-
-			};
+				};
 
 			callables.add(callable);
 		}
@@ -606,9 +609,15 @@ public class GitWorkingDirectory {
 		ParallelExecutor<Boolean> parallelExecutor = new ParallelExecutor<>(
 			callables, true,
 			JenkinsResultsParserUtil.getNewThreadPoolExecutor(
-				callables.size(), true));
+				callables.size(), true),
+			"deleteRemoteGitBranches");
 
-		parallelExecutor.execute();
+		try {
+			parallelExecutor.execute();
+		}
+		catch (TimeoutException timeoutException) {
+			throw new RuntimeException(timeoutException);
+		}
 	}
 
 	public void displayLog() {
@@ -2647,13 +2656,18 @@ public class GitWorkingDirectory {
 			String upstreamGitBranchSHA = upstreamRemoteGitBranch.getSHA();
 
 			if (!localSHAExists(upstreamGitBranchSHA)) {
-				fetch(upstreamRemoteGitBranch);
+				commands.add(
+					JenkinsResultsParserUtil.combine(
+						"git fetch -f upstream ",
+						upstreamRemoteGitBranch.getName(), ":",
+						tempBranchName));
 			}
-
-			commands.add(
-				JenkinsResultsParserUtil.combine(
-					"git branch -f ", tempBranchName, " ",
-					upstreamGitBranchSHA));
+			else {
+				commands.add(
+					JenkinsResultsParserUtil.combine(
+						"git branch -f ", tempBranchName, " ",
+						upstreamGitBranchSHA));
+			}
 
 			commands.add(
 				JenkinsResultsParserUtil.combine(

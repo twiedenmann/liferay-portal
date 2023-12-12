@@ -34,6 +34,7 @@ import com.liferay.saml.opensaml.integration.internal.binding.SamlBindingProvide
 import com.liferay.saml.opensaml.integration.internal.credential.FileSystemKeyStoreManagerImpl;
 import com.liferay.saml.opensaml.integration.internal.credential.KeyStoreCredentialResolver;
 import com.liferay.saml.opensaml.integration.internal.identifier.SamlIdentifierGeneratorStrategyFactory;
+import com.liferay.saml.opensaml.integration.internal.metadata.KeyStoreLocalEntityManager;
 import com.liferay.saml.opensaml.integration.internal.metadata.MetadataGeneratorUtil;
 import com.liferay.saml.opensaml.integration.internal.metadata.MetadataManagerImpl;
 import com.liferay.saml.opensaml.integration.internal.provider.CachingChainingMetadataResolver;
@@ -44,9 +45,10 @@ import com.liferay.saml.persistence.model.SamlPeerBinding;
 import com.liferay.saml.persistence.model.impl.SamlPeerBindingImpl;
 import com.liferay.saml.persistence.service.SamlPeerBindingLocalService;
 import com.liferay.saml.persistence.service.SamlPeerBindingLocalServiceUtil;
+import com.liferay.saml.persistence.service.SamlSpIdpConnectionLocalService;
+import com.liferay.saml.persistence.service.SamlSpIdpConnectionLocalServiceUtil;
 import com.liferay.saml.runtime.configuration.SamlProviderConfiguration;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
-import com.liferay.saml.runtime.metadata.LocalEntityManager;
 import com.liferay.saml.util.PortletPropsKeys;
 
 import java.io.UnsupportedEncodingException;
@@ -75,7 +77,6 @@ import org.junit.Before;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
-import org.opensaml.core.config.ConfigurationService;
 import org.opensaml.core.criterion.EntityIdCriterion;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistry;
 import org.opensaml.saml.common.xml.SAMLConstants;
@@ -319,7 +320,7 @@ public abstract class BaseSamlTestCase {
 	protected IdentifierGenerationStrategyFactory
 		identifierGenerationStrategyFactory;
 	protected List<String> identifiers = new ArrayList<>();
-	protected LocalEntityManager localEntityManager;
+	protected KeyStoreLocalEntityManager keyStoreLocalEntityManager;
 	protected MetadataManagerImpl metadataManagerImpl;
 	protected ParserPool parserPool;
 	protected Portal portal;
@@ -605,8 +606,6 @@ public abstract class BaseSamlTestCase {
 	}
 
 	private void _setupMetadata() throws Exception {
-		metadataManagerImpl = new MetadataManagerImpl();
-
 		fileSystemKeyStoreManagerImpl = new FileSystemKeyStoreManagerImpl();
 
 		ReflectionTestUtil.invoke(
@@ -627,11 +626,31 @@ public abstract class BaseSamlTestCase {
 			credentialResolver, "_samlProviderConfigurationHelper",
 			samlProviderConfigurationHelper);
 
+		keyStoreLocalEntityManager = new KeyStoreLocalEntityManager();
+
+		ReflectionTestUtil.setFieldValue(
+			keyStoreLocalEntityManager, "_credentialResolver",
+			credentialResolver);
+		ReflectionTestUtil.setFieldValue(
+			keyStoreLocalEntityManager, "_keyStoreManager",
+			fileSystemKeyStoreManagerImpl);
+		ReflectionTestUtil.setFieldValue(
+			keyStoreLocalEntityManager, "_samlProviderConfigurationHelper",
+			samlProviderConfigurationHelper);
+		ReflectionTestUtil.setFieldValue(
+			keyStoreLocalEntityManager, "_samlSpIdpConnectionLocalService",
+			getMockPortletService(
+				SamlSpIdpConnectionLocalServiceUtil.class,
+				SamlSpIdpConnectionLocalService.class));
+
+		metadataManagerImpl = new MetadataManagerImpl();
+
 		ReflectionTestUtil.setFieldValue(
 			metadataManagerImpl, "_credentialResolver", credentialResolver);
 
 		ReflectionTestUtil.setFieldValue(
-			metadataManagerImpl, "_localEntityManager", credentialResolver);
+			metadataManagerImpl, "_localEntityManager",
+			keyStoreLocalEntityManager);
 
 		ReflectionTestUtil.setFieldValue(
 			metadataManagerImpl, "_portal", portal);
@@ -658,7 +677,8 @@ public abstract class BaseSamlTestCase {
 
 	private void _setupParserPool() {
 		XMLObjectProviderRegistry xmlObjectProviderRegistry =
-			ConfigurationService.get(XMLObjectProviderRegistry.class);
+			ConfigurationServiceBootstrapUtil.get(
+				XMLObjectProviderRegistry.class);
 
 		parserPool = xmlObjectProviderRegistry.getParserPool();
 	}

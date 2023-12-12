@@ -5,7 +5,6 @@
 
 package com.liferay.layout.utility.page.service.impl;
 
-import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.utility.page.exception.LayoutUtilityPageEntryNameException;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
@@ -141,7 +140,7 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 
 		String name = _getUniqueCopyName(
 			groupId, sourceLayoutUtilityPageEntry.getName(),
-			sourceLayoutUtilityPageEntry.getType(), serviceContext.getLocale());
+			sourceLayoutUtilityPageEntry.getType());
 
 		long masterLayoutPlid = 0;
 
@@ -504,9 +503,9 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 	}
 
 	private String _getUniqueCopyName(
-		long groupId, String sourceName, String type, Locale locale) {
+		long groupId, String sourceName, String type) {
 
-		String copy = _language.get(locale, "copy");
+		String copy = _language.get(LocaleUtil.getSiteDefault(), "copy");
 
 		String name = StringUtil.appendParentheticalSuffix(sourceName, copy);
 
@@ -567,9 +566,6 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 		';', '/', '?', ':', '@', '=', '&', '\"', '<', '>', '#', '%', '{', '}',
 		'|', '\\', '^', '~', '[', ']', '`'
 	};
-
-	@Reference
-	private DLFileEntryLocalService _dlFileEntryLocalService;
 
 	@Reference
 	private File _file;

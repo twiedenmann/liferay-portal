@@ -67,7 +67,7 @@ public class ObjectFieldUtil {
 			listTypeDefinition =
 				listTypeDefinitionLocalService.addListTypeDefinition(
 					objectField.getListTypeDefinitionExternalReferenceCode(),
-					userId);
+					userId, objectField.getSystem());
 		}
 
 		if (objectField.getObjectFieldSettings() != null) {
@@ -138,6 +138,10 @@ public class ObjectFieldUtil {
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectFieldSettingLocalService objectFieldSettingLocalService,
 		ObjectFilterLocalService objectFilterLocalService) {
+
+		if (objectField == null) {
+			return null;
+		}
 
 		if (!FeatureFlagManagerUtil.isEnabled("LPS-164948") &&
 			Objects.equals(

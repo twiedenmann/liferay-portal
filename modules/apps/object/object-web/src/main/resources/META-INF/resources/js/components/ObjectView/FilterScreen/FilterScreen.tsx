@@ -25,7 +25,7 @@ export function FilterScreen() {
 			filterOperators,
 			objectFields,
 			objectView,
-			workflowStatusJSONArray,
+			workflowStatuses,
 		},
 		dispatch,
 	] = useViewContext();
@@ -86,7 +86,7 @@ export function FilterScreen() {
 		checkedItems,
 		disableDateValues,
 		selectedFilterBy,
-		selectedFilterType,
+		selectedFilterTypeValue,
 		setErrors,
 	}: FilterValidation) => {
 		setErrors({});
@@ -97,7 +97,7 @@ export function FilterScreen() {
 		}
 
 		if (
-			!selectedFilterType &&
+			!selectedFilterTypeValue &&
 			!disableDateValues &&
 			(selectedFilterBy?.name !== 'status' ||
 				selectedFilterBy?.businessType !== 'Picklist')
@@ -106,7 +106,7 @@ export function FilterScreen() {
 		}
 
 		if (
-			selectedFilterType &&
+			selectedFilterTypeValue &&
 			(selectedFilterBy?.name === 'status' ||
 				selectedFilterBy?.businessType === 'Picklist' ||
 				selectedFilterBy?.businessType === 'Relationship') &&
@@ -124,19 +124,7 @@ export function FilterScreen() {
 		<>
 			<Card title={Liferay.Language.get('filters')}>
 				<BuilderScreen
-					creationLanguageId={creationLanguageId}
-					emptyState={{
-						buttonText: Liferay.Language.get('new-filter'),
-						description: Liferay.Language.get(
-							'start-creating-a-filter-to-display-specific-data'
-						),
-						title: Liferay.Language.get(
-							'no-filter-was-created-yet'
-						),
-					}}
-					filter
-					firstColumnHeader={Liferay.Language.get('filter-by')}
-					objectColumns={
+					builderScreenItems={
 						objectViewFilterColumns.map((filterColumn) => {
 							if (
 								filterColumn.objectFieldName === 'createDate' ||
@@ -152,6 +140,18 @@ export function FilterScreen() {
 							}
 						}) ?? []
 					}
+					creationLanguageId={creationLanguageId}
+					emptyState={{
+						buttonText: Liferay.Language.get('new-filter'),
+						description: Liferay.Language.get(
+							'start-creating-a-filter-to-display-specific-data'
+						),
+						title: Liferay.Language.get(
+							'no-filter-was-created-yet'
+						),
+					}}
+					filter
+					firstColumnHeader={Liferay.Language.get('filter-by')}
 					onDeleteColumn={handleDeleteColumn}
 					onEditing={setEditingFilter}
 					onEditingObjectFieldName={setEditingObjectFieldName}
@@ -198,7 +198,7 @@ export function FilterScreen() {
 					onClose={onClose}
 					onSave={saveFilterColumn}
 					validate={validateFilters}
-					workflowStatusJSONArray={workflowStatusJSONArray}
+					workflowStatuses={workflowStatuses}
 				/>
 			)}
 		</>

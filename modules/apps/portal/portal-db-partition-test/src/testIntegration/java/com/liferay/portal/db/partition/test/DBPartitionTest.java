@@ -87,7 +87,7 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 	public static void tearDownClass() throws Exception {
 		deletePartitionRequiredData();
 
-		removeDBPartitions(false);
+		removeDBPartitions();
 
 		dropTable(TEST_CONTROL_TABLE_NAME);
 
@@ -99,7 +99,9 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 		finderCache.removeCache(ClassNameImpl.class.getName());
 		finderCache.removeCache(ResourceActionImpl.class.getName());
 
-		_resourceActions.clear();
+		if (_resourceActions != null) {
+			_resourceActions.clear();
+		}
 
 		DBPartitionUtil.forEachCompanyId(
 			companyId -> _resourceActionLocalService.checkResourceActions());
@@ -359,8 +361,9 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 		CompanyLocalServiceImpl companyLocalServiceImpl =
 			(CompanyLocalServiceImpl)aopInvocationHandler.getTarget();
 
-		ReflectionTestUtil.setFieldValue(
-			companyLocalServiceImpl, "_dlFileEntryTypeLocalService", null);
+		Object dlFileEntryTypeLocalService =
+			ReflectionTestUtil.getAndSetFieldValue(
+				companyLocalServiceImpl, "_dlFileEntryTypeLocalService", null);
 
 		long companyId = RandomTestUtil.randomLong();
 		boolean orphanedDBPartition = false;
@@ -389,8 +392,12 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 			}
 		}
 		finally {
+			ReflectionTestUtil.setFieldValue(
+				companyLocalServiceImpl, "_dlFileEntryTypeLocalService",
+				dlFileEntryTypeLocalService);
+
 			if (orphanedDBPartition) {
-				removeDBPartitions(new long[] {companyId}, false);
+				removeDBPartitions(new long[] {companyId});
 			}
 		}
 	}

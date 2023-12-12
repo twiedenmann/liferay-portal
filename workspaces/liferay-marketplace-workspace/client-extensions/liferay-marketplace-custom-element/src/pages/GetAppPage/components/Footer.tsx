@@ -9,26 +9,27 @@ import infoCircleIcon from '../../../assets/icons/info_circle_icon.svg';
 import {getSiteURL} from '../../../components/InviteMemberModal/services';
 import useCart from '../../../hooks/useCart';
 import {Liferay} from '../../../liferay/liferay';
-import {paymentMethod} from '../enums/paymentMethod';
+import {PaymentMethod} from '../enums/paymentMethod';
 import {StepType} from '../enums/stepType';
 
 interface ProductFooterProps {
 	addresses: BillingAddress[];
 	cartId?: number;
 	cartUtil: ReturnType<typeof useCart>;
+	disabled: boolean;
 	enablePurchaseButton: boolean;
 	handleGetApp: (orderId?: number) => void;
 	isFreeApp: boolean;
 	licenseSelected: boolean;
-	sectionProperties: SectionPropertiesType;
 	selectedAccount?: Account;
 	selectedPaymentMethod: PaymentMethodSelector;
-	selectedSKU?: SKU;
+	selectedSKU?: DeliverySKU;
 	setStep: (nextStep: StepType) => void;
 	step: StepType;
+	stepsNavigation: StepsNavigation;
 }
 
-type SectionPropertiesType = {
+type StepsNavigation = {
 	[key in StepType]: {
 		backStep: StepType;
 		nextStep: StepType;
@@ -42,52 +43,54 @@ const onCancel = () => {
 const ProductFooter = ({
 	addresses,
 	cartUtil,
+	disabled,
 	enablePurchaseButton,
 	handleGetApp,
 	isFreeApp,
 	licenseSelected,
-	sectionProperties,
 	selectedAccount,
 	selectedPaymentMethod,
 	setStep,
 	step,
+	stepsNavigation,
 }: ProductFooterProps) => {
 	const getButtonText = () => {
 		if (isFreeApp) {
-			return 'Get This App';
+			return 'Get App';
 		}
 
 		if ([StepType.ACCOUNT, StepType.LICENSES].includes(step)) {
 			return 'Continue';
 		}
 
-		if (selectedPaymentMethod === paymentMethod.PAY) {
-			return `Pay ${cartUtil?.cart?.summary?.totalFormatted} Now`;
+		if (selectedPaymentMethod === PaymentMethod.PAY) {
+			return `Pay ${cartUtil?.cart?.summary?.totalFormatted ?? 0} Now`;
 		}
 
-		if (selectedPaymentMethod === paymentMethod.TRIAL) {
+		if (selectedPaymentMethod === PaymentMethod.TRIAL) {
 			return 'Start Free Trial';
 		}
 
-		if (selectedPaymentMethod === paymentMethod.ORDER) {
+		if (selectedPaymentMethod === PaymentMethod.ORDER) {
 			return `Create PO for ${cartUtil?.cart?.summary?.totalFormatted}`;
 		}
 	};
 
-	const onPrevious = async (previousStep: StepType) => {
-		setStep(previousStep);
-
-		return;
-	};
+	const onPrevious = (previousStep: StepType) => setStep(previousStep);
 
 	const onContinue = async (nextStep: StepType) => {
 		const isAccountStep = step === StepType.ACCOUNT;
 		const isLicenseStep = step === StepType.LICENSES;
 
-		if ((!isFreeApp && isAccountStep && selectedAccount) || isLicenseStep) {
-			setStep(nextStep);
+		if (
+			selectedPaymentMethod === PaymentMethod.TRIAL &&
+			cartUtil?.cart?.id
+		) {
+			await cartUtil.removeCart(cartUtil?.cart?.id);
+		}
 
-			return;
+		if ((!isFreeApp && isAccountStep && selectedAccount) || isLicenseStep) {
+			return setStep(nextStep);
 		}
 
 		const isPaymentStep = step === StepType.PAYMENT;
@@ -96,7 +99,7 @@ const ProductFooter = ({
 			(isFreeApp && selectedAccount) ||
 			(enablePurchaseButton && addresses && isPaymentStep)
 		) {
-			handleGetApp(cartUtil.cart?.id);
+			await handleGetApp(cartUtil.cart?.id);
 		}
 	};
 
@@ -116,30 +119,27 @@ const ProductFooter = ({
 					Cancel
 				</ClayButton>
 				<div>
-					{sectionProperties[step].backStep !== step && (
+					{stepsNavigation[step].backStep !== step && (
 						<ClayButton
 							displayType="secondary"
-							onClick={() => {
-								if (cartUtil?.cart?.id) {
-									cartUtil.removeCart(cartUtil?.cart?.id);
-								}
-
-								onPrevious(sectionProperties[step].backStep);
-							}}
+							onClick={() =>
+								onPrevious(stepsNavigation[step].backStep)
+							}
 						>
 							Back
 						</ClayButton>
 					)}
-					{sectionProperties[step].nextStep && (
+					{stepsNavigation[step].nextStep && (
 						<ClayButton
 							className="ml-5"
 							disabled={
+								disabled ||
 								(step === StepType.ACCOUNT &&
 									!selectedAccount) ||
 								(step === StepType.LICENSES && !licenseSelected)
 							}
 							onClick={() =>
-								onContinue(sectionProperties[step].nextStep)
+								onContinue(stepsNavigation[step].nextStep)
 							}
 						>
 							{getButtonText()}
@@ -150,7 +150,7 @@ const ProductFooter = ({
 
 			{!isFreeApp &&
 				step === StepType.PAYMENT &&
-				selectedPaymentMethod === paymentMethod.PAY && (
+				selectedPaymentMethod === PaymentMethod.PAY && (
 					<div className="align-items-end d-flex flex-column mt-4">
 						<span>
 							You will be redirected to PayPal to complete payment

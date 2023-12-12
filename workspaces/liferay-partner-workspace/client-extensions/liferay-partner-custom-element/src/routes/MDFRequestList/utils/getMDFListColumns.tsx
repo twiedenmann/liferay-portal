@@ -39,9 +39,6 @@ export default function getMDFListColumns(
 					row[MDFColumnKey.STATUS] === Status.DRAFT.name ||
 					row[MDFColumnKey.STATUS] === Status.REQUEST_MORE_INFO.name;
 
-				const currentMDFRequestHasValidStatusToDelete =
-					row[MDFColumnKey.STATUS] === Status.DRAFT.name;
-
 				if (currentValue === PermissionActionType.VIEW) {
 					previousValue.push({
 						icon: 'view',
@@ -76,7 +73,7 @@ export default function getMDFListColumns(
 
 				if (
 					currentValue === PermissionActionType.DELETE &&
-					currentMDFRequestHasValidStatusToDelete
+					row.STATUS === 'Approved'
 				) {
 					previousValue.push({
 						icon: 'trash',
@@ -84,7 +81,8 @@ export default function getMDFListColumns(
 						label: ' Delete',
 						onClick: () => {
 							Liferay.Util.openConfirmModal({
-								message: 'Are you sure?',
+								message:
+									'Are you sure you want to delete this MDF record?',
 								onConfirm: async (isConfirmed: boolean) => {
 									if (isConfirmed) {
 										try {
@@ -176,8 +174,8 @@ export default function getMDFListColumns(
 			label: 'Amout Claimed',
 		},
 		{
-			columnKey: MDFColumnKey.PAID,
-			label: 'Paid',
+			columnKey: MDFColumnKey.AMOUNT_PAID,
+			label: 'Amount Paid',
 		},
 		{
 			columnKey: MDFColumnKey.DATE_SUBMITTTED,

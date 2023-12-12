@@ -40,7 +40,7 @@ import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUID;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
@@ -3141,7 +3141,7 @@ public class CommerceDiscountPersistenceImpl
 				queryPos.add(companyId);
 
 				if (bindCouponCode) {
-					queryPos.add(couponCode);
+					queryPos.add(StringUtil.toLowerCase(couponCode));
 				}
 
 				list = (List<CommerceDiscount>)QueryUtil.list(
@@ -3442,7 +3442,7 @@ public class CommerceDiscountPersistenceImpl
 		queryPos.add(companyId);
 
 		if (bindCouponCode) {
-			queryPos.add(couponCode);
+			queryPos.add(StringUtil.toLowerCase(couponCode));
 		}
 
 		if (orderByComparator != null) {
@@ -3605,7 +3605,7 @@ public class CommerceDiscountPersistenceImpl
 			queryPos.add(companyId);
 
 			if (bindCouponCode) {
-				queryPos.add(couponCode);
+				queryPos.add(StringUtil.toLowerCase(couponCode));
 			}
 
 			return (List<CommerceDiscount>)QueryUtil.list(
@@ -3821,7 +3821,7 @@ public class CommerceDiscountPersistenceImpl
 		queryPos.add(companyId);
 
 		if (bindCouponCode) {
-			queryPos.add(couponCode);
+			queryPos.add(StringUtil.toLowerCase(couponCode));
 		}
 
 		if (orderByComparator != null) {
@@ -3909,7 +3909,7 @@ public class CommerceDiscountPersistenceImpl
 				queryPos.add(companyId);
 
 				if (bindCouponCode) {
-					queryPos.add(couponCode);
+					queryPos.add(StringUtil.toLowerCase(couponCode));
 				}
 
 				count = (Long)query.uniqueResult();
@@ -3978,7 +3978,7 @@ public class CommerceDiscountPersistenceImpl
 			queryPos.add(companyId);
 
 			if (bindCouponCode) {
-				queryPos.add(couponCode);
+				queryPos.add(StringUtil.toLowerCase(couponCode));
 			}
 
 			Long count = (Long)sqlQuery.uniqueResult();
@@ -3997,7 +3997,7 @@ public class CommerceDiscountPersistenceImpl
 		"commerceDiscount.companyId = ? AND ";
 
 	private static final String _FINDER_COLUMN_C_C_COUPONCODE_2 =
-		"commerceDiscount.couponCode = ?";
+		"lower(commerceDiscount.couponCode) = ?";
 
 	private static final String _FINDER_COLUMN_C_C_COUPONCODE_3 =
 		"(commerceDiscount.couponCode IS NULL OR commerceDiscount.couponCode = '')";
@@ -6149,7 +6149,7 @@ public class CommerceDiscountPersistenceImpl
 				queryPos.add(companyId);
 
 				if (bindCouponCode) {
-					queryPos.add(couponCode);
+					queryPos.add(StringUtil.toLowerCase(couponCode));
 				}
 
 				queryPos.add(active);
@@ -6274,7 +6274,7 @@ public class CommerceDiscountPersistenceImpl
 				queryPos.add(companyId);
 
 				if (bindCouponCode) {
-					queryPos.add(couponCode);
+					queryPos.add(StringUtil.toLowerCase(couponCode));
 				}
 
 				queryPos.add(active);
@@ -6298,7 +6298,7 @@ public class CommerceDiscountPersistenceImpl
 		"commerceDiscount.companyId = ? AND ";
 
 	private static final String _FINDER_COLUMN_C_C_A_COUPONCODE_2 =
-		"commerceDiscount.couponCode = ? AND ";
+		"lower(commerceDiscount.couponCode) = ? AND ";
 
 	private static final String _FINDER_COLUMN_C_C_A_COUPONCODE_3 =
 		"(commerceDiscount.couponCode IS NULL OR commerceDiscount.couponCode = '') AND ";
@@ -7871,7 +7871,7 @@ public class CommerceDiscountPersistenceImpl
 		commerceDiscount.setNew(true);
 		commerceDiscount.setPrimaryKey(commerceDiscountId);
 
-		String uuid = _portalUUID.generate();
+		String uuid = PortalUUIDUtil.generate();
 
 		commerceDiscount.setUuid(uuid);
 
@@ -7991,7 +7991,7 @@ public class CommerceDiscountPersistenceImpl
 			(CommerceDiscountModelImpl)commerceDiscount;
 
 		if (Validator.isNull(commerceDiscount.getUuid())) {
-			String uuid = _portalUUID.generate();
+			String uuid = PortalUUIDUtil.generate();
 
 			commerceDiscount.setUuid(uuid);
 		}
@@ -8621,8 +8621,5 @@ public class CommerceDiscountPersistenceImpl
 	protected FinderCache getFinderCache() {
 		return finderCache;
 	}
-
-	@Reference
-	private PortalUUID _portalUUID;
 
 }

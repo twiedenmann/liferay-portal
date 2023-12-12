@@ -9,9 +9,10 @@ import ClayForm from '@clayui/form';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClayModal from '@clayui/modal';
+import {IClientExtensionRenderer} from '@liferay/frontend-data-set-web';
 import classNames from 'classnames';
 import {InputLocalized} from 'frontend-js-components-web';
-import {IClientExtensionRenderer, fetch, openModal, sub} from 'frontend-js-web';
+import {fetch, openModal, sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import {API_URL, OBJECT_RELATIONSHIP} from '../Constants';
@@ -24,6 +25,7 @@ import DateRangeFilterModalContent from '../components/modal_content/DateRangeFi
 import SelectionFilterModalContent from '../components/modal_content/SelectionFilter';
 import {
 	EFieldFormat,
+	EFieldType,
 	EFilterType,
 	IClientExtensionFilter,
 	IDateFilter,
@@ -69,8 +71,8 @@ function AddFDSFilterModalContent({
 	>(
 		filter && filterType === EFilterType.CLIENT_EXTENSION
 			? fdsFilterClientExtensions.find(
-					(cx: IClientExtensionRenderer) =>
-						cx.externalReferenceCode ===
+					(clientExtensionRenderer: IClientExtensionRenderer) =>
+						clientExtensionRenderer.externalReferenceCode ===
 						(filter as IClientExtensionFilter)
 							.fdsFilterClientExtensionERC
 			  )
@@ -86,13 +88,7 @@ function AddFDSFilterModalContent({
 	const [i18nFilterLabels, setI18nFilterLabels] = useState(
 		fdsFilterLabelTranslations
 	);
-	const [includeMode, setIncludeMode] = useState<string>(
-		filter
-			? (filter as ISelectionFilter)?.include
-				? 'include'
-				: 'exclude'
-			: 'include'
-	);
+	const [includeMode, setIncludeMode] = useState<string>('include');
 	const [isValidDateRange, setIsValidDateRange] = useState<boolean>(true);
 	const [multiple, setMultiple] = useState<boolean>(
 		(filter as ISelectionFilter)?.multiple ?? true
@@ -110,22 +106,31 @@ function AddFDSFilterModalContent({
 		getAllPicklists().then((items) => {
 			setPicklists(items);
 
-			const newVal = items.find(
+			const picklist = items.find(
 				(item) =>
 					String(item.externalReferenceCode) ===
 					(filter as any)?.listTypeDefinitionERC
 			);
 
-			if (newVal) {
-				setSelectedPicklist(newVal);
+			if (picklist) {
+				setSelectedPicklist(picklist);
 
-				setPreselectedValues(
-					newVal.listTypeEntries.filter((item) =>
+				const validSavedPreselectedValues = picklist.listTypeEntries.filter(
+					(item) =>
 						JSON.parse(
 							(filter as ISelectionFilter).preselectedValues ||
 								'[]'
 						).includes(item.externalReferenceCode)
-					)
+				);
+
+				setPreselectedValues(validSavedPreselectedValues);
+
+				setIncludeMode(
+					validSavedPreselectedValues?.length
+						? filter && (filter as ISelectionFilter).include
+							? 'include'
+							: 'exclude'
+						: 'include'
 				);
 			}
 		});
@@ -400,7 +405,19 @@ function AddFDSFilterModalContent({
 								namespace={namespace}
 								onIncludeModeChange={setIncludeMode}
 								onMultipleChange={setMultiple}
-								onPreselectedValuesChange={setPreselectedValues}
+								onPreselectedValuesChange={(values) => {
+									setPreselectedValues(values);
+
+									setIncludeMode(
+										values.length
+											? filter &&
+											  (filter as ISelectionFilter)
+													.include
+												? 'include'
+												: 'exclude'
+											: 'include'
+									);
+								}}
 								onSelectedPicklistChange={setSelectedPicklist}
 								picklists={picklists}
 								preselectedValues={preselectedValues}
@@ -577,7 +594,8 @@ function Filters({fdsFilterClientExtensions, fdsView, namespace}: IProps) {
 			(item) =>
 				filterType === EFilterType.CLIENT_EXTENSION ||
 				(filterType === EFilterType.SELECTION &&
-					item.format === EFieldFormat.STRING) ||
+					item.type === EFieldType.STRING &&
+					!item.format) ||
 				(filterType === EFilterType.DATE_RANGE &&
 					item.format === EFieldFormat.DATE)
 		);

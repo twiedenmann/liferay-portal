@@ -25,15 +25,14 @@ import {useObjectDetailsForm} from './useObjectDetailsForm';
 
 import './ObjectDetails.scss';
 
-export type KeyValuePair = {
-	key: string;
-	value: string;
+export type Scope = {
+	items: LabelValueObject[];
+	label: string;
 };
 interface EditObjectDetailsProps {
 	backURL: string;
-	companyKeyValuePair: KeyValuePair[];
+	companies: Scope[];
 	dbTableName: string;
-	externalReferenceCode: string;
 	hasPublishObjectPermission: boolean;
 	hasUpdateObjectDefinitionPermission: boolean;
 	isApproved: boolean;
@@ -43,11 +42,12 @@ interface EditObjectDetailsProps {
 		label: LocalizedValue<string>;
 		name: string;
 	}[];
+	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	pluralLabel: LocalizedValue<string>;
 	portletNamespace: string;
 	shortName: string;
-	siteKeyValuePair: KeyValuePair[];
+	sites: Scope[];
 	storageTypes: LabelValueObject[];
 }
 
@@ -75,20 +75,20 @@ function setAccountRelationshipFieldMandatory(
 
 export default function EditObjectDetails({
 	backURL,
-	companyKeyValuePair,
+	companies,
 	dbTableName,
-	externalReferenceCode,
 	hasPublishObjectPermission,
 	hasUpdateObjectDefinitionPermission,
 	isApproved,
 	isRootDescendantNode,
 	label,
 	nonRelationshipObjectFieldsInfo,
+	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	pluralLabel,
 	portletNamespace,
 	shortName,
-	siteKeyValuePair,
+	sites,
 	storageTypes,
 }: EditObjectDetailsProps) {
 	const [objectFields, setObjectFields] = useState<ObjectField[]>([]);
@@ -102,7 +102,7 @@ export default function EditObjectDetails({
 	} = useObjectDetailsForm({
 		initialValues: {
 			defaultLanguageId: 'en_US',
-			externalReferenceCode,
+			externalReferenceCode: objectDefinitionExternalReferenceCode,
 			id: objectDefinitionId,
 			label,
 			name: shortName,
@@ -184,10 +184,10 @@ export default function EditObjectDetails({
 	useEffect(() => {
 		const makeFetch = async () => {
 			const objectFieldsResponse = await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
-				externalReferenceCode
+				objectDefinitionExternalReferenceCode
 			);
 			const objectDefinitionResponse = await API.getObjectDefinitionByExternalReferenceCode(
-				externalReferenceCode
+				objectDefinitionExternalReferenceCode
 			);
 
 			setValues(objectDefinitionResponse);
@@ -203,7 +203,6 @@ export default function EditObjectDetails({
 			<div className="lfr-objects__object-definition-details-management-toolbar">
 				<ObjectManagementToolbar
 					backURL={backURL}
-					externalReferenceCode={externalReferenceCode}
 					hasPublishObjectPermission={hasPublishObjectPermission}
 					hasUpdateObjectDefinitionPermission={
 						hasUpdateObjectDefinitionPermission
@@ -215,11 +214,13 @@ export default function EditObjectDetails({
 						values.label,
 						values.name
 					)}
+					objectDefinitionExternalReferenceCode={
+						objectDefinitionExternalReferenceCode
+					}
 					objectDefinitionId={objectDefinitionId}
 					onSubmit={onSubmit}
 					portletNamespace={portletNamespace}
 					screenNavigationCategoryKey="details"
-					setValues={setValues}
 					system={values.system as boolean}
 				/>
 			</div>
@@ -270,24 +271,30 @@ export default function EditObjectDetails({
 						<ClayPanel
 							collapsable
 							defaultExpanded
-							displayTitle={Liferay.Language.get(
-								'external-data-source'
-							)}
+							displayTitle={
+								<div className="lfr__object-web-edit-object-details-external-data-source-panel">
+									<span className="panel-title">
+										{Liferay.Language.get(
+											'external-data-source'
+										)}
+									</span>
+
+									{values.storageType === 'salesforce' && (
+										<div className="lfr__object-web-edit-object-details-external-data-source-panel-container-beta">
+											<BetaButton />
+										</div>
+									)}
+								</div>
+							}
 							displayType="unstyled"
 						>
 							<ClayPanel.Body>
 								<div className="lfr__object-web-edit-object-details-external-data-source-container">
 									<ExternalDataSourceContainer
 										errors={errors}
-										setValues={setValues}
 										storageTypes={storageTypes}
 										values={values}
 									/>
-
-									<div className="lfr__object-web-edit-object-details-external-data-source-container-beta">
-										{values.storageType ===
-											'salesforce' && <BetaButton />}
-									</div>
 								</div>
 							</ClayPanel.Body>
 						</ClayPanel>
@@ -301,7 +308,7 @@ export default function EditObjectDetails({
 					>
 						<ClayPanel.Body>
 							<ScopeContainer
-								companyKeyValuePairs={companyKeyValuePair}
+								companies={companies}
 								errors={errors}
 								hasUpdateObjectDefinitionPermission={
 									hasUpdateObjectDefinitionPermission
@@ -309,7 +316,7 @@ export default function EditObjectDetails({
 								isApproved={isApproved}
 								isRootDescendantNode={isRootDescendantNode}
 								setValues={setValues}
-								siteKeyValuePairs={siteKeyValuePair}
+								sites={sites}
 								values={values}
 							/>
 						</ClayPanel.Body>

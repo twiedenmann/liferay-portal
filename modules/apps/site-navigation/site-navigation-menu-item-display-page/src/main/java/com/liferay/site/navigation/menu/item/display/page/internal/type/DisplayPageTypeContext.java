@@ -10,6 +10,7 @@ import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
+import com.liferay.info.permission.provider.InfoPermissionProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageInfoItemFieldValuesProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageInfoItemFieldValuesProviderRegistry;
 import com.liferay.layout.display.page.LayoutDisplayPageMultiSelectionProvider;
@@ -17,6 +18,8 @@ import com.liferay.layout.display.page.LayoutDisplayPageMultiSelectionProviderRe
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 
 import java.util.Locale;
 
@@ -69,7 +72,7 @@ public class DisplayPageTypeContext {
 		InfoItemClassDetails infoItemClassDetails = getInfoItemClassDetails();
 
 		if (infoItemClassDetails == null) {
-			return null;
+			return StringPool.BLANK;
 		}
 
 		return infoItemClassDetails.getLabel(locale);
@@ -109,11 +112,28 @@ public class DisplayPageTypeContext {
 	}
 
 	public boolean isAvailable() {
+		InfoItemClassDetails infoItemClassDetails = getInfoItemClassDetails();
+
+		if (infoItemClassDetails == null) {
+			return false;
+		}
+
 		InfoItemDetailsProvider<?> infoItemDetailsProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
 				InfoItemDetailsProvider.class, _className);
 
 		if (infoItemDetailsProvider == null) {
+			return false;
+		}
+
+		InfoPermissionProvider infoPermissionProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				InfoPermissionProvider.class, _className);
+
+		if ((infoPermissionProvider != null) &&
+			!infoPermissionProvider.hasViewPermission(
+				PermissionThreadLocal.getPermissionChecker())) {
+
 			return false;
 		}
 

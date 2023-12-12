@@ -52,7 +52,7 @@ definition {
 
 				Type(
 					ariaLabel = "Spacer 1",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 					value1 = "-32");
 
 				StyleBooks.clickManagementBar();
@@ -74,8 +74,6 @@ definition {
 
 			task ("Apply the new style book to content page") {
 				PageEditor.gotoTab(tabName = "Page Design Options");
-
-				Navigator.gotoNavTab(navTab = "Style Book");
 
 				StyleBooks.selectStyleBookViaPageDesignOptions(styleBookName = "Test Style Book Name");
 			}
@@ -319,13 +317,11 @@ definition {
 
 			LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
 
-			SelectWindow.selectPopUp(locator1 = "null");
-
 			PortletEntry.inputName(name = "Test Page Name Edited");
 
 			PortletEntry.save();
 
-			Close.closeWindow();
+			Navigator.gotoBack();
 		}
 
 		task ("Then the page designer can see new page name in pages admin") {
@@ -624,8 +620,6 @@ definition {
 
 				PageEditor.gotoTab(tabName = "Page Design Options");
 
-				Navigator.gotoNavTab(navTab = "Master");
-
 				MastersPageTemplates.selectMasterViaPageDesignOptions(masterLayoutName = "Custom Masters Page Template");
 
 				PageEditor.publish();
@@ -648,7 +642,7 @@ definition {
 					item = "Go to Pages",
 					tableEntry = ${siteName});
 
-				SelectWindow.selectPopUp(locator1 = "null");
+				SelectWindow.selectPopUp(value1 = "null");
 
 				ContentPages.gotoPageEditor();
 
@@ -1265,7 +1259,7 @@ definition {
 		}
 
 		task ("When the page creator selects the element-text of Heading fragment") {
-			PageEditor.gotoEditableFieldEdit(
+			PageEditor.clickEditableField(
 				fragmentName = "Heading",
 				id = "element-text");
 		}
@@ -1365,10 +1359,7 @@ definition {
 		}
 
 		task ("Execute Clean Up Orphaned Theme Portlet Preferences in Server Administration") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Server Administration");
+			ServerAdministration.openServerAdmin();
 
 			ServerAdministration.executeServerResourcesActions(actionsDescription = "Clean up orphaned theme portlet preferences.");
 		}
@@ -2046,8 +2037,6 @@ definition {
 
 			PageEditor.gotoTab(tabName = "Page Design Options");
 
-			Navigator.gotoNavTab(navTab = "Master");
-
 			MastersPageTemplates.selectMasterViaPageDesignOptions(masterLayoutName = "Custom Masters Page Template");
 
 			AssertVisible(
@@ -2189,7 +2178,7 @@ definition {
 
 					Type(
 						ariaLabel = "Spacer ${i}",
-						locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+						locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 						value1 = ${tokenValue});
 
 					StyleBooks.clickManagementBar();
@@ -2205,7 +2194,7 @@ definition {
 
 				Type(
 					ariaLabel = "Spacer 3",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 					value1 = "Auto");
 
 				StyleBooks.clickManagementBar();
@@ -2249,8 +2238,6 @@ definition {
 
 		task ("When the page designer applies the new style book to content page") {
 			PageEditor.gotoTab(tabName = "Page Design Options");
-
-			Navigator.gotoNavTab(navTab = "Style Book");
 
 			StyleBooks.selectStyleBookViaPageDesignOptions(styleBookName = "Test Style Book Name");
 		}

@@ -6,29 +6,29 @@
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import {ClayTooltipProvider} from '@clayui/tooltip';
+import {getLocalizableLabel} from '@liferay/object-js-components-web';
 import classNames from 'classnames';
 import React from 'react';
 
+import {defaultLanguageId} from '../../../utils/constants';
 import {useObjectFolderContext} from '../ModelBuilderContext/objectFolderContext';
+import {TYPES} from '../ModelBuilderContext/typesEnum';
 
 import './EditObjectFolderHeader.scss';
-
-import {getLocalizableLabel} from '@liferay/object-js-components-web';
-
-import {defaultLanguageId} from '../../../utils/constants';
 
 interface EditObjectFolderHeaderProps {
 	hasDraftObjectDefinitions: boolean;
 	selectedObjectFolder: ObjectFolder;
-	setShowModal: (value: React.SetStateAction<ModelBuilderModals>) => void;
 }
 
 export default function EditObjectFolderHeader({
 	hasDraftObjectDefinitions,
 	selectedObjectFolder,
-	setShowModal,
 }: EditObjectFolderHeaderProps) {
-	const [{showChangesSaved}] = useObjectFolderContext();
+	const [
+		{modelBuilderModals, showChangesSaved, showSidebars},
+		dispatch,
+	] = useObjectFolderContext();
 
 	return (
 		<div className="lfr-objects__model-builder-header">
@@ -106,14 +106,16 @@ export default function EditObjectFolderHeader({
 								)}
 								displayType="unstyled"
 								onClick={() =>
-									setShowModal(
-										(
-											previousState: ModelBuilderModals
-										) => ({
-											...previousState,
-											editObjectFolder: true,
-										})
-									)
+									dispatch({
+										payload: {
+											modelBuilderModals: {
+												...modelBuilderModals,
+												editObjectFolder: true,
+											},
+										},
+										type:
+											TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+									})
 								}
 								symbol="pencil"
 							/>
@@ -129,18 +131,37 @@ export default function EditObjectFolderHeader({
 				)}
 
 				<div className="lfr-objects__model-builder-header-buttons-container">
+					<ClayButtonWithIcon
+						aria-label={Liferay.Language.get('toggle-sidebars')}
+						displayType="secondary"
+						onClick={() =>
+							dispatch({
+								payload: {updatedShowSidebars: !showSidebars},
+								type: TYPES.SET_SHOW_SIDEBARS,
+							})
+						}
+						size="sm"
+						symbol={showSidebars ? 'view' : 'hidden'}
+						title={Liferay.Language.get('toggle-sidebars')}
+					/>
+
 					<ClayButton
 						aria-labelledby={Liferay.Language.get('publish')}
 						disabled={!hasDraftObjectDefinitions}
 						displayType="primary"
 						onClick={() => {
-							setShowModal(
-								(previousState: ModelBuilderModals) => ({
-									...previousState,
-									publishObjectDefinitions: true,
-								})
-							);
+							dispatch({
+								payload: {
+									modelBuilderModals: {
+										...modelBuilderModals,
+										publishObjectDefinitions: true,
+									},
+								},
+								type:
+									TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+							});
 						}}
+						size="sm"
 					>
 						{Liferay.Language.get('publish')}
 					</ClayButton>

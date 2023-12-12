@@ -54,6 +54,21 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = ObjectEntryHelper.class)
 public class ObjectEntryHelper {
 
+	public ObjectEntry addObjectEntry(
+			long companyId, String objectDefinitionExternalReferenceCode,
+			ObjectEntry objectEntry, String scopeKey)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.
+				getObjectDefinitionByExternalReferenceCode(
+					objectDefinitionExternalReferenceCode, companyId);
+
+		return _objectEntryManager.addObjectEntry(
+			_getDefaultDTOConverterContext(objectDefinition), objectDefinition,
+			objectEntry, scopeKey);
+	}
+
 	public List<ObjectEntry> getObjectEntries(
 			long companyId, String filterString, List<String> nestedFields,
 			String objectDefinitionExternalReferenceCode, String scopeKey)
@@ -241,35 +256,6 @@ public class ObjectEntryHelper {
 			_objectFieldLocalService.getObjectFields(
 				objectDefinition.getObjectDefinitionId()),
 			this::_getUniqueFieldName);
-	}
-
-	public boolean isValidObjectEntry(
-			long objectEntryId, String externalReferenceCode)
-		throws Exception {
-
-		if (objectEntryId == 0) {
-			return false;
-		}
-
-		com.liferay.object.model.ObjectEntry objectEntry =
-			_objectEntryLocalService.fetchObjectEntry(objectEntryId);
-
-		if (objectEntry == null) {
-			return false;
-		}
-
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.getObjectDefinition(
-				objectEntry.getObjectDefinitionId());
-
-		if (!Objects.equals(
-				objectDefinition.getExternalReferenceCode(),
-				externalReferenceCode)) {
-
-			return false;
-		}
-
-		return true;
 	}
 
 	private DTOConverterContext _getDefaultDTOConverterContext(

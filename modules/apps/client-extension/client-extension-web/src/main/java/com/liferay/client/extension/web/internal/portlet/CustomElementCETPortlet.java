@@ -11,6 +11,7 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -55,6 +56,8 @@ public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 			).put(
 				"com.liferay.portlet.css-class-wrapper",
 				"portlet-client-extension"
+			).put(
+				"com.liferay.portlet.deploy.parallel", false
 			).put(
 				"com.liferay.portlet.display-category",
 				cet.getPortletCategoryName()
@@ -150,8 +153,16 @@ public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 
 	private String[] _prepareURLs(long lastModified, String[] urls) {
 		for (int i = 0; i < urls.length; i++) {
-			urls[i] = HttpComponentsUtil.addParameter(
-				urls[i], "t", lastModified);
+			if (!FeatureFlagManagerUtil.isEnabled("LPS-202104") &&
+				!urls[i].contains("?t=") && !urls[i].contains("&t=")) {
+
+				urls[i] = HttpComponentsUtil.addParameter(
+					urls[i], "t", lastModified);
+			}
+
+			if (!urls[i].startsWith("module:")) {
+				urls[i] = "nocombo:" + urls[i];
+			}
 		}
 
 		return urls;

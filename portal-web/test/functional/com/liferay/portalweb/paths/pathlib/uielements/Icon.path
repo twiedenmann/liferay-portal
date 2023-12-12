@@ -312,7 +312,12 @@
 </tr>
 <tr>
 	<td>OK</td>
-	<td>//*[name()='svg'][contains(@class,'check')]</td>
+	<td>//div[contains(@class,'toolbar')]//*[name()='svg'][contains(@class,'check')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ORDER_ARROW_UP</td>
+	<td>//*[contains(@class, 'lexicon-icon lexicon-icon-order-arrow-up')]</td>
 	<td></td>
 </tr>
 <tr>

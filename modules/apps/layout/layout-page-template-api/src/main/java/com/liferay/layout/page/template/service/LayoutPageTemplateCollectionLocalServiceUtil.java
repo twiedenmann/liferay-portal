@@ -356,6 +356,14 @@ public class LayoutPageTemplateCollectionLocalServiceUtil {
 
 	public static List<LayoutPageTemplateCollection>
 		getLayoutPageTemplateCollections(
+			long groupId, long layoutPageTemplateCollectionId) {
+
+		return getService().getLayoutPageTemplateCollections(
+			groupId, layoutPageTemplateCollectionId);
+	}
+
+	public static List<LayoutPageTemplateCollection>
+		getLayoutPageTemplateCollections(
 			long groupId, String name, int type, int start, int end,
 			OrderByComparator<LayoutPageTemplateCollection> orderByComparator) {
 
@@ -461,6 +469,15 @@ public class LayoutPageTemplateCollectionLocalServiceUtil {
 
 		return getService().updateLayoutPageTemplateCollection(
 			layoutPageTemplateCollection);
+	}
+
+	public static LayoutPageTemplateCollection
+			updateLayoutPageTemplateCollection(
+				long layoutPageTemplateCollectionId, String name)
+		throws PortalException {
+
+		return getService().updateLayoutPageTemplateCollection(
+			layoutPageTemplateCollectionId, name);
 	}
 
 	public static LayoutPageTemplateCollection

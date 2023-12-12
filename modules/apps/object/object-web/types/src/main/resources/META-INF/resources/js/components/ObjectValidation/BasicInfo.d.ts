@@ -6,18 +6,17 @@
 /// <reference types="react" />
 
 import {TabProps} from './useObjectValidationForm';
-interface BasicInfoProps extends TabProps {
+export interface BasicInfoProps extends TabProps {
 	componentLabel: string;
 	creationLanguageId: Liferay.Language.Locale;
-	objectFields: ObjectField[];
+	customObjectFields: ObjectField[];
 }
 export declare function BasicInfo({
 	componentLabel,
 	creationLanguageId,
+	customObjectFields,
 	disabled,
 	errors,
-	objectFields,
 	setValues,
 	values,
 }: BasicInfoProps): JSX.Element;
-export {};

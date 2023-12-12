@@ -36,6 +36,10 @@ public class FeatureFlagsBag {
 		_featureFlagsMap = featureFlagsMap;
 	}
 
+	public FeatureFlag getFeatureFlag(String key) {
+		return _featureFlagsMap.get(key);
+	}
+
 	public List<FeatureFlag> getFeatureFlags(Predicate<FeatureFlag> predicate) {
 		List<FeatureFlag> featureFlags = new ArrayList<>();
 
@@ -83,12 +87,10 @@ public class FeatureFlagsBag {
 			return featureFlag.isEnabled();
 		}
 
-		if (_log.isInfoEnabled()) {
-			_log.info(
-				StringBundler.concat(
-					"Feature flag ", key, " is not available for company ",
-					_companyId));
-		}
+		_log.error(
+			StringBundler.concat(
+				"Feature flag ", key, " is not available for company ",
+				_companyId));
 
 		return GetterUtil.getBoolean(
 			PropsUtil.get(FeatureFlagConstants.getKey(key)));

@@ -200,6 +200,12 @@ public abstract class BaseTopLevelBuild
 
 	@Override
 	public String getBuildName() {
+		String jenkinsJobVariant = getParameterValue("JENKINS_JOB_VARIANT");
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(jenkinsJobVariant)) {
+			return getJobName() + "/" + jenkinsJobVariant;
+		}
+
 		return "top-level";
 	}
 
@@ -609,11 +615,6 @@ public abstract class BaseTopLevelBuild
 	}
 
 	@Override
-	public boolean isApplyReinvokeRules() {
-		return false;
-	}
-
-	@Override
 	public boolean isCompareToUpstream() {
 		return _compareToUpstream;
 	}
@@ -653,7 +654,7 @@ public abstract class BaseTopLevelBuild
 
 		try {
 			JSONObject buildJSONObject = JenkinsResultsParserUtil.toJSONObject(
-				buildURL + "api/json?tree=result");
+				buildURL + "/api/json?tree=result");
 
 			if (!JenkinsResultsParserUtil.isNullOrEmpty(
 					buildJSONObject.optString("result", null))) {
@@ -704,8 +705,7 @@ public abstract class BaseTopLevelBuild
 		}
 	}
 
-	public static class WorkspaceBranchInformation
-		implements BranchInformation {
+	public class WorkspaceBranchInformation implements BranchInformation {
 
 		@Override
 		public String getCachedRemoteGitRefName() {
@@ -719,7 +719,7 @@ public abstract class BaseTopLevelBuild
 
 		@Override
 		public Integer getPullRequestNumber() {
-			Matcher matcher = _pattern.matcher(
+			Matcher matcher = _gitHubURLPattern.matcher(
 				_workspaceGitRepository.getGitHubURL());
 
 			if (!matcher.find()) {
@@ -731,7 +731,7 @@ public abstract class BaseTopLevelBuild
 
 		@Override
 		public String getReceiverUsername() {
-			Matcher matcher = _pattern.matcher(
+			Matcher matcher = _gitHubURLPattern.matcher(
 				_workspaceGitRepository.getGitHubURL());
 
 			if (!matcher.find()) {
@@ -758,9 +758,18 @@ public abstract class BaseTopLevelBuild
 
 		@Override
 		public RemoteGitRef getSenderRemoteGitRef() {
-			String remoteURL = JenkinsResultsParserUtil.combine(
-				"git@github.com:", getSenderUsername(), "/",
-				getRepositoryName(), ".git");
+			String remoteURL = null;
+
+			if (isReleaseBuild()) {
+				remoteURL = JenkinsResultsParserUtil.combine(
+					"git@github.com:", getSenderUsername(), "/",
+					getReleaseRepositoryName(), ".git");
+			}
+			else {
+				remoteURL = JenkinsResultsParserUtil.combine(
+					"git@github.com:", getSenderUsername(), "/",
+					getRepositoryName(), ".git");
+			}
 
 			return GitUtil.getRemoteGitRef(
 				getSenderBranchName(), new File("."), remoteURL);
@@ -786,10 +795,6 @@ public abstract class BaseTopLevelBuild
 
 			_workspaceGitRepository = workspaceGitRepository;
 		}
-
-		private static final Pattern _pattern = Pattern.compile(
-			"https://github.com/(?<username>[^/]+)/[^/]/pull/" +
-				"(?<pullNumber>\\d+)");
 
 		private final WorkspaceGitRepository _workspaceGitRepository;
 
@@ -946,8 +951,54 @@ public abstract class BaseTopLevelBuild
 	}
 
 	protected Element[] getBuildFailureElements() {
+		List<Build> failedDownstreamBuilds = getFailedDownstreamBuilds();
+
+		if (failedDownstreamBuilds != null) {
+			StringBuilder sb = new StringBuilder();
+
+			sb.append("\nUnique Failures:");
+
+			for (Build failedDownstreamBuild : failedDownstreamBuilds) {
+				if (failedDownstreamBuild.isUniqueFailure()) {
+					sb.append("\n");
+					sb.append(failedDownstreamBuild.getDisplayName());
+
+					for (TestResult testResult :
+							failedDownstreamBuild.
+								getUniqueFailureTestResults()) {
+
+						sb.append("\n\t");
+						sb.append(testResult.getDisplayName());
+					}
+				}
+			}
+
+			sb.append("\n\nUpstream Failures:");
+
+			for (Build failedDownstreamBuild : failedDownstreamBuilds) {
+				if (!failedDownstreamBuild.isUniqueFailure()) {
+					sb.append("\n");
+					sb.append(failedDownstreamBuild.getDisplayName());
+
+					for (TestResult testResult :
+							failedDownstreamBuild.
+								getUpstreamJobFailureTestResults()) {
+
+						sb.append("\n\t");
+						sb.append(testResult.getDisplayName());
+					}
+				}
+			}
+
+			System.out.println(sb.toString());
+		}
+
 		Map<Build, Element> downstreamBuildFailureMessages =
-			getDownstreamBuildMessages(getFailedDownstreamBuilds());
+			getDownstreamBuildMessages(failedDownstreamBuilds);
+
+		System.out.println(
+			"Collected " + downstreamBuildFailureMessages.size() +
+				" downstream failure messages");
 
 		List<Element> allCurrentBuildFailureElements = new ArrayList<>();
 		List<Element> upstreamBuildFailureElements = new ArrayList<>();
@@ -961,7 +1012,19 @@ public abstract class BaseTopLevelBuild
 
 			Element failureElement = entry.getValue();
 
+			if (failureElement == null) {
+				System.out.println(
+					"Failure element for [" +
+						failedDownstreamBuild.getBuildName() + "] is null");
+			}
+
 			if (failureElement != null) {
+				System.out.println(
+					JenkinsResultsParserUtil.combine(
+						failedDownstreamBuild.getBuildName(),
+						" failure element object ID: ",
+						String.valueOf(failureElement.hashCode())));
+
 				if (!failedDownstreamBuild.isUniqueFailure()) {
 					upstreamBuildFailureElements.add(failureElement);
 
@@ -1301,11 +1364,19 @@ public abstract class BaseTopLevelBuild
 		String senderBranchSHA =
 			workspaceBranchInformation.getSenderBranchSHA();
 
-		GitHubRemoteGitCommit gitHubRemoteGitCommit =
-			GitCommitFactory.newGitHubRemoteGitCommit(
+		GitHubRemoteGitCommit gitHubRemoteGitCommit = null;
+
+		if (isReleaseBuild()) {
+			gitHubRemoteGitCommit = GitCommitFactory.newGitHubRemoteGitCommit(
+				workspaceBranchInformation.getSenderUsername(),
+				getReleaseRepositoryName(), senderBranchSHA);
+		}
+		else {
+			gitHubRemoteGitCommit = GitCommitFactory.newGitHubRemoteGitCommit(
 				workspaceBranchInformation.getSenderUsername(),
 				workspaceBranchInformation.getRepositoryName(),
 				senderBranchSHA);
+		}
 
 		return Dom4JUtil.getNewElement(
 			"div", null,
@@ -1714,6 +1785,14 @@ public abstract class BaseTopLevelBuild
 			preElement);
 	}
 
+	protected String getReleaseRepositoryName() {
+		if (!Objects.equals(getBranchName(), "master")) {
+			return "liferay-portal-ee";
+		}
+
+		return "liferay-portal";
+	}
+
 	protected Element getResourceFileContentAsElement(
 		String tagName, Element parentElement, String resourceName) {
 
@@ -1949,6 +2028,10 @@ public abstract class BaseTopLevelBuild
 			return true;
 		}
 
+		return false;
+	}
+
+	protected boolean isReleaseBuild() {
 		return false;
 	}
 
@@ -2331,6 +2414,9 @@ public abstract class BaseTopLevelBuild
 			"(?<url>.+/job/(?<jobName>[^/]+)/.+)\\.");
 	private static final ExecutorService _executorService =
 		JenkinsResultsParserUtil.getNewThreadPoolExecutor(10, true);
+	private static final Pattern _gitHubURLPattern = Pattern.compile(
+		"https://github.com/(?<username>[^/]+)/[^/]/pull/" +
+			"(?<pullNumber>\\d+)");
 
 	private boolean _compareToUpstream;
 	private Build _controllerBuild;

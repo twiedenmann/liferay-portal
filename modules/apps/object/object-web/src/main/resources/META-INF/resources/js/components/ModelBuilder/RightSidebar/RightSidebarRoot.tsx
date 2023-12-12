@@ -19,6 +19,7 @@ export function RightSideBarRoot({children}: IRightSidebarRoot) {
 			selectedObjectDefinitionNode,
 			selectedObjectField,
 			selectedObjectRelationship,
+			showSidebars,
 		},
 	] = useObjectFolderContext();
 	const [loading, setLoading] = useState(false);
@@ -33,18 +34,23 @@ export function RightSideBarRoot({children}: IRightSidebarRoot) {
 	};
 
 	useEffect(() => {
-		if (
-			selectedObjectField &&
-			selectedObjectField.businessType === 'Aggregation'
-		) {
-			setNewVerticalBarWidthValue(950);
+		if (selectedObjectField) {
+			if (selectedObjectField.businessType === 'Aggregation') {
+				setNewVerticalBarWidthValue(950);
+
+				return;
+			}
+
+			if (selectedObjectField.businessType === 'Picklist') {
+				setNewVerticalBarWidthValue(500);
+
+				return;
+			}
+
+			setNewVerticalBarWidthValue(320);
 
 			return;
 		}
-
-		setNewVerticalBarWidthValue(320);
-
-		return;
 	}, [
 		selectedObjectDefinitionNode,
 		selectedObjectField,
@@ -59,7 +65,7 @@ export function RightSideBarRoot({children}: IRightSidebarRoot) {
 					panelWidth={verticalBarWidth}
 					position="right"
 					resize={false}
-					triggerSideBarAnimation={true}
+					triggerSideBarAnimation={showSidebars}
 					verticalBarItems={[
 						{
 							title: 'objectsModelBuilderRightSidebar',

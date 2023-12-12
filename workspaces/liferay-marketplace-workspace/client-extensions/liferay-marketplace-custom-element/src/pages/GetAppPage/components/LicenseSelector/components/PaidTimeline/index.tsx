@@ -5,77 +5,87 @@
 
 import {useEffect, useState} from 'react';
 
+import {useMarketplaceContext} from '../../../../../../context/MarketplaceContext';
 import useCart from '../../../../../../hooks/useCart';
+import {Liferay} from '../../../../../../liferay/liferay';
 import {getLicenseDescription, getTierPrice} from '../../../../../../utils/api';
-import LicenseSectorCard from '../../LicenseCard';
+import {SkuOptions} from '../../../../enums/skuOptions';
+import LicenseCard from '../../LicenseCard';
 
 interface PaidTimelineProps {
-	cart: ReturnType<typeof useCart>;
-	product?: Product;
+	cartUtil: ReturnType<typeof useCart>;
+	product?: DeliveryProduct;
 }
 
-export function PaidTimeline({cart, product}: PaidTimelineProps) {
-	const [skuInfo, setSkuInfo] = useState<any>({});
-	const [tierPrice, setTierPrice] = useState<any>([]);
-	const productId = product?.id;
+export function PaidTimeline({cartUtil, product}: PaidTimelineProps) {
+	const {channel} = useMarketplaceContext();
+	const [skuInfo, setSkuInfo] = useState({});
+	const [tierPrices, setTierPrices] = useState<any[]>([]);
+
+	const {id: productId, skus} = product || {};
+	const accountId = Liferay.CommerceContext.account?.accountId;
 
 	useEffect(() => {
 		(async () => {
-			const catalogName = product?.catalog?.name;
-
 			const [tierpriceData, skuDescription] = await Promise.all([
-				getTierPrice(catalogName as string),
+				getTierPrice(channel.id, product?.productId, Number(accountId)),
 				getLicenseDescription(),
 			]);
 
-			setTierPrice(tierpriceData);
-			setSkuInfo(skuDescription?.items[0]);
+			setTierPrices(tierpriceData);
+			setSkuInfo(skuDescription?.items[0] || {});
 		})();
-	}, [product?.catalog?.name]);
-
-	const skus = product?.skus;
+	}, [accountId, channel.id, product?.productId]);
 
 	const purchasebleSkus = skus?.filter((sku) =>
 		sku?.skuOptions.find(
 			(skuOption) =>
-				skuOption?.key !== 'trial' && skuOption?.value === 'yes'
+				skuOption.skuOptionValueKey.toLocaleLowerCase() !==
+					SkuOptions.TRIAL ||
+				(skuOption.skuOptionValueKey.toLocaleLowerCase() ===
+					SkuOptions.TRIAL &&
+					skuOption.skuOptionValueKey === 'no')
 		)
 	);
 
 	return (
 		<div className="paid-timeline">
 			<div>
-				<span>
-					<p className="mt-3">Need help with license calculations?</p>
-				</span>
+				<p className="mt-3">Need help with license calculations?</p>
 
-				{purchasebleSkus?.map((sku: SKU, index) => {
-					const tierPricesList = tierPrice?.filter(
-						(tier: any) =>
-							tier?.tierPrice.length && tier.skuId === sku.id
-					);
+				{purchasebleSkus
+					?.map((sku, index) => {
+						const tierPricesFiltered = tierPrices?.filter(
+							(tier: any) =>
+								tier?.tierPrice.length && tier.skuId === sku.id
+						);
 
-					const licenseTypeName = sku.skuOptions.find(
-						(optins) => optins.value === 'yes'
-					);
+						const skuOption = sku.skuOptions.find(
+							(skuOption) =>
+								skuOption.skuOptionKey ===
+								'dxp-license-usage-type'
+						);
 
-					return (
-						<div className="mb-5" key={index}>
-							<LicenseSectorCard
-								cart={cart}
-								licenseDescription={
-									skuInfo[
-										licenseTypeName?.key as keyof typeof skuInfo
-									]
-								}
-								licensetiers={tierPricesList}
-								lisenceType={licenseTypeName?.key}
-								productId={productId}
-								sku={sku}
-							/>
-						</div>
-					);
-				})}
+						return (
+							<div className="mb-5" key={index}>
+								<LicenseCard
+									cartUtil={cartUtil}
+									licenseDescription={
+										skuInfo[
+											skuOption?.skuOptionValueKey?.toLocaleLowerCase() as keyof typeof skuInfo
+										]
+									}
+									licensetiers={tierPricesFiltered}
+									lisenceType={
+										skuOption?.skuOptionValueKey ?? sku.sku
+									}
+									productId={productId}
+									sku={sku}
+								/>
+							</div>
+						);
+					})
+					.reverse()}
 			</div>
 		</div>
 	);

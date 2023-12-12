@@ -139,9 +139,12 @@ export default function _JournalPortlet({
 		}
 	};
 
-	const handleDDMFormError = (error) => {
+	const handleDDMFormError = (event) => {
 		publishingLock.unlock();
-		console.error(error);
+
+		if (event.error?.statusCode) {
+			showAlert(event.error.message);
+		}
 
 		const workflowActionInput = document.getElementById(
 			`${namespace}workflowAction`
@@ -247,6 +250,8 @@ export default function _JournalPortlet({
 				: '/journal/add_data_engine_default_values';
 		}
 		else {
+			articleId = document.getElementById(`${namespace}articleId`).value;
+
 			actionInput.value = articleId
 				? '/journal/update_article'
 				: '/journal/add_article';

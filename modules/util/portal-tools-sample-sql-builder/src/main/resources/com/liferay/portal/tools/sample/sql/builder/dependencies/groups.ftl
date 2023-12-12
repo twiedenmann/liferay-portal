@@ -41,7 +41,7 @@
 	<@insertDLFolder
 		_ddmStructureId=dataFactory.defaultDLDDMStructureId
 		_dlFolderDepth=1
-		_groupId=groupId
+		_groupModel=groupModel
 		_parentDLFolderId=0
 	/>
 
@@ -59,7 +59,7 @@
 
 	<@insertGroup _groupModel=groupModel />
 
-	${csvFileWriter.write("repository", groupId + ", " + groupModel.name + "\n")}
+	${csvFileWriter.write("repository", virtualHostModel.hostname + "," + groupModel.friendlyURL + "," + groupId + ", " + groupModel.name + "\n")}
 </#list>
 
 <#assign defaultSiteHomePageContentLayoutModels = dataFactory.newContentPageLayoutModels(guestGroupModel.groupId, "welcome") />

@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -200,7 +201,7 @@ public abstract class BaseAttachmentResourceTestCase {
 			attachmentResource.getChannelProductAttachmentsPage(
 				channelId, productId, null, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if ((irrelevantChannelId != null) && (irrelevantProductId != null)) {
 			Attachment irrelevantAttachment =
@@ -210,13 +211,12 @@ public abstract class BaseAttachmentResourceTestCase {
 
 			page = attachmentResource.getChannelProductAttachmentsPage(
 				irrelevantChannelId, irrelevantProductId, null,
-				Pagination.of(1, 2));
+				Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAttachment),
-				(List<Attachment>)page.getItems());
+			assertContains(
+				irrelevantAttachment, (List<Attachment>)page.getItems());
 			assertValid(
 				page,
 				testGetChannelProductAttachmentsPage_getExpectedActions(
@@ -234,11 +234,10 @@ public abstract class BaseAttachmentResourceTestCase {
 		page = attachmentResource.getChannelProductAttachmentsPage(
 			channelId, productId, null, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(attachment1, attachment2),
-			(List<Attachment>)page.getItems());
+		assertContains(attachment1, (List<Attachment>)page.getItems());
+		assertContains(attachment2, (List<Attachment>)page.getItems());
 		assertValid(
 			page,
 			testGetChannelProductAttachmentsPage_getExpectedActions(
@@ -262,6 +261,12 @@ public abstract class BaseAttachmentResourceTestCase {
 		Long channelId = testGetChannelProductAttachmentsPage_getChannelId();
 		Long productId = testGetChannelProductAttachmentsPage_getProductId();
 
+		Page<Attachment> attachmentPage =
+			attachmentResource.getChannelProductAttachmentsPage(
+				channelId, productId, null, null);
+
+		int totalCount = GetterUtil.getInteger(attachmentPage.getTotalCount());
+
 		Attachment attachment1 =
 			testGetChannelProductAttachmentsPage_addAttachment(
 				channelId, productId, randomAttachment());
@@ -276,17 +281,18 @@ public abstract class BaseAttachmentResourceTestCase {
 
 		Page<Attachment> page1 =
 			attachmentResource.getChannelProductAttachmentsPage(
-				channelId, productId, null, Pagination.of(1, 2));
+				channelId, productId, null, Pagination.of(1, totalCount + 2));
 
 		List<Attachment> attachments1 = (List<Attachment>)page1.getItems();
 
-		Assert.assertEquals(attachments1.toString(), 2, attachments1.size());
+		Assert.assertEquals(
+			attachments1.toString(), totalCount + 2, attachments1.size());
 
 		Page<Attachment> page2 =
 			attachmentResource.getChannelProductAttachmentsPage(
-				channelId, productId, null, Pagination.of(2, 2));
+				channelId, productId, null, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<Attachment> attachments2 = (List<Attachment>)page2.getItems();
 
@@ -294,11 +300,12 @@ public abstract class BaseAttachmentResourceTestCase {
 
 		Page<Attachment> page3 =
 			attachmentResource.getChannelProductAttachmentsPage(
-				channelId, productId, null, Pagination.of(1, 3));
+				channelId, productId, null,
+				Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(attachment1, attachment2, attachment3),
-			(List<Attachment>)page3.getItems());
+		assertContains(attachment1, (List<Attachment>)page3.getItems());
+		assertContains(attachment2, (List<Attachment>)page3.getItems());
+		assertContains(attachment3, (List<Attachment>)page3.getItems());
 	}
 
 	protected Attachment testGetChannelProductAttachmentsPage_addAttachment(
@@ -347,7 +354,7 @@ public abstract class BaseAttachmentResourceTestCase {
 		Page<Attachment> page = attachmentResource.getChannelProductImagesPage(
 			channelId, productId, null, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if ((irrelevantChannelId != null) && (irrelevantProductId != null)) {
 			Attachment irrelevantAttachment =
@@ -357,13 +364,12 @@ public abstract class BaseAttachmentResourceTestCase {
 
 			page = attachmentResource.getChannelProductImagesPage(
 				irrelevantChannelId, irrelevantProductId, null,
-				Pagination.of(1, 2));
+				Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantAttachment),
-				(List<Attachment>)page.getItems());
+			assertContains(
+				irrelevantAttachment, (List<Attachment>)page.getItems());
 			assertValid(
 				page,
 				testGetChannelProductImagesPage_getExpectedActions(
@@ -379,11 +385,10 @@ public abstract class BaseAttachmentResourceTestCase {
 		page = attachmentResource.getChannelProductImagesPage(
 			channelId, productId, null, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(attachment1, attachment2),
-			(List<Attachment>)page.getItems());
+		assertContains(attachment1, (List<Attachment>)page.getItems());
+		assertContains(attachment2, (List<Attachment>)page.getItems());
 		assertValid(
 			page,
 			testGetChannelProductImagesPage_getExpectedActions(
@@ -407,6 +412,12 @@ public abstract class BaseAttachmentResourceTestCase {
 		Long channelId = testGetChannelProductImagesPage_getChannelId();
 		Long productId = testGetChannelProductImagesPage_getProductId();
 
+		Page<Attachment> attachmentPage =
+			attachmentResource.getChannelProductImagesPage(
+				channelId, productId, null, null);
+
+		int totalCount = GetterUtil.getInteger(attachmentPage.getTotalCount());
+
 		Attachment attachment1 = testGetChannelProductImagesPage_addAttachment(
 			channelId, productId, randomAttachment());
 
@@ -417,27 +428,28 @@ public abstract class BaseAttachmentResourceTestCase {
 			channelId, productId, randomAttachment());
 
 		Page<Attachment> page1 = attachmentResource.getChannelProductImagesPage(
-			channelId, productId, null, Pagination.of(1, 2));
+			channelId, productId, null, Pagination.of(1, totalCount + 2));
 
 		List<Attachment> attachments1 = (List<Attachment>)page1.getItems();
 
-		Assert.assertEquals(attachments1.toString(), 2, attachments1.size());
+		Assert.assertEquals(
+			attachments1.toString(), totalCount + 2, attachments1.size());
 
 		Page<Attachment> page2 = attachmentResource.getChannelProductImagesPage(
-			channelId, productId, null, Pagination.of(2, 2));
+			channelId, productId, null, Pagination.of(2, totalCount + 2));
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<Attachment> attachments2 = (List<Attachment>)page2.getItems();
 
 		Assert.assertEquals(attachments2.toString(), 1, attachments2.size());
 
 		Page<Attachment> page3 = attachmentResource.getChannelProductImagesPage(
-			channelId, productId, null, Pagination.of(1, 3));
+			channelId, productId, null, Pagination.of(1, (int)totalCount + 3));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(attachment1, attachment2, attachment3),
-			(List<Attachment>)page3.getItems());
+		assertContains(attachment1, (List<Attachment>)page3.getItems());
+		assertContains(attachment2, (List<Attachment>)page3.getItems());
+		assertContains(attachment3, (List<Attachment>)page3.getItems());
 	}
 
 	protected Attachment testGetChannelProductImagesPage_addAttachment(
@@ -566,6 +578,14 @@ public abstract class BaseAttachmentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("customFields", additionalAssertFieldName)) {
+				if (attachment.getCustomFields() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("displayDate", additionalAssertFieldName)) {
 				if (attachment.getDisplayDate() == null) {
 					valid = false;
@@ -576,6 +596,14 @@ public abstract class BaseAttachmentResourceTestCase {
 
 			if (Objects.equals("expirationDate", additionalAssertFieldName)) {
 				if (attachment.getExpirationDate() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("galleryEnabled", additionalAssertFieldName)) {
+				if (attachment.getGalleryEnabled() == null) {
 					valid = false;
 				}
 
@@ -608,6 +636,14 @@ public abstract class BaseAttachmentResourceTestCase {
 
 			if (Objects.equals("src", additionalAssertFieldName)) {
 				if (attachment.getSrc() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("tags", additionalAssertFieldName)) {
+				if (attachment.getTags() == null) {
 					valid = false;
 				}
 
@@ -758,6 +794,17 @@ public abstract class BaseAttachmentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("customFields", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						attachment1.getCustomFields(),
+						attachment2.getCustomFields())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("displayDate", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						attachment1.getDisplayDate(),
@@ -773,6 +820,17 @@ public abstract class BaseAttachmentResourceTestCase {
 				if (!Objects.deepEquals(
 						attachment1.getExpirationDate(),
 						attachment2.getExpirationDate())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("galleryEnabled", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						attachment1.getGalleryEnabled(),
+						attachment2.getGalleryEnabled())) {
 
 					return false;
 				}
@@ -825,6 +883,16 @@ public abstract class BaseAttachmentResourceTestCase {
 			if (Objects.equals("src", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						attachment1.getSrc(), attachment2.getSrc())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("tags", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						attachment1.getTags(), attachment2.getTags())) {
 
 					return false;
 				}
@@ -1001,6 +1069,11 @@ public abstract class BaseAttachmentResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("customFields")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("displayDate")) {
 			if (operator.equals("between")) {
 				sb = new StringBundler();
@@ -1063,6 +1136,11 @@ public abstract class BaseAttachmentResourceTestCase {
 			}
 
 			return sb.toString();
+		}
+
+		if (entityFieldName.equals("galleryEnabled")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("id")) {
@@ -1130,6 +1208,11 @@ public abstract class BaseAttachmentResourceTestCase {
 			}
 
 			return sb.toString();
+		}
+
+		if (entityFieldName.equals("tags")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("title")) {
@@ -1232,6 +1315,7 @@ public abstract class BaseAttachmentResourceTestCase {
 					RandomTestUtil.randomString());
 				displayDate = RandomTestUtil.nextDate();
 				expirationDate = RandomTestUtil.nextDate();
+				galleryEnabled = RandomTestUtil.randomBoolean();
 				id = RandomTestUtil.randomLong();
 				neverExpire = RandomTestUtil.randomBoolean();
 				priority = RandomTestUtil.randomDouble();

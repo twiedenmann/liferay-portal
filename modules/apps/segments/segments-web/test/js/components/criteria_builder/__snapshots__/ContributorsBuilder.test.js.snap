@@ -30,18 +30,18 @@ exports[`ContributorsBuilder renders builder with sidebar: initialRenderEditing 
             >
               <input
                 aria-label="search-properties"
-                class="form-control input-group-inset input-group-inset-after"
+                class="form-control form-control-sm input-group-inset input-group-inset-after"
                 data-testid="search-input"
                 placeholder="search-properties"
                 type="text"
                 value=""
               />
               <div
-                class="input-group-inset-item input-group-inset-item-after"
+                class="c-pr-0 input-group-inset-item input-group-inset-item-after"
               >
                 <button
                   aria-label="search-properties"
-                  class="btn btn-unstyled"
+                  class="mr-1 pr-2 btn btn-unstyled"
                   data-testid="search-button"
                   title="search-properties"
                   type="button"
@@ -51,7 +51,7 @@ exports[`ContributorsBuilder renders builder with sidebar: initialRenderEditing 
                     role="presentation"
                   >
                     <use
-                      xlink:href="#search"
+                      href="#search"
                     />
                   </svg>
                 </button>
@@ -69,12 +69,14 @@ exports[`ContributorsBuilder renders builder with sidebar: initialRenderEditing 
           >
             <div
               class="panel panel-unstyled"
+              id="user"
               role="tablist"
             >
               <button
                 aria-expanded="true"
                 class="panel-header panel-header-link collapse-icon collapse-icon-middle show btn btn-unstyled"
                 role="tab"
+                tabindex="0"
                 type="button"
               >
                 <div
@@ -95,7 +97,7 @@ exports[`ContributorsBuilder renders builder with sidebar: initialRenderEditing 
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-right"
+                      href="#angle-right"
                     />
                   </svg>
                 </span>
@@ -107,7 +109,7 @@ exports[`ContributorsBuilder renders builder with sidebar: initialRenderEditing 
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-down"
+                      href="#angle-down"
                     />
                   </svg>
                 </span>
@@ -120,642 +122,607 @@ exports[`ContributorsBuilder renders builder with sidebar: initialRenderEditing 
                   class="panel-body c-px-0"
                 >
                   <p
-                    class="c-pt-1 c-px-4 text-secondary"
+                    class="c-pt-1 text-secondary"
                   >
                     inherited-attributes-are-not-taken-into-account-to-include-members-in-segments
                   </p>
                   <ul
                     class="c-pl-0"
+                    role="menu"
                   >
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Ancestor Organization IDs
+                        Ancestor Organization IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Class PK
+                        Class PK
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Company ID
+                        Company ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-date"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#date"
+                              href="#date"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Date Modified
+                        Date Modified
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Email Address
+                        Email Address
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      First Name
+                        First Name
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Group ID
+                        Group ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Group IDs
+                        Group IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Job Title
+                        Job Title
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Last Name
+                        Last Name
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Organization IDs
+                        Organization IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Role IDs
+                        Role IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Scope Group ID
+                        Scope Group ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Screen Name
+                        Screen Name
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Team IDs
+                        Team IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      User Group IDs
+                        User Group IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      User ID
+                        User ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      User Name
+                        User Name
+                      </div>
                     </li>
                   </ul>
                 </div>
@@ -763,12 +730,14 @@ exports[`ContributorsBuilder renders builder with sidebar: initialRenderEditing 
             </div>
             <div
               class="panel panel-unstyled"
+              id="user-organization"
               role="tablist"
             >
               <button
                 aria-expanded="false"
                 class="panel-header panel-header-link collapse-icon collapse-icon-middle collapsed btn btn-unstyled"
                 role="tab"
+                tabindex="-1"
                 type="button"
               >
                 <div
@@ -789,7 +758,7 @@ exports[`ContributorsBuilder renders builder with sidebar: initialRenderEditing 
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-right"
+                      href="#angle-right"
                     />
                   </svg>
                 </span>
@@ -801,7 +770,7 @@ exports[`ContributorsBuilder renders builder with sidebar: initialRenderEditing 
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-down"
+                      href="#angle-down"
                     />
                   </svg>
                 </span>
@@ -814,292 +783,277 @@ exports[`ContributorsBuilder renders builder with sidebar: initialRenderEditing 
                   class="panel-body c-px-0"
                 >
                   <p
-                    class="c-pt-1 c-px-4 text-secondary"
+                    class="c-pt-1 text-secondary"
                   >
                     inherited-attributes-are-not-taken-into-account-to-include-members-in-segments
                   </p>
                   <ul
                     class="c-pl-0"
+                    role="menu"
                   >
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Class PK
+                        Class PK
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Company ID
+                        Company ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-date"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#date"
+                              href="#date"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Date Modified
+                        Date Modified
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Name
+                        Name
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Name Tree Path
+                        Name Tree Path
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Organization ID
+                        Organization ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Parent Organization ID
+                        Parent Organization ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Type
+                        Type
+                      </div>
                     </li>
                   </ul>
                 </div>
@@ -1200,18 +1154,18 @@ exports[`ContributorsBuilder renders builder without sidebar: initialRenderNotEd
             >
               <input
                 aria-label="search-properties"
-                class="form-control input-group-inset input-group-inset-after"
+                class="form-control form-control-sm input-group-inset input-group-inset-after"
                 data-testid="search-input"
                 placeholder="search-properties"
                 type="text"
                 value=""
               />
               <div
-                class="input-group-inset-item input-group-inset-item-after"
+                class="c-pr-0 input-group-inset-item input-group-inset-item-after"
               >
                 <button
                   aria-label="search-properties"
-                  class="btn btn-unstyled"
+                  class="mr-1 pr-2 btn btn-unstyled"
                   data-testid="search-button"
                   title="search-properties"
                   type="button"
@@ -1221,7 +1175,7 @@ exports[`ContributorsBuilder renders builder without sidebar: initialRenderNotEd
                     role="presentation"
                   >
                     <use
-                      xlink:href="#search"
+                      href="#search"
                     />
                   </svg>
                 </button>
@@ -1239,12 +1193,14 @@ exports[`ContributorsBuilder renders builder without sidebar: initialRenderNotEd
           >
             <div
               class="panel panel-unstyled"
+              id="user"
               role="tablist"
             >
               <button
                 aria-expanded="true"
                 class="panel-header panel-header-link collapse-icon collapse-icon-middle show btn btn-unstyled"
                 role="tab"
+                tabindex="0"
                 type="button"
               >
                 <div
@@ -1265,7 +1221,7 @@ exports[`ContributorsBuilder renders builder without sidebar: initialRenderNotEd
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-right"
+                      href="#angle-right"
                     />
                   </svg>
                 </span>
@@ -1277,7 +1233,7 @@ exports[`ContributorsBuilder renders builder without sidebar: initialRenderNotEd
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-down"
+                      href="#angle-down"
                     />
                   </svg>
                 </span>
@@ -1290,642 +1246,607 @@ exports[`ContributorsBuilder renders builder without sidebar: initialRenderNotEd
                   class="panel-body c-px-0"
                 >
                   <p
-                    class="c-pt-1 c-px-4 text-secondary"
+                    class="c-pt-1 text-secondary"
                   >
                     inherited-attributes-are-not-taken-into-account-to-include-members-in-segments
                   </p>
                   <ul
                     class="c-pl-0"
+                    role="menu"
                   >
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Ancestor Organization IDs
+                        Ancestor Organization IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Class PK
+                        Class PK
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Company ID
+                        Company ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-date"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#date"
+                              href="#date"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Date Modified
+                        Date Modified
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Email Address
+                        Email Address
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      First Name
+                        First Name
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Group ID
+                        Group ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Group IDs
+                        Group IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Job Title
+                        Job Title
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Last Name
+                        Last Name
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Organization IDs
+                        Organization IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Role IDs
+                        Role IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Scope Group ID
+                        Scope Group ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Screen Name
+                        Screen Name
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Team IDs
+                        Team IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      User Group IDs
+                        User Group IDs
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      User ID
+                        User ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      User Name
+                        User Name
+                      </div>
                     </li>
                   </ul>
                 </div>
@@ -1933,12 +1854,14 @@ exports[`ContributorsBuilder renders builder without sidebar: initialRenderNotEd
             </div>
             <div
               class="panel panel-unstyled"
+              id="user-organization"
               role="tablist"
             >
               <button
                 aria-expanded="false"
                 class="panel-header panel-header-link collapse-icon collapse-icon-middle collapsed btn btn-unstyled"
                 role="tab"
+                tabindex="-1"
                 type="button"
               >
                 <div
@@ -1959,7 +1882,7 @@ exports[`ContributorsBuilder renders builder without sidebar: initialRenderNotEd
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-right"
+                      href="#angle-right"
                     />
                   </svg>
                 </span>
@@ -1971,7 +1894,7 @@ exports[`ContributorsBuilder renders builder without sidebar: initialRenderNotEd
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-down"
+                      href="#angle-down"
                     />
                   </svg>
                 </span>
@@ -1984,292 +1907,277 @@ exports[`ContributorsBuilder renders builder without sidebar: initialRenderNotEd
                   class="panel-body c-px-0"
                 >
                   <p
-                    class="c-pt-1 c-px-4 text-secondary"
+                    class="c-pt-1 text-secondary"
                   >
                     inherited-attributes-are-not-taken-into-account-to-include-members-in-segments
                   </p>
                   <ul
                     class="c-pl-0"
+                    role="menu"
                   >
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Class PK
+                        Class PK
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Company ID
+                        Company ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-date"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#date"
+                              href="#date"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Date Modified
+                        Date Modified
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Name
+                        Name
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Name Tree Path
+                        Name Tree Path
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Organization ID
+                        Organization ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Parent Organization ID
+                        Parent Organization ID
+                      </div>
                     </li>
                     <li
-                      class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-3 c-my-1 c-mx-n4 d-flex  color--user-organization"
-                      draggable="true"
-                      tabindex="0"
+                      aria-label="drag-x"
+                      class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--user-organization"
+                      role="menuitem"
+                      tabindex="-1"
                     >
-                      <span
-                        class="inline-item"
+                      <div
+                        class="h-100 w-100"
+                        draggable="true"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-drag"
+                          class="lexicon-icon lexicon-icon-drag mt-0"
                           role="presentation"
                         >
                           <use
-                            xlink:href="#drag"
+                            href="#drag"
                           />
                         </svg>
-                      </span>
-                      <span
-                        class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                      >
                         <span
-                          class="inline-item"
+                          class="sticker"
                         >
                           <svg
                             class="lexicon-icon lexicon-icon-text"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              href="#text"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Type
+                        Type
+                      </div>
                     </li>
                   </ul>
                 </div>

@@ -5,7 +5,7 @@
 
 import {openSimpleInputModal} from 'frontend-js-web';
 
-import openDeletePageTemplateModal from '../modal/openDeletePageTemplateModal';
+import openDeletePageTemplateModal from '../commands/openDeletePageTemplateModal';
 
 export default function propsTransformer({portletNamespace, ...otherProps}) {
 	const deleteSelectedEntries = (itemData) => {
@@ -17,7 +17,7 @@ export default function propsTransformer({portletNamespace, ...otherProps}) {
 					submitForm(form, itemData?.deleteSelectedEntriesURL);
 				}
 			},
-			title: Liferay.Language.get('display-page-templates'),
+			title: Liferay.Language.get('entries'),
 		});
 	};
 

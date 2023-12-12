@@ -311,7 +311,7 @@ public class FriendlyURLServlet extends HttpServlet {
 						locale)) {
 
 					Locale originalLocale = _setAlternativeLayoutFriendlyURL(
-						httpServletRequest, layout,
+						companyId, httpServletRequest, layout,
 						layoutFriendlyURLSeparatorCompositeFriendlyURL,
 						alternativeSiteFriendlyURL);
 
@@ -348,30 +348,23 @@ public class FriendlyURLServlet extends HttpServlet {
 		catch (LayoutPermissionException | NoSuchLayoutException exception) {
 			Layout redirectLayout = null;
 
-			if (layoutFriendlyURL == null) {
-				if (exception instanceof LayoutPermissionException) {
-					List<Layout> layouts = layoutService.getLayouts(
-						group.getGroupId(), _private,
-						LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, 0, 1);
-
-					if (!layouts.isEmpty()) {
-						redirectLayout = layouts.get(0);
-					}
-				}
-				else {
+			if (!(exception instanceof LayoutPermissionException)) {
+				if (layoutFriendlyURL == null) {
 					redirectLayout = defaultLayout;
 				}
-			}
-			else {
-				List<Layout> layouts = layoutLocalService.getLayouts(
-					group.getGroupId(), _private,
-					LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+				else {
+					List<Layout> layouts = layoutLocalService.getLayouts(
+						group.getGroupId(), _private,
+						LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
 
-				for (Layout layout : layouts) {
-					if (layout.matches(httpServletRequest, layoutFriendlyURL)) {
-						redirectLayout = layout;
+					for (Layout layout : layouts) {
+						if (layout.matches(
+								httpServletRequest, layoutFriendlyURL)) {
 
-						break;
+							redirectLayout = layout;
+
+							break;
+						}
 					}
 				}
 			}
@@ -391,24 +384,20 @@ public class FriendlyURLServlet extends HttpServlet {
 					group, _normalizeFriendlyURL(layoutFriendlyURL));
 			}
 
-			if (exception instanceof LayoutPermissionException ||
-				exception instanceof NoSuchLayoutException) {
+			if (Validator.isNotNull(
+					PropsValues.LAYOUT_FRIENDLY_URL_PAGE_NOT_FOUND)) {
 
-				if (Validator.isNotNull(
-						PropsValues.LAYOUT_FRIENDLY_URL_PAGE_NOT_FOUND)) {
-
-					if (exception instanceof NoSuchLayoutException) {
-						throw exception;
-					}
-
-					throw new NoSuchLayoutException(exception);
+				if (exception instanceof NoSuchLayoutException) {
+					throw exception;
 				}
 
-				httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
-
-				httpServletRequest.setAttribute(
-					NoSuchLayoutException.class.getName(), Boolean.TRUE);
+				throw new NoSuchLayoutException(exception);
 			}
+
+			httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+
+			httpServletRequest.setAttribute(
+				NoSuchLayoutException.class.getName(), Boolean.TRUE);
 
 			layoutFriendlyURL = null;
 		}
@@ -929,6 +918,16 @@ public class FriendlyURLServlet extends HttpServlet {
 		return false;
 	}
 
+	private boolean _isShowAlternativeLayoutFriendlyURLMessage(long companyId) {
+		FriendlyURLRedirectionConfiguration
+			friendlyURLRedirectionConfiguration =
+				friendlyURLRedirectionConfigurationProvider.
+					getCompanyFriendlyURLRedirectionConfiguration(companyId);
+
+		return friendlyURLRedirectionConfiguration.
+			showAlternativeLayoutFriendlyURLMessage();
+	}
+
 	private boolean _isSkipRedirect(HttpServletRequest httpServletRequest) {
 		String refererURL = httpServletRequest.getHeader(HttpHeaders.REFERER);
 
@@ -966,7 +965,7 @@ public class FriendlyURLServlet extends HttpServlet {
 	}
 
 	private Locale _setAlternativeLayoutFriendlyURL(
-		HttpServletRequest httpServletRequest, Layout layout,
+		long companyId, HttpServletRequest httpServletRequest, Layout layout,
 		String friendlyURL, SiteFriendlyURL siteFriendlyURL) {
 
 		List<LayoutFriendlyURL> layoutFriendlyURLs =
@@ -998,13 +997,15 @@ public class FriendlyURLServlet extends HttpServlet {
 		String alternativeLayoutFriendlyURL = portal.getLocalizedFriendlyURL(
 			httpServletRequest, layout, groupLocale, locale);
 
-		SessionMessages.add(
-			httpServletRequest, "alternativeLayoutFriendlyURL",
-			alternativeLayoutFriendlyURL);
+		if (_isShowAlternativeLayoutFriendlyURLMessage(companyId)) {
+			SessionMessages.add(
+				httpServletRequest, "alternativeLayoutFriendlyURL",
+				alternativeLayoutFriendlyURL);
 
-		PortalMessages.add(
-			httpServletRequest, PortalMessages.KEY_JSP_PATH,
-			"/html/common/themes/layout_friendly_url_redirect.jsp");
+			PortalMessages.add(
+				httpServletRequest, PortalMessages.KEY_JSP_PATH,
+				"/html/common/themes/layout_friendly_url_redirect.jsp");
+		}
 
 		return groupLocale;
 	}

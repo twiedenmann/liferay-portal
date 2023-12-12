@@ -304,6 +304,64 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-194263. If the page has more than one Experience, the page template created is from the Default experience."
+	@priority = 2
+	test CreatePageTemplateFromContentPageWithExperiencesViaPagesAdmin {
+		task ("Given a page creator has a contenge page with experiences") {
+			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
+				groupName = ${randomSiteName},
+				layoutPageTemplateCollectionName = "Page Template Set");
+
+			JSONLayout.addPublicLayout(
+				groupName = ${randomSiteName},
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.addExperience(
+				experienceName = "New Experience",
+				segmentName = "Anyone");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
+				text = "Welcome to Liferay");
+
+			PageEditor.publish();
+		}
+
+		task ("When the page creator navigates to the Pages admin") {
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+		}
+
+		task ("Then the page creator could convert the content page to content page template based on the Default experience") {
+			PagesAdmin.createPageTemplate(
+				collectionName = "Page Template Set",
+				pageName = "Test Page Name");
+
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
+
+			Navigator.gotoNavNested(navNested = "Page Template Set");
+
+			PageTemplatesAdmin.viewPageTemplatePresent(pageTemplateName = "Test Page Name - Page Template");
+
+			PageTemplatesAdmin.viewEntryWorkflowStatus(
+				entry = "Test Page Name - Page Template",
+				workflowStatus = "Draft");
+
+			PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "Test Page Name - Page Template");
+
+			PageEditor.viewFragment(fragmentName = "Heading");
+		}
+	}
+
 	@description = "This is a test for LPS-145215. View alert message when delete a page."
 	@priority = 5
 	@uitest
@@ -1019,7 +1077,7 @@ definition {
 				menuItem = "Preview Draft",
 				pageName = "Test Page Name");
 
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			ControlMenu.viewHeaderDraftTitle(headerTitle = "Test Page Name");
 
@@ -1080,7 +1138,7 @@ definition {
 				menuItem = "Preview Draft",
 				pageName = "Test Public Page Name");
 
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			ControlMenu.viewHeaderDraftTitle(headerTitle = "Test Public Page Name");
 
@@ -1101,7 +1159,7 @@ definition {
 				menuItem = "Preview Draft",
 				pageName = "Test Private Page Name");
 
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			ControlMenu.viewHeaderDraftTitle(headerTitle = "Test Private Page Name");
 
@@ -2100,11 +2158,13 @@ definition {
 	test ViewDisplayPageTemplateViaCollectionItems {
 		property portal.acceptance = "true";
 
+		var groupId = JSONGroupSetter.setGroupId(groupName = ${randomSiteName});
+
 		task ("Add a display page template for Web Content Article and Basic Web Content") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Web Content DPT",
-				groupName = ${randomSiteName},
+				groupId = ${groupId},
 				subType = "Basic Web Content");
 		}
 
@@ -2124,7 +2184,7 @@ definition {
 			for (var i : list "1,2,3") {
 				JSONWebcontent.addWebContent(
 					content = "Web Content Content ${i}",
-					groupName = ${randomSiteName},
+					groupId = ${groupId},
 					title = "Web Content Title ${i}");
 			}
 		}
@@ -2144,18 +2204,17 @@ definition {
 		}
 
 		task ("Add a manual collection with Web Content Article item type and Basic Web Content item subtype") {
-			JSONAssetlist.addManualAssetListEntryWithItemType(
-				groupName = ${randomSiteName},
+			AssetListsAdmin.openAssetListsAdmin(siteURLKey = ${siteURLKey});
+
+			AssetListsAdmin.addManualSelection(assetListTitle = "Manual Collection");
+
+			AssetListsAdmin.configureItemTypeInManualCollection(
 				itemSubtype = "Basic Web Content",
-				itemType = "Web Content Article",
-				title = "Manual Collection");
+				itemType = "Web Content Article");
 		}
 
 		task ("Select all web contents as collection item") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = ${siteURLKey});
-
 			AssetListsAdmin.selectAsset(
-				assetListName = "Manual Collection",
 				assetType = "Basic Web Content",
 				entryList = "Web Content Title 1,Web Content Title 2,Web Content Title 3");
 		}
@@ -2277,9 +2336,9 @@ definition {
 		task ("Then the Page designer can see the new icon icon on orphan widget entries") {
 			for (var entryName : list "Menu Display,Search Bar,User Personal Bar") {
 				AssertVisible(
-					key_listEntry = ${entryName},
+					key_tableEntry = ${entryName},
 					key_text = "trash",
-					locator1 = "LexiconList#ANY_ICON");
+					locator1 = "LexiconTable#TABLE_ENTRY_ICON");
 			}
 		}
 
@@ -2332,7 +2391,7 @@ definition {
 				locator1 = "Home#PAGE",
 				value1 = "Test Link to URL Page Name");
 
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			AssertLocation.assertPartialLocation(value1 = "https://www.google.com");
 
@@ -2347,7 +2406,7 @@ definition {
 				locator1 = "PagesFinder#PAGE_NAME",
 				value1 = ${pageName});
 
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			AssertLocation.assertPartialLocation(value1 = "https://www.google.com");
 
@@ -2359,7 +2418,7 @@ definition {
 				menuItem = "View",
 				pageName = "Test Link to URL Page Name");
 
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			AssertLocation.assertPartialLocation(value1 = "https://www.google.com");
 
@@ -2394,7 +2453,7 @@ definition {
 				locator1 = "Home#PAGE",
 				value1 = "Test Link to URL Page Name");
 
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			AssertLocation.assertPartialLocation(value1 = "https://www.google.com");
 
@@ -2409,7 +2468,7 @@ definition {
 				locator1 = "PagesFinder#PAGE_NAME",
 				value1 = ${pageName});
 
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			AssertLocation.assertPartialLocation(value1 = "https://www.google.com");
 
@@ -2421,7 +2480,7 @@ definition {
 				menuItem = "View",
 				pageName = "Test Link to URL Page Name");
 
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			AssertLocation.assertPartialLocation(value1 = "https://www.google.com");
 

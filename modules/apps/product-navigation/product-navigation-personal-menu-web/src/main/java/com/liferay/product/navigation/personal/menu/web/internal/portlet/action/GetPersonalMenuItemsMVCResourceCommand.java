@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -165,7 +165,7 @@ public class GetPersonalMenuItemsMVCResourceCommand
 				changeLanguageLabel = _language.format(
 					realUserLocale, "use-x's-preferred-language-(x)",
 					new String[] {
-						_html.escape(user.getFullName()),
+						HtmlUtil.escape(user.getFullName()),
 						userLocale.getDisplayLanguage(realUserLocale)
 					},
 					false);
@@ -233,7 +233,11 @@ public class GetPersonalMenuItemsMVCResourceCommand
 					jsonObject.put(
 						"jsOnClickConfig",
 						personalMenuEntry.getJSOnClickConfigJSONObject(
-							_portal.getHttpServletRequest(portletRequest)));
+							_portal.getHttpServletRequest(portletRequest))
+					).put(
+						"onClickJSModuleURL",
+						personalMenuEntry.getOnClickJSModuleURL()
+					);
 				}
 			}
 			catch (PortalException portalException) {
@@ -287,25 +291,32 @@ public class GetPersonalMenuItemsMVCResourceCommand
 		for (String personalMenuGroup :
 				new TreeSet<>(_serviceTrackerMap.keySet())) {
 
-			JSONArray personalMenuEntriesJSONArray =
-				_getPersonalMenuEntriesJSONArray(
-					portletRequest,
-					_serviceTrackerMap.getService(personalMenuGroup));
+			try {
+				JSONArray personalMenuEntriesJSONArray =
+					_getPersonalMenuEntriesJSONArray(
+						portletRequest,
+						_serviceTrackerMap.getService(personalMenuGroup));
 
-			if (personalMenuEntriesJSONArray.length() == 0) {
-				continue;
+				if (personalMenuEntriesJSONArray.length() == 0) {
+					continue;
+				}
+
+				if (jsonArray.length() > 0) {
+					jsonArray.put(dividerJSONObject);
+				}
+
+				jsonArray.put(
+					JSONUtil.put(
+						"items", personalMenuEntriesJSONArray
+					).put(
+						"type", "group"
+					));
 			}
-
-			if (jsonArray.length() > 0) {
-				jsonArray.put(dividerJSONObject);
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 			}
-
-			jsonArray.put(
-				JSONUtil.put(
-					"items", personalMenuEntriesJSONArray
-				).put(
-					"type", "group"
-				));
 		}
 
 		if ((jsonArray.length() > 0) && !themeDisplay.isImpersonated()) {
@@ -321,9 +332,6 @@ public class GetPersonalMenuItemsMVCResourceCommand
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		GetPersonalMenuItemsMVCResourceCommand.class);
-
-	@Reference
-	private Html _html;
 
 	@Reference
 	private JSONFactory _jsonFactory;

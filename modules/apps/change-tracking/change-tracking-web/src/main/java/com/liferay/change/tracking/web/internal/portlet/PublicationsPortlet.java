@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.permission.PortletPermission;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
@@ -80,8 +80,7 @@ public class PublicationsPortlet extends MVCPortlet {
 
 		PublicationsDisplayContext publicationsDisplayContext =
 			new PublicationsDisplayContext(
-				_ctCollectionLocalService, _ctCollectionService,
-				_ctDisplayRendererRegistry, _ctEntryLocalService,
+				_ctCollectionLocalService, _ctDisplayRendererRegistry,
 				_ctPreferencesLocalService, _ctRemoteLocalService,
 				_portal.getHttpServletRequest(renderRequest), _language,
 				_publicationHelper, renderRequest, renderResponse);
@@ -114,7 +113,7 @@ public class PublicationsPortlet extends MVCPortlet {
 			}
 		}
 
-		_portletPermission.check(
+		PortletPermissionUtil.check(
 			PermissionThreadLocal.getPermissionChecker(),
 			CTPortletKeys.PUBLICATIONS, ActionKeys.VIEW);
 	}
@@ -145,9 +144,6 @@ public class PublicationsPortlet extends MVCPortlet {
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private PortletPermission _portletPermission;
 
 	@Reference
 	private PublicationHelper _publicationHelper;

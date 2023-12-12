@@ -802,6 +802,89 @@ public class ObjectDefinitionResourceImpl
 			}
 		}
 
+		// Object relationship must be created before object layout
+
+		if (objectRelationships != null) {
+			ObjectRelationshipResource.Builder builder =
+				_objectRelationshipResourceFactory.create();
+
+			ObjectRelationshipResource objectRelationshipResource =
+				builder.user(
+					contextUser
+				).build();
+
+			Set<String> updateReverseObjectRelationshipNames = new HashSet<>();
+
+			for (ObjectRelationship objectRelationship : objectRelationships) {
+				com.liferay.object.model.ObjectRelationship
+					serviceBuilderObjectRelationship =
+						_objectRelationshipLocalService.
+							fetchObjectRelationshipByExternalReferenceCode(
+								objectRelationship.getExternalReferenceCode(),
+								contextCompany.getCompanyId(),
+								objectDefinitionId);
+
+				if (serviceBuilderObjectRelationship == null) {
+					serviceBuilderObjectRelationship =
+						_objectRelationshipLocalService.
+							fetchObjectRelationshipByObjectDefinitionId1(
+								objectDefinitionId,
+								objectRelationship.getName());
+				}
+
+				if (serviceBuilderObjectRelationship != null) {
+					if (updateReverseObjectRelationshipNames.contains(
+							serviceBuilderObjectRelationship.getName())) {
+
+						serviceBuilderObjectRelationship =
+							_objectRelationshipLocalService.
+								fetchReverseObjectRelationship(
+									serviceBuilderObjectRelationship, true);
+					}
+
+					objectRelationshipResource.putObjectRelationship(
+						serviceBuilderObjectRelationship.
+							getObjectRelationshipId(),
+						objectRelationship);
+
+					if (Objects.equals(
+							serviceBuilderObjectRelationship.getType(),
+							ObjectRelationshipConstants.TYPE_MANY_TO_MANY) &&
+						serviceBuilderObjectRelationship.isSelf()) {
+
+						updateReverseObjectRelationshipNames.add(
+							serviceBuilderObjectRelationship.getName());
+					}
+
+					continue;
+				}
+
+				objectRelationship =
+					objectRelationshipResource.
+						postObjectDefinitionObjectRelationship(
+							objectDefinitionId, objectRelationship);
+
+				if (Objects.equals(
+						objectRelationship.getTypeAsString(),
+						ObjectRelationshipConstants.TYPE_MANY_TO_MANY) &&
+					Objects.equals(
+						objectRelationship.getObjectDefinitionId1(),
+						objectRelationship.getObjectDefinitionId2())) {
+
+					updateReverseObjectRelationshipNames.add(
+						objectRelationship.getName());
+				}
+
+				if (accountEntryRestrictedObjectRelationshipsNames.contains(
+						objectRelationship.getName())) {
+
+					_objectDefinitionLocalService.enableAccountEntryRestricted(
+						_objectRelationshipLocalService.getObjectRelationship(
+							objectRelationship.getId()));
+				}
+			}
+		}
+
 		if (objectLayouts != null) {
 			ObjectLayoutResource.Builder builder =
 				_objectLayoutResourceFactory.create();
@@ -813,47 +896,6 @@ public class ObjectDefinitionResourceImpl
 			for (ObjectLayout objectLayout : objectLayouts) {
 				objectLayoutResource.postObjectDefinitionObjectLayout(
 					objectDefinitionId, objectLayout);
-			}
-		}
-
-		if (objectRelationships != null) {
-			ObjectRelationshipResource.Builder builder =
-				_objectRelationshipResourceFactory.create();
-
-			ObjectRelationshipResource objectRelationshipResource =
-				builder.user(
-					contextUser
-				).build();
-
-			for (ObjectRelationship objectRelationship : objectRelationships) {
-				com.liferay.object.model.ObjectRelationship
-					serviceBuilderObjectRelationship =
-						_objectRelationshipLocalService.
-							fetchObjectRelationshipByObjectDefinitionId(
-								objectDefinitionId,
-								objectRelationship.getName());
-
-				if (serviceBuilderObjectRelationship != null) {
-					objectRelationshipResource.putObjectRelationship(
-						serviceBuilderObjectRelationship.
-							getObjectRelationshipId(),
-						objectRelationship);
-
-					continue;
-				}
-
-				objectRelationship =
-					objectRelationshipResource.
-						postObjectDefinitionObjectRelationship(
-							objectDefinitionId, objectRelationship);
-
-				if (accountEntryRestrictedObjectRelationshipsNames.contains(
-						objectRelationship.getName())) {
-
-					_objectDefinitionLocalService.enableAccountEntryRestricted(
-						_objectRelationshipLocalService.getObjectRelationship(
-							objectRelationship.getId()));
-				}
 			}
 		}
 
@@ -1107,12 +1149,6 @@ public class ObjectDefinitionResourceImpl
 					objectDefinition.getEnableCategorization();
 				enableComments = objectDefinition.getEnableComments();
 				enableLocalization = objectDefinition.getEnableLocalization();
-
-				if (FeatureFlagManagerUtil.isEnabled("LPS-181663")) {
-					enableObjectEntryDraft =
-						objectDefinition.getEnableObjectEntryDraft();
-				}
-
 				enableObjectEntryHistory =
 					objectDefinition.getEnableObjectEntryHistory();
 				externalReferenceCode =
@@ -1142,18 +1178,13 @@ public class ObjectDefinitionResourceImpl
 							null),
 						objectField),
 					ObjectField.class);
-
-				if (FeatureFlagManagerUtil.isEnabled("LPS-148856")) {
-					objectFolderExternalReferenceCode =
-						objectDefinition.getObjectFolderExternalReferenceCode();
-				}
-
 				objectLayouts = transformToArray(
 					_objectLayoutLocalService.getObjectLayouts(
 						objectDefinition.getObjectDefinitionId()),
 					objectLayout -> ObjectLayoutUtil.toObjectLayout(
 						null, _objectDefinitionLocalService,
-						_objectFieldLocalService, objectLayout),
+						_objectFieldLocalService,
+						_objectRelationshipLocalService, objectLayout),
 					ObjectLayout.class);
 				objectRelationships = transformToArray(
 					_objectRelationshipLocalService.getObjectRelationships(
@@ -1207,11 +1238,6 @@ public class ObjectDefinitionResourceImpl
 								objectDefinition.getStatus()));
 					}
 				};
-
-				if (FeatureFlagManagerUtil.isEnabled("LPS-135430")) {
-					storageType = objectDefinition.getStorageType();
-				}
-
 				system = objectDefinition.isSystem();
 
 				setAccountEntryRestrictedObjectFieldName(
@@ -1228,26 +1254,51 @@ public class ObjectDefinitionResourceImpl
 
 						return serviceBuilderObjectField.getName();
 					});
+				setEnableObjectEntryDraft(
+					() -> {
+						if (!FeatureFlagManagerUtil.isEnabled("LPS-181663")) {
+							return null;
+						}
 
-				if (FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
-					setRootObjectDefinitionExternalReferenceCode(
-						() -> {
-							com.liferay.object.model.ObjectDefinition
-								serviceBuilderObjectDefinition =
-									_objectDefinitionLocalService.
-										fetchObjectDefinition(
-											objectDefinition.
-												getRootObjectDefinitionId());
+						return objectDefinition.getEnableObjectEntryDraft();
+					});
+				setObjectFolderExternalReferenceCode(
+					() -> {
+						if (!FeatureFlagManagerUtil.isEnabled("LPS-148856")) {
+							return null;
+						}
 
-							if (serviceBuilderObjectDefinition == null) {
-								return null;
-							}
+						return objectDefinition.
+							getObjectFolderExternalReferenceCode();
+					});
+				setRootObjectDefinitionExternalReferenceCode(
+					() -> {
+						if (!FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
+							return null;
+						}
 
-							return serviceBuilderObjectDefinition.
-								getExternalReferenceCode();
-						});
-				}
+						com.liferay.object.model.ObjectDefinition
+							serviceBuilderObjectDefinition =
+								_objectDefinitionLocalService.
+									fetchObjectDefinition(
+										objectDefinition.
+											getRootObjectDefinitionId());
 
+						if (serviceBuilderObjectDefinition == null) {
+							return null;
+						}
+
+						return serviceBuilderObjectDefinition.
+							getExternalReferenceCode();
+					});
+				setStorageType(
+					() -> {
+						if (!FeatureFlagManagerUtil.isEnabled("LPS-135430")) {
+							return null;
+						}
+
+						return objectDefinition.getStorageType();
+					});
 				setTitleObjectFieldName(
 					() -> {
 						com.liferay.object.model.ObjectField

@@ -9,10 +9,13 @@ import com.liferay.asset.display.page.portlet.AssetDisplayPageEntryFormProcessor
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
+import com.liferay.knowledge.base.exception.KBArticleDisplayDateException;
 import com.liferay.knowledge.base.exception.KBArticleExpirationDateException;
 import com.liferay.knowledge.base.exception.KBArticleReviewDateException;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleService;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
@@ -21,10 +24,13 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -32,6 +38,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
+
+import java.text.Format;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -93,15 +101,13 @@ public class UpdateKBArticleMVCActionCommand
 		String content = ParamUtil.getString(actionRequest, "content");
 		String description = ParamUtil.getString(actionRequest, "description");
 		String sourceURL = ParamUtil.getString(actionRequest, "sourceURL");
-		Date displayDate = ParamUtil.getDate(
-			actionRequest, "displayDate",
-			DateFormatFactoryUtil.getSimpleDateFormat("yyyy-MM-dd HH:mm"));
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		User user = _userLocalService.getUser(themeDisplay.getUserId());
 
+		Date displayDate = _getDisplayDate(actionRequest, user.getTimeZone());
 		Date expirationDate = _getExpirationDate(
 			actionRequest, true, user.getTimeZone());
 		Date reviewDate = _getReviewDate(
@@ -144,11 +150,20 @@ public class UpdateKBArticleMVCActionCommand
 		int workflowAction = ParamUtil.getInteger(
 			actionRequest, "workflowAction");
 
+		String successMessage = StringPool.BLANK;
+
 		if (workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) {
 			String editURL = _buildEditURL(
 				actionRequest, actionResponse, kbArticle);
 
 			actionRequest.setAttribute(WebKeys.REDIRECT, editURL);
+
+			successMessage = _language.format(
+				_portal.getHttpServletRequest(actionRequest),
+				"x-was-successfully-saved-as-draft",
+				new Object[] {
+					"<strong>" + HtmlUtil.escape(title) + "</strong>"
+				});
 		}
 		else {
 			String redirect = _portal.escapeRedirect(
@@ -161,7 +176,33 @@ public class UpdateKBArticleMVCActionCommand
 						KBArticle.class, kbArticle.getResourcePrimKey(),
 						redirect));
 			}
+
+			if (kbArticle.isScheduled()) {
+				Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
+					themeDisplay.getLocale(), user.getTimeZone());
+
+				successMessage = _language.format(
+					_portal.getHttpServletRequest(actionRequest),
+					"x-will-be-published-on-x",
+					new Object[] {
+						"<strong>" + HtmlUtil.escape(title) + "</strong>",
+						dateTimeFormat.format(displayDate)
+					});
+			}
+			else {
+				successMessage = _language.format(
+					_portal.getHttpServletRequest(actionRequest),
+					"x-was-successfully-published",
+					new Object[] {
+						"<strong>" + HtmlUtil.escape(title) + "</strong>"
+					});
+			}
 		}
+
+		MultiSessionMessages.add(
+			actionRequest, "kbArticleSuccessMessage", successMessage);
+
+		hideDefaultSuccessMessage(actionRequest);
 	}
 
 	private String _buildEditURL(
@@ -229,6 +270,28 @@ public class UpdateKBArticleMVCActionCommand
 		}
 
 		return redirect;
+	}
+
+	private Date _getDisplayDate(ActionRequest actionRequest, TimeZone timeZone)
+		throws Exception {
+
+		Date date = new Date();
+
+		if (!PropsValues.SCHEDULER_ENABLED) {
+			return date;
+		}
+
+		Date displayDate = ParamUtil.getDate(
+			actionRequest, "displayDate",
+			DateFormatFactoryUtil.getSimpleDateFormat(
+				"yyyy-MM-dd HH:mm", timeZone));
+
+		if ((displayDate == null) || displayDate.before(date)) {
+			throw new KBArticleDisplayDateException(
+				"Schedule date " + displayDate + " is in the past");
+		}
+
+		return displayDate;
 	}
 
 	private Date _getExpirationDate(
@@ -327,6 +390,9 @@ public class UpdateKBArticleMVCActionCommand
 
 	@Reference
 	private KBArticleService _kbArticleService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

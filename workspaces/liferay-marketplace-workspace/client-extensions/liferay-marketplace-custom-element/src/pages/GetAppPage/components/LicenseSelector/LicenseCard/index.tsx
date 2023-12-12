@@ -15,16 +15,16 @@ const MAX_ITEM = 99;
 const MIN_ITEM = 0;
 
 const LicenseSectorCard: React.FC<any> = ({
-	cart,
+	cartUtil,
 	licenseDescription,
 	licensetiers,
-	lisenceType,
+	lisenceType = '',
 	productId,
 	sku,
 }) => {
 	const count =
-		cart.cartItems.find((item: any) => item.skuId === sku.id)?.quantity ||
-		MIN_ITEM;
+		cartUtil.cartItems.find((item: any) => item.skuId === sku.id)
+			?.quantity || MIN_ITEM;
 
 	const tiers = licensetiers[0];
 
@@ -51,56 +51,58 @@ const LicenseSectorCard: React.FC<any> = ({
 					</div>
 				</span>
 				<div className="align-items-center d-flex justify-content-between license__card__buttons__container p-1">
-					<span>
-						<ClayButton
-							aria-label="Remove from Cart"
-							className="align-items-center d-flex justify-content-center license__card__buttons p-2"
-							disabled={count === MIN_ITEM}
-							displayType="primary"
-							onClick={() => cart.removeFromCart(sku.id)}
-						>
-							<ClayIcon
-								aria-label="Divider"
-								className="license__card__buttons__icon"
-								symbol="hr"
-							/>
-						</ClayButton>
-					</span>
-					<span className="d-flex justify-content-center license__card__buttons__container__conut">
-						{count.toString()}
-					</span>
-					<span>
-						<ClayButton
-							aria-label="Add To Cart"
-							className="align-items-center d-flex justify-content-center license__card__buttons p-2"
-							disabled={count === MAX_ITEM}
-							displayType="primary"
-							onClick={() => cart.addCart(productId, sku.id)}
-						>
-							<ClayIcon
-								aria-label="Plus Button"
-								className="license__card__buttons__icon"
-								symbol="plus"
-							/>
-						</ClayButton>
-					</span>
-				</div>
-			</div>
-
-			<div className="d-flex flex-column license__card__tier mt-4 p-4">
-				<div className="font-weight-bold license__card__tier__title mb-1">
-					License Prices
-				</div>
-
-				{(tiers?.tierPrice as any[])?.map((tier: any, index) => (
-					<span
-						className="license__card__tier__price__text"
-						key={index}
+					<ClayButton
+						aria-label="Remove from Cart"
+						className="align-items-center d-flex justify-content-center license__card__buttons p-2"
+						disabled={count === MIN_ITEM}
+						displayType="primary"
+						onClick={() => cartUtil.removeFromCart(sku.id)}
 					>
-						{`${tier?.minimumQuantity} License: ${tier?.priceFormatted} each`}
+						<ClayIcon
+							aria-label="Divider"
+							className="license__card__buttons__icon"
+							symbol="hr"
+						/>
+					</ClayButton>
+
+					<span className="d-flex justify-content-center license__card__buttons__container__count">
+						{count}
 					</span>
-				))}
+
+					<ClayButton
+						aria-label="Add To Cart"
+						className="align-items-center d-flex justify-content-center license__card__buttons p-2"
+						disabled={count === MAX_ITEM}
+						displayType="primary"
+						onClick={() => cartUtil.addCart(productId, sku.id)}
+					>
+						<ClayIcon
+							aria-label="Plus Button"
+							className="license__card__buttons__icon"
+							symbol="plus"
+						/>
+					</ClayButton>
+				</div>
 			</div>
+
+			{tiers?.tierPrice.length && (
+				<div className="d-flex flex-column license__card__tier mt-4 p-4">
+					<div className="font-weight-bold license__card__tier__title mb-1">
+						License Prices
+					</div>
+
+					{(tiers?.tierPrice as any[])?.map((tier: any, index) => (
+						<span
+							className="license__card__tier__price__text"
+							key={index}
+						>
+							{`${
+								tier?.minimumQuantity || tier?.quantity
+							} License: ${tier?.priceFormatted} each`}
+						</span>
+					))}
+				</div>
+			)}
 		</div>
 	);
 };

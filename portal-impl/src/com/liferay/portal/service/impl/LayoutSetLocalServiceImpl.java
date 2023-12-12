@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetBranch;
 import com.liferay.portal.kernel.model.LayoutSetStagingHandler;
 import com.liferay.portal.kernel.model.VirtualHost;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.service.ImageLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -38,15 +39,14 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.ThemeFactoryUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.LayoutSetImpl;
 import com.liferay.portal.service.base.LayoutSetLocalServiceBaseImpl;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.util.ThemeFactoryUtil;
 import com.liferay.sites.kernel.util.Sites;
 
 import java.io.File;
@@ -308,7 +308,9 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		try {
 			MergeLayoutPrototypesThreadLocal.setSkipMerge(false);
 
-			_sites.mergeLayoutSetPrototypeLayouts(
+			Sites sites = _sitesSnapshot.get();
+
+			sites.mergeLayoutSetPrototypeLayouts(
 				_groupPersistence.findByPrimaryKey(groupId), layoutSet);
 		}
 		catch (Exception exception) {
@@ -642,9 +644,8 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutSetLocalServiceImpl.class);
 
-	private static volatile Sites _sites =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			Sites.class, LayoutSetLocalServiceImpl.class, "_sites", false);
+	private static final Snapshot<Sites> _sitesSnapshot = new Snapshot<>(
+		LayoutSetLocalServiceImpl.class, Sites.class);
 
 	@BeanReference(type = GroupPersistence.class)
 	private GroupPersistence _groupPersistence;

@@ -98,7 +98,7 @@ public class DLViewDisplayContext {
 		return PortletURLBuilder.createRenderURL(
 			_renderResponse
 		).setMVCRenderCommandName(
-			"/document_library/copy_folder"
+			"/document_library/copy_dl_objects"
 		).setRedirect(
 			_getRedirect()
 		).setParameter(
@@ -429,8 +429,8 @@ public class DLViewDisplayContext {
 		for (AssetVocabulary assetVocabulary : assetVocabularies) {
 			if (assetVocabulary.isRequired(
 					classNameId,
-					DLFileEntryTypeConstants.
-						FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT)) {
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT,
+					themeDisplay.getScopeGroupId())) {
 
 				return false;
 			}

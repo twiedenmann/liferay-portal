@@ -8,20 +8,19 @@
 import 'codemirror/mode/groovy/groovy';
 import {SidebarCategory} from '@liferay/object-js-components-web';
 import {TabProps} from './useObjectValidationForm';
-interface ConditionsProps extends TabProps {
+export interface ConditionsProps extends TabProps {
 	creationLanguageId: Liferay.Language.Locale;
+	customObjectFields: ObjectField[];
 	learnResources: ObjectWebLearnResources;
-	objectFields: ObjectField[];
 	objectValidationRuleElements: SidebarCategory[];
 }
 export declare function Conditions({
 	creationLanguageId,
+	customObjectFields,
 	disabled,
 	errors,
 	learnResources,
-	objectFields,
 	objectValidationRuleElements,
 	setValues,
 	values,
 }: ConditionsProps): JSX.Element;
-export {};

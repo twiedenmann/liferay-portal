@@ -74,7 +74,11 @@ function AddToCart({
 			initialDisabled ||
 			!account?.id ||
 			cpInstance.disabled ||
+			cpInstance.published === false ||
 			cpInstance.purchasable === false ||
+			(cpInstance.availability?.stockQuantity !== undefined &&
+				cpInstance.backOrderAllowed === false &&
+				cpInstance.availability?.stockQuantity <= 0) ||
 			!cpInstance.quantity
 		) {
 			return true;
@@ -96,9 +100,11 @@ function AddToCart({
 			function updateInCartState(inCart) {
 				setCpInstance((cpInstance) => ({
 					...cpInstance,
+					availability: incomingCpInstance.availability,
 					backOrderAllowed: incomingCpInstance.backOrderAllowed,
 					disabled: incomingCpInstance.disabled,
 					inCart,
+					published: incomingCpInstance.published,
 					purchasable: incomingCpInstance.purchasable,
 					skuId: incomingCpInstance.skuId,
 					skuOptions: Array.isArray(incomingCpInstance.skuOptions)

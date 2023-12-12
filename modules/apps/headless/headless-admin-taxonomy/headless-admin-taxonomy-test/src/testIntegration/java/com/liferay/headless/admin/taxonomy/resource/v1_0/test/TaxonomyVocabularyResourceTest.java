@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -73,17 +74,24 @@ public class TaxonomyVocabularyResourceTest
 	public void testGetAssetLibraryTaxonomyVocabulariesPage() throws Exception {
 		super.testGetAssetLibraryTaxonomyVocabulariesPage();
 
-		TaxonomyVocabulary taxonomyVocabulary =
-			testGetAssetLibraryTaxonomyVocabulariesPage_addTaxonomyVocabulary(
-				testGetAssetLibraryTaxonomyVocabulariesPage_getAssetLibraryId(),
-				randomTaxonomyVocabulary());
-
 		Page<TaxonomyVocabulary> page =
 			taxonomyVocabularyResource.getAssetLibraryTaxonomyVocabulariesPage(
 				testGetAssetLibraryTaxonomyVocabulariesPage_getAssetLibraryId(),
 				null, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(1, page.getTotalCount());
+		long totalCount = page.getTotalCount();
+
+		TaxonomyVocabulary taxonomyVocabulary =
+			testGetAssetLibraryTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+				testGetAssetLibraryTaxonomyVocabulariesPage_getAssetLibraryId(),
+				randomTaxonomyVocabulary());
+
+		page =
+			taxonomyVocabularyResource.getAssetLibraryTaxonomyVocabulariesPage(
+				testGetAssetLibraryTaxonomyVocabulariesPage_getAssetLibraryId(),
+				null, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
 		assertValid(
 			page,
@@ -148,15 +156,15 @@ public class TaxonomyVocabularyResourceTest
 				testDepotEntry.getDepotEntryId(), null, null, null,
 				Pagination.of(1, 10), null);
 
-		Assert.assertEquals(1, page.getTotalCount());
+		Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-		assertEquals(
+		assertContains(
 			new TaxonomyVocabulary() {
 				{
 					name = taxonomyVocabulary.getName();
 				}
 			},
-			page.fetchFirstItem());
+			(List<TaxonomyVocabulary>)page.getItems());
 
 		assertValid(page);
 	}
@@ -197,16 +205,22 @@ public class TaxonomyVocabularyResourceTest
 	public void testGetSiteTaxonomyVocabulariesPage() throws Exception {
 		super.testGetSiteTaxonomyVocabulariesPage();
 
-		testGetSiteTaxonomyVocabulariesPage_addTaxonomyVocabulary(
-			testGetSiteTaxonomyVocabulariesPage_getSiteId(),
-			randomTaxonomyVocabulary());
-
 		Page<TaxonomyVocabulary> page =
 			taxonomyVocabularyResource.getSiteTaxonomyVocabulariesPage(
 				testGetSiteTaxonomyVocabulariesPage_getSiteId(), null, null,
 				null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(1, page.getTotalCount());
+		long totalCount = page.getTotalCount();
+
+		testGetSiteTaxonomyVocabulariesPage_addTaxonomyVocabulary(
+			testGetSiteTaxonomyVocabulariesPage_getSiteId(),
+			randomTaxonomyVocabulary());
+
+		page = taxonomyVocabularyResource.getSiteTaxonomyVocabulariesPage(
+			testGetSiteTaxonomyVocabulariesPage_getSiteId(), null, null, null,
+			Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
 		assertValid(
 			page,

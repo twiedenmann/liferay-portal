@@ -4,16 +4,18 @@
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
+import {Text} from '@clayui/core';
 import ClayPanel from '@clayui/panel';
 import {
 	API,
 	getLocalizableLabel,
 	openToast,
 } from '@liferay/object-js-components-web';
-import {createResourceURL} from 'frontend-js-web';
+import {sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 import {useStore} from 'react-flow-renderer';
 
+import ModalObjectFieldDeletionNotAllowed from '../../ModalObjectFieldDeletionNotAllowed';
 import {objectFieldInitialValues} from '../../ObjectField/EditObjectField';
 import {EditObjectFieldContent} from '../../ObjectField/EditObjectFieldContent';
 import {ModalDeleteObjectField} from '../../ObjectField/ModalDeleteObjectField';
@@ -22,16 +24,18 @@ import {useObjectFolderContext} from '../ModelBuilderContext/objectFolderContext
 import {TYPES} from '../ModelBuilderContext/typesEnum';
 
 import './RightSidebarObjectFieldDetails.scss';
+import {handleTriggerDeleteObjectField} from '../../ObjectField/deleteObjectFieldUtil';
 
 export function RightSidebarObjectFieldDetails() {
-	const [
-		showDeletionObjectFieldModal,
-		setShowDeletionObjectFieldModal,
-	] = useState(false);
-	const [
-		showObjectFieldDeletionNotAllowedModal,
-		setShowObjectFieldDeletionNotAllowedModal,
-	] = useState<boolean>(false);
+	const [objectFieldDeleteInfo, setObjectFieldDeleteInfo] = useState<
+		ObjectFieldDeleteInfoProps
+	>({
+		deleteLastPublishedObjectDefinitionObjectField: false,
+		deleteObjectFieldObjectValidationRuleSetting: false,
+		showObjectFieldDeletionConfirmationModal: false,
+		showObjectFieldDeletionNotAllowedModal: false,
+	});
+
 	const [
 		{
 			baseResourceURL,
@@ -42,7 +46,7 @@ export function RightSidebarObjectFieldDetails() {
 			objectWebLearnResources,
 			selectedObjectDefinitionNode,
 			selectedObjectField,
-			workflowStatusJSONArray,
+			workflowStatuses,
 		},
 		dispatch,
 	] = useObjectFolderContext();
@@ -63,28 +67,6 @@ export function RightSidebarObjectFieldDetails() {
 		initialValues: objectFieldInitialValues,
 		onSubmit: () => {},
 	});
-
-	const handleTriggerDeleteObjectFieldModal = async () => {
-		const objectFieldModalDeletionModalUrl = createResourceURL(
-			baseResourceURL,
-			{
-				objectFieldId: values.id,
-				p_p_resource_id:
-					'/object_definitions/get_object_field_delete_info',
-			}
-		).href;
-
-		const objectFieldModalDeletionModalResponse = await API.fetchJSON<{
-			showDeletionModal: boolean;
-			showDeletionNotAllowedModal: boolean;
-		}>(objectFieldModalDeletionModalUrl);
-
-		setShowDeletionObjectFieldModal(true);
-
-		setShowObjectFieldDeletionNotAllowedModal(
-			objectFieldModalDeletionModalResponse.showDeletionNotAllowedModal
-		);
-	};
 
 	const onSubmit = async (editedObjectField?: Partial<ObjectField>) => {
 		const validationErrors = handleValidate(editedObjectField ?? values);
@@ -181,29 +163,48 @@ export function RightSidebarObjectFieldDetails() {
 	return (
 		<>
 			<div className="lfr-objects__model-builder-right-sidebar-definition-node-title">
-				<span>
-					{getLocalizableLabel(
-						selectedObjectDefinitionNode?.data
-							?.defaultLanguageId as Liferay.Language.Locale,
-						selectedObjectField?.label,
-						selectedObjectField?.name
-					)}
-				</span>
+				<span>{Liferay.Language.get('field-details')}</span>
 
 				<div className="lfr-objects__model-builder-right-sidebar-definition-node-title-buttons-container">
-					{!values.system &&
-						values.businessType !== 'Relationship' && (
-							<ClayButtonWithIcon
-								aria-label={Liferay.Language.get('delete')}
-								className="lfr-objects__model-builder-right-sidebar-definition-node-title-delete-button"
-								displayType="secondary"
-								onClick={() =>
-									handleTriggerDeleteObjectFieldModal()
-								}
-								symbol="trash"
-								title={Liferay.Language.get('delete')}
-							/>
-						)}
+					{!values.system && values.businessType !== 'Relationship' && (
+						<ClayButtonWithIcon
+							aria-label={Liferay.Language.get('delete')}
+							className="lfr-objects__model-builder-right-sidebar-definition-node-title-delete-button"
+							displayType="secondary"
+							onClick={() =>
+								handleTriggerDeleteObjectField({
+									baseResourceURL,
+									objectFieldId: selectedObjectField?.id!,
+									objectFieldLabel: getLocalizableLabel(
+										selectedObjectDefinitionNode?.data
+											?.defaultLanguageId!,
+										selectedObjectDefinitionNode?.data
+											?.label,
+										selectedObjectDefinitionNode?.data?.name
+									),
+									onAfterDelete: () => {
+										if (
+											selectedObjectField &&
+											selectedObjectDefinitionNode
+										) {
+											dispatch({
+												payload: {
+													objectDefinitionNodes: nodes,
+													objectRelationshipEdges: edges,
+													selectedObjectDefinitionNode,
+													selectedObjectField,
+												},
+												type: TYPES.DELETE_OBJECT_FIELD,
+											});
+										}
+									},
+									setObjectFieldDeleteInfo,
+								})
+							}
+							symbol="trash"
+							title={Liferay.Language.get('delete')}
+						/>
+					)}
 				</div>
 			</div>
 
@@ -241,13 +242,21 @@ export function RightSidebarObjectFieldDetails() {
 						}
 						setValues={setValues}
 						values={values}
-						workflowStatusJSONArray={workflowStatusJSONArray}
+						workflowStatuses={workflowStatuses}
 					/>
 				</div>
 			</div>
 
-			{showDeletionObjectFieldModal && (
+			{objectFieldDeleteInfo.showObjectFieldDeletionConfirmationModal && (
 				<ModalDeleteObjectField
+					handleOnClose={() =>
+						setObjectFieldDeleteInfo(
+							(prevState: ObjectFieldDeleteInfoProps) => ({
+								...prevState,
+								showObjectFieldDeletionConfirmationModal: false,
+							})
+						)
+					}
 					objectField={values as ObjectField}
 					onAfterSubmit={() => {
 						if (
@@ -265,9 +274,47 @@ export function RightSidebarObjectFieldDetails() {
 							});
 						}
 					}}
-					setModalVisibility={setShowDeletionObjectFieldModal}
-					showObjectFieldDeletionNotAllowedModal={
-						showObjectFieldDeletionNotAllowedModal
+				/>
+			)}
+
+			{objectFieldDeleteInfo?.showObjectFieldDeletionNotAllowedModal && (
+				<ModalObjectFieldDeletionNotAllowed
+					content={
+						objectFieldDeleteInfo?.deleteObjectFieldObjectValidationRuleSetting ? (
+							<Text>
+								{sub(
+									Liferay.Language.get(
+										'the-object-field-x-cannot-be-deleted-because-it-is-the-only-custom-object-field-of-the-published-object-definition'
+									),
+									`${getLocalizableLabel(
+										selectedObjectDefinitionNode?.data
+											?.defaultLanguageId as Liferay.Language.Locale,
+										values.label,
+										values.name
+									)}`
+								)}
+							</Text>
+						) : (
+							<Text>
+								{sub(
+									Liferay.Language.get(
+										'the-object-field-x-cannot-be-deleted-because-it-is-used-in-a-unique-composite-key-validation'
+									),
+									`${getLocalizableLabel(
+										selectedObjectDefinitionNode?.data
+											?.defaultLanguageId as Liferay.Language.Locale,
+										values.label,
+										values.name
+									)}`
+								)}
+							</Text>
+						)
+					}
+					onVisibilityChange={() =>
+						setObjectFieldDeleteInfo({
+							...objectFieldDeleteInfo,
+							showObjectFieldDeletionNotAllowedModal: false,
+						})
 					}
 				/>
 			)}

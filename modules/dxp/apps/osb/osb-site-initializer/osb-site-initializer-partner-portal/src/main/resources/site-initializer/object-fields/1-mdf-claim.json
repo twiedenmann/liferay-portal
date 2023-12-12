@@ -171,12 +171,6 @@
 										"key": "pendingMarketingReview"
 									},
 									{
-										"key": "approved"
-									},
-									{
-										"key": "claimPaid"
-									},
-									{
 										"key": "inFinanceReview"
 									},
 									{
@@ -350,6 +344,25 @@
 			"required": false,
 			"state": false,
 			"system": false
+		},
+		{
+			"DBType": "DateTime",
+			"businessType": "DateTime",
+			"externalReferenceCode": "49dc5901-a026-4f61-bd03-3a0a42b228f2",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Submit Date"
+			},
+			"name": "submitDate",
+			"objectFieldSettings": [
+				{
+					"name": "timeStorage",
+					"value": "convertToUTC"
+				}
+			],
+			"required": false,
+			"type": "DateTime"
 		}
 	],
 	"objectDefinitionId": "[$OBJECT_DEFINITION_ID:MDFClaim$]"

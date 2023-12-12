@@ -51,7 +51,7 @@ import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
-import com.liferay.portal.kernel.service.permission.PortletPermission;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -59,7 +59,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -118,7 +118,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			if (!_ctSettingsConfigurationHelper.isEnabled(
 					themeDisplay.getCompanyId()) ||
 				user.isOnDemandUser() ||
-				!_portletPermission.contains(
+				!PortletPermissionUtil.contains(
 					themeDisplay.getPermissionChecker(),
 					CTPortletKeys.PUBLICATIONS, ActionKeys.VIEW)) {
 
@@ -206,7 +206,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 					_language.get(themeDisplay.getLocale(), "production"));
 			}
 			else {
-				writer.write(_html.escape(ctCollection.getName()));
+				writer.write(HtmlUtil.escape(ctCollection.getName()));
 			}
 
 			writer.write("</span></button></div>");
@@ -391,6 +391,8 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 				return getSelectPublicationsURL.toString();
 			}
 		).put(
+			"namespace", _portal.getPortletNamespace(CTPortletKeys.PUBLICATIONS)
+		).put(
 			"orderByAscending",
 			portalPreferences.getValue(
 				CTPortletKeys.PUBLICATIONS, "select-order-by-ascending")
@@ -426,9 +428,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			data.put("iconClass", "change-tracking-indicator-icon-publication");
 			data.put("iconName", "radio-button");
 
-			if (FeatureFlagManagerUtil.isEnabled("LPS-147671") &&
-				productionOnlyApplication) {
-
+			if (productionOnlyApplication) {
 				data.put(
 					"title",
 					StringBundler.concat(
@@ -447,9 +447,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 				data.put("warningLearnLink", null);
 				data.put("warningButton", false);
 			}
-			else if (FeatureFlagManagerUtil.isEnabled("LPS-147671") &&
-					 unsupportedApplication) {
-
+			else if (unsupportedApplication) {
 				data.put(
 					"title",
 					StringBundler.concat(
@@ -512,7 +510,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			}
 			else {
 				if (!sandboxOnlyEnabled ||
-					_portletPermission.contains(
+					PortletPermissionUtil.contains(
 						themeDisplay.getPermissionChecker(),
 						CTPortletKeys.PUBLICATIONS,
 						CTActionKeys.WORK_ON_PRODUCTION)) {
@@ -810,9 +808,6 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 	private FastDateFormatFactory _fastDateFormatFactory;
 
 	@Reference
-	private Html _html;
-
-	@Reference
 	private JSONFactory _jsonFactory;
 
 	@Reference
@@ -823,9 +818,6 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private PortletPermission _portletPermission;
 
 	@Reference
 	private ReactRenderer _reactRenderer;

@@ -66,7 +66,9 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 				address.setClassPK(resultSet.getLong("classPK"));
 				address.setCountryId(resultSet.getLong("countryId"));
 				address.setListTypeId(
-					_getListTypeId(resultSet.getInt("type_")));
+					_getListTypeId(
+						resultSet.getInt("type_"),
+						resultSet.getLong("companyId")));
 				address.setRegionId(resultSet.getLong("regionId"));
 				address.setCity(resultSet.getString("city"));
 				address.setDescription(resultSet.getString("description"));
@@ -96,7 +98,7 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 		};
 	}
 
-	private long _getListTypeId(int commerceAddressType) {
+	private long _getListTypeId(int commerceAddressType, long companyId) {
 		String name = null;
 
 		if (CommerceAddressConstants.ADDRESS_TYPE_BILLING ==
@@ -116,11 +118,12 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 		}
 
 		ListType listType = _listTypeLocalService.getListType(
-			name, AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
+			companyId, name, AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
 
 		if (listType == null) {
 			listType = _listTypeLocalService.addListType(
-				name, AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
+				companyId, name,
+				AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
 		}
 
 		return listType.getListTypeId();
@@ -169,9 +172,6 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 			return;
 		}
 
-		ListType listType = _listTypeLocalService.getListType(
-			"phone-number", ListTypeConstants.ADDRESS_PHONE);
-
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setUserId(address.getUserId());
@@ -180,7 +180,10 @@ public class CommerceAddressUpgradeProcess extends UpgradeProcess {
 			_phoneLocalService.addPhone(
 				serviceContext.getUserId(), Address.class.getName(),
 				address.getAddressId(), phoneNumber, null,
-				listType.getListTypeId(), false, serviceContext);
+				_listTypeLocalService.getListTypeId(
+					address.getCompanyId(), "phone-number",
+					ListTypeConstants.ADDRESS_PHONE),
+				false, serviceContext);
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);

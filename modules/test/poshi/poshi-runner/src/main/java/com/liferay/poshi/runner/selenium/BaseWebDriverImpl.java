@@ -145,9 +145,18 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 		options.deleteAllCookies();
 
-		WebDriver.Window window = options.window();
+		String browserResolution = poshiProperties.browserResolution;
 
-		window.setSize(new Dimension(1280, 1040));
+		if (Validator.isNotNull(browserResolution)) {
+			WebDriver.Window window = options.window();
+
+			if (browserResolution.equals("maximize")) {
+				window.maximize();
+			}
+			else {
+				window.setSize(_getDimension(browserResolution));
+			}
+		}
 
 		try {
 			webDriver.get(browserURL);
@@ -249,7 +258,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void assertAttributeNotPresent(String locator, String attribute)
 		throws Exception {
 
-		if (isAttributePresent(attribute, locator)) {
+		if (isAttributePresent(locator, attribute)) {
 			throw new Exception(
 				"Unexpected attribute \"" + attribute + "\" is present");
 		}
@@ -259,7 +268,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void assertAttributePresent(String locator, String attribute)
 		throws Exception {
 
-		if (!isAttributePresent(attribute, locator)) {
+		if (!isAttributePresent(locator, attribute)) {
 			throw new Exception(
 				"Expected attribute \"" + attribute + "\" is not present");
 		}
@@ -1593,7 +1602,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 	@Override
 	public boolean isAttributeNotPresent(String locator, String attribute) {
-		return !isAttributePresent(attribute, locator);
+		return !isAttributePresent(locator, attribute);
 	}
 
 	@Override
@@ -2616,12 +2625,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 		WebDriver.Window window = options.window();
 
-		String[] sizeCoordinates = StringUtil.split(size, ",");
-
-		int x = GetterUtil.getInteger(sizeCoordinates[0]);
-		int y = GetterUtil.getInteger(sizeCoordinates[1]);
-
-		window.setSize(new Dimension(x, y));
+		window.setSize(_getDimension(size));
 	}
 
 	@Override
@@ -4730,6 +4734,15 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 		private final String _message;
 
+	}
+
+	private Dimension _getDimension(String size) {
+		String[] sizeParts = StringUtil.split(size, "[\\D]+");
+
+		int x = GetterUtil.getInteger(sizeParts[0]);
+		int y = GetterUtil.getInteger(sizeParts[1]);
+
+		return new Dimension(x, y);
 	}
 
 	private static final String _OCULAR_BASELINE_IMAGE_DIR_NAME;

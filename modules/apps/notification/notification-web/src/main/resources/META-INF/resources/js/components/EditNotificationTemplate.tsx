@@ -179,7 +179,7 @@ export default function EditNotificationTemplate({
 			[defaultLanguageId]: '',
 		},
 		description: '',
-		editorType: 'richText' as editorTypeOptions,
+		editorType: 'richText' as EditorTypeOptions,
 		externalReferenceCode: '',
 		name: '',
 		objectDefinitionExternalReferenceCode: '',
@@ -190,6 +190,7 @@ export default function EditNotificationTemplate({
 		subject: {
 			[defaultLanguageId]: '',
 		},
+		system: false,
 		type: notificationTemplateType,
 	};
 
@@ -214,6 +215,7 @@ export default function EditNotificationTemplate({
 					recipientType,
 					recipients,
 					subject,
+					system,
 					type,
 				} = await API.getNotificationTemplateById(
 					notificationTemplateId
@@ -232,6 +234,7 @@ export default function EditNotificationTemplate({
 					recipientType,
 					recipients,
 					subject,
+					system,
 					type,
 				});
 
@@ -264,18 +267,18 @@ export default function EditNotificationTemplate({
 						: Liferay.Language.get('user-notification')
 				}
 				entityId={notificationTemplateId}
-				externalReferenceCode={
-					invalidateRequired(values.externalReferenceCode)
-						? externalReferenceCode
-						: values.externalReferenceCode
-				}
-				externalReferenceCodeSaveURL={`/o/notification/v1.0/notification-templates/${notificationTemplateId}`}
 				hasPublishPermission={true}
 				hasUpdatePermission={true}
 				helpMessage={Liferay.Language.get(
 					'internal-key-to-reference-the-notification-template'
 				)}
 				label={templateTitle}
+				objectDefinitionExternalReferenceCode={
+					invalidateRequired(values.externalReferenceCode)
+						? externalReferenceCode
+						: values.externalReferenceCode
+				}
+				objectDefinitionExternalReferenceCodeSaveURL={`/o/notification/v1.0/notification-templates/${notificationTemplateId}`}
 				onExternalReferenceCodeChange={(value) => {
 					setValues({
 						externalReferenceCode: value,

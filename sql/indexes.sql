@@ -63,7 +63,7 @@ create index IX_5B6AC3B8 on AssetEntry (visible, ctCollectionId);
 
 create index IX_E534924E on AssetTag (ctCollectionId);
 create index IX_24286918 on AssetTag (groupId, ctCollectionId);
-create unique index IX_AA52E757 on AssetTag (groupId, name[$COLUMN_LENGTH:75$], ctCollectionId);
+create index IX_AA52E757 on AssetTag (groupId, name[$COLUMN_LENGTH:75$], ctCollectionId);
 create index IX_7A6CD00D on AssetTag (name[$COLUMN_LENGTH:75$], ctCollectionId);
 create index IX_71579042 on AssetTag (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
 create index IX_E7450E22 on AssetTag (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
@@ -94,16 +94,20 @@ create index IX_791914FA on Contact_ (classNameId, classPK);
 create index IX_FD2E9BDD on Contact_ (companyId, userId);
 create index IX_42F94F9F on Contact_ (userId);
 
-create index IX_25D734CD on Country (active_);
-create unique index IX_742FFB11 on Country (companyId, a2[$COLUMN_LENGTH:75$]);
-create unique index IX_742FFED2 on Country (companyId, a3[$COLUMN_LENGTH:75$]);
-create index IX_F9CD867E on Country (companyId, active_, billingAllowed);
-create index IX_54E98CCD on Country (companyId, active_, shippingAllowed);
-create unique index IX_410257AB on Country (companyId, name[$COLUMN_LENGTH:75$]);
-create unique index IX_4B78E87A on Country (companyId, number_[$COLUMN_LENGTH:75$]);
-create index IX_BEAF8B0 on Country (uuid_[$COLUMN_LENGTH:75$], companyId);
+create index IX_4660D12B on Country (active_, ctCollectionId);
+create unique index IX_B38C8F6F on Country (companyId, a2[$COLUMN_LENGTH:75$], ctCollectionId);
+create unique index IX_8136F130 on Country (companyId, a3[$COLUMN_LENGTH:75$], ctCollectionId);
+create index IX_F307A0DC on Country (companyId, active_, billingAllowed, ctCollectionId);
+create index IX_AC6B4BFB on Country (companyId, active_, ctCollectionId);
+create index IX_75C3292B on Country (companyId, active_, shippingAllowed, ctCollectionId);
+create index IX_938AE74A on Country (companyId, ctCollectionId);
+create unique index IX_2E567809 on Country (companyId, name[$COLUMN_LENGTH:75$], ctCollectionId);
+create unique index IX_53078AD8 on Country (companyId, number_[$COLUMN_LENGTH:75$], ctCollectionId);
+create index IX_912E6F0E on Country (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
+create index IX_338576D6 on Country (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
 
-create unique index IX_518948B3 on CountryLocalization (countryId, languageId[$COLUMN_LENGTH:75$]);
+create index IX_ABAE88CA on CountryLocalization (countryId, ctCollectionId);
+create unique index IX_E22A5911 on CountryLocalization (countryId, languageId[$COLUMN_LENGTH:75$], ctCollectionId);
 
 create index IX_33E8A112 on DLFileEntry (companyId, ctCollectionId);
 create index IX_5444C427 on DLFileEntry (companyId, fileEntryTypeId);
@@ -321,7 +325,8 @@ create unique index IX_5FF18552 on LayoutSetBranch (groupId, privateLayout, name
 create index IX_9178FC71 on LayoutSetPrototype (companyId, active_);
 create index IX_D9FFCA84 on LayoutSetPrototype (uuid_[$COLUMN_LENGTH:75$], companyId);
 
-create unique index IX_77729718 on ListType (name[$COLUMN_LENGTH:75$], type_[$COLUMN_LENGTH:75$]);
+create unique index IX_B7F62EEC on ListType (companyId, name[$COLUMN_LENGTH:75$], type_[$COLUMN_LENGTH:75$]);
+create index IX_9AE9E40B on ListType (companyId, type_[$COLUMN_LENGTH:75$]);
 create index IX_2932DD37 on ListType (type_[$COLUMN_LENGTH:75$]);
 
 create index IX_C28C72EC on MembershipRequest (groupId, statusId);
@@ -362,6 +367,7 @@ create index IX_9FF9CC4E on PortalPreferenceValue (portalPreferencesId, key_[$CO
 create index IX_4C7A38C4 on PortalPreferenceValue (portalPreferencesId, namespace[$COLUMN_LENGTH:255$]);
 
 create index IX_D1F795F1 on PortalPreferences (ownerId, ownerType);
+create index IX_FBB40A2B on PortalPreferences (ownerType);
 
 create unique index IX_12B5E51D on Portlet (companyId, portletId[$COLUMN_LENGTH:200$]);
 
@@ -408,12 +414,15 @@ create index IX_711995A5 on RecentLayoutSetBranch (groupId);
 create index IX_23FF0700 on RecentLayoutSetBranch (layoutSetBranchId);
 create unique index IX_4654D204 on RecentLayoutSetBranch (userId, layoutSetId);
 
-create index IX_2D9A426F on Region (active_);
-create index IX_11FB3E42 on Region (countryId, active_);
-create unique index IX_A2635F5C on Region (countryId, regionCode[$COLUMN_LENGTH:75$]);
-create index IX_60C0214E on Region (uuid_[$COLUMN_LENGTH:75$], companyId);
+create index IX_13E85ACD on Region (active_, ctCollectionId);
+create index IX_40F550A0 on Region (countryId, active_, ctCollectionId);
+create index IX_E29B2505 on Region (countryId, ctCollectionId);
+create unique index IX_183BFDBA on Region (countryId, regionCode[$COLUMN_LENGTH:75$], ctCollectionId);
+create index IX_EF8A9BAC on Region (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
+create index IX_EB4700F8 on Region (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
 
-create unique index IX_A149763D on RegionLocalization (regionId, languageId[$COLUMN_LENGTH:75$]);
+create index IX_9D28E154 on RegionLocalization (regionId, ctCollectionId);
+create unique index IX_982329B on RegionLocalization (regionId, languageId[$COLUMN_LENGTH:75$], ctCollectionId);
 
 create unique index IX_8BD6BCA7 on Release_ (servletContextName[$COLUMN_LENGTH:75$]);
 

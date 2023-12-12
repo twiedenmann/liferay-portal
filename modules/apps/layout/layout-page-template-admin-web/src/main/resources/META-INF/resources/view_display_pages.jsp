@@ -44,12 +44,14 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 	cssClass="container-view sidenav-content"
 >
 	<portlet:actionURL name="/layout_page_template_admin/delete_layout_page_template_entry" var="deleteDisplayPageURL">
+		<portlet:param name="tabs1" value="display-page-templates" />
 		<portlet:param name="redirect" value="<%= currentURL %>" />
 	</portlet:actionURL>
 
 	<aui:form action="<%= deleteDisplayPageURL %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
 		<liferay-ui:error key="<%= RequiredLayoutPageTemplateEntryException.class.getName() %>" message="you-cannot-delete-display-page-templates-that-are-used-by-one-or-more-items.-please-view-the-usages-and-try-to-unassign-them" />
 
+		<liferay-ui:success key="displayPageContentTypeChanged" message='<%= GetterUtil.getString(SessionMessages.get(renderRequest, "displayPageContentTypeChanged")) %>' />
 		<liferay-ui:success key="displayPageTemplateDeleted" message='<%= GetterUtil.getString(MultiSessionMessages.get(renderRequest, "displayPageTemplateDeleted")) %>' />
 
 		<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPS-189856") %>'>
@@ -86,6 +88,10 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 
 						<%
 						row.setCssClass("card-page-item card-page-item-directory " + row.getCssClass());
+						row.setData(
+							HashMapBuilder.<String, Object>put(
+								"actions", displayPageManagementToolbarDisplayContext.getAvailableLayoutPageTemplateCollectionActions(curLayoutPageTemplateCollection)
+							).build());
 						%>
 
 						<liferay-ui:search-container-column-text
@@ -102,7 +108,7 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 						<%
 						row.setData(
 							HashMapBuilder.<String, Object>put(
-								"actions", displayPageManagementToolbarDisplayContext.getAvailableActions(curLayoutPageTemplateEntry)
+								"actions", displayPageManagementToolbarDisplayContext.getAvailableLayoutPageTemplateEntryActions(curLayoutPageTemplateEntry)
 							).build());
 						%>
 
@@ -110,13 +116,11 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 							<clay:vertical-card
 								additionalProps='<%=
 									HashMapBuilder.<String, Object>put(
-										"changeContentTypeURL", displayPageDisplayContext.getChangeContentTypeURL(curLayoutPageTemplateEntry)
-									).put(
 										"mappingTypes", displayPageDisplayContext.getMappingTypesJSONArray()
 									).build()
 								%>'
 								propsTransformer="js/propsTransformers/DisplayPageDropdownPropsTransformer"
-								verticalCard="<%= new DisplayPageVerticalCard(curLayoutPageTemplateEntry, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
+								verticalCard="<%= new DisplayPageVerticalCard(displayPageDisplayContext.isAllowedMappedContentType(curLayoutPageTemplateEntry), curLayoutPageTemplateEntry, displayPageDisplayContext.existsMappedContentType(curLayoutPageTemplateEntry), renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:when>

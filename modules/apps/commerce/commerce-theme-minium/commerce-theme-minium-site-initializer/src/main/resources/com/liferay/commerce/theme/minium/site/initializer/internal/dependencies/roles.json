@@ -21,6 +21,12 @@
 			},
 			{
 				"actionIds": [
+					"VIEW"
+				],
+				"resource": "com.liferay.account.model.AccountRole"
+			},
+			{
+				"actionIds": [
 					"ADD_COMMERCE_ORDER",
 					"CHECKOUT_OPEN_COMMERCE_ORDERS",
 					"MANAGE_QUOTES",
@@ -288,6 +294,12 @@
 					"VIEW"
 				],
 				"resource": "com.liferay.commerce.model.CommerceOrder"
+			},
+			{
+				"actionIds": [
+					"VIEW"
+				],
+				"resource": "com.liferay.commerce.inventory.model.CommerceInventoryWarehouse"
 			},
 			{
 				"actionIds": [

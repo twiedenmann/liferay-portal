@@ -12,9 +12,9 @@ long kbFolderClassNameId = PortalUtil.getClassNameId(KBFolderConstants.getClassN
 
 long parentResourceClassNameId = ParamUtil.getLong(request, "parentResourceClassNameId", kbFolderClassNameId);
 
-KBAdminManagementToolbarDisplayContext kbAdminManagementToolbarDisplayContext = new KBAdminManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, renderRequest, renderResponse, portletConfig);
+KBAdminManagementToolbarDisplayContext kbAdminManagementToolbarDisplayContext = new KBAdminManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, renderRequest, renderResponse, portletConfig, trashHelper);
 KBArticleURLHelper kbArticleURLHelper = new KBArticleURLHelper(renderRequest, renderResponse);
-KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDisplayContext(request, liferayPortletRequest, liferayPortletResponse, renderResponse);
+KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDisplayContext(request, liferayPortletRequest, liferayPortletResponse, renderResponse, trashHelper);
 %>
 
 <liferay-ui:search-container
@@ -76,7 +76,7 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 				<liferay-ui:search-container-column-text>
 
 					<%
-					KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse);
+					KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse, trashHelper);
 					%>
 
 					<clay:dropdown-actions
@@ -132,13 +132,13 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 
 					<span class="text-default">
 						<c:choose>
-							<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-188060") && kbArticle.isScheduled() %>'>
+							<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-188058") && kbArticle.isScheduled() %>'>
 
 								<%
 								String displayDateString = StringPool.BLANK;
 
 								if (kbArticle.getDisplayDate() != null) {
-									displayDateString = dateFormatDateTime.format(kbArticle.getDisplayDate());
+									displayDateString = dateTimeFormat.format(kbArticle.getDisplayDate());
 								}
 								%>
 
@@ -150,7 +150,7 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 								String expirationDateString = StringPool.BLANK;
 
 								if (kbArticle.getExpirationDate() != null) {
-									expirationDateString = dateFormatDateTime.format(kbArticle.getExpirationDate());
+									expirationDateString = dateTimeFormat.format(kbArticle.getExpirationDate());
 								}
 								%>
 

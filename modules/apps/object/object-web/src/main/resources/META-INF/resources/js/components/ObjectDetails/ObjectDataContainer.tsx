@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayForm from '@clayui/form';
 import {FormError, Input, Toggle} from '@liferay/object-js-components-web';
 import {InputLocalized} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
@@ -47,6 +48,7 @@ export function ObjectDataContainer({
 			<Input
 				disabled={isApproved || noPermissionOrLinked}
 				error={errors.name}
+				id="lfr-objects__object-data-container-name"
 				label={Liferay.Language.get('name')}
 				name="name"
 				onBlur={(event) => {
@@ -104,23 +106,25 @@ export function ObjectDataContainer({
 				value={dbTableName}
 			/>
 
-			<Toggle
-				disabled={!isApproved || isReadOnly || noPermissionOrLinked}
-				label={sub(
-					Liferay.Language.get('activate-x'),
-					Liferay.Language.get('object')
-				)}
-				name="active"
-				onBlur={(event) => {
-					event.stopPropagation();
+			<ClayForm.Group>
+				<Toggle
+					disabled={!isApproved || isReadOnly || noPermissionOrLinked}
+					label={sub(
+						Liferay.Language.get('activate-x'),
+						Liferay.Language.get('object')
+					)}
+					name="active"
+					onBlur={(event) => {
+						event.stopPropagation();
 
-					if (onSubmit) {
-						onSubmit();
-					}
-				}}
-				onToggle={() => setValues({active: !values.active})}
-				toggled={values.active}
-			/>
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
+					onToggle={() => setValues({active: !values.active})}
+					toggled={values.active}
+				/>
+			</ClayForm.Group>
 		</>
 	);
 }

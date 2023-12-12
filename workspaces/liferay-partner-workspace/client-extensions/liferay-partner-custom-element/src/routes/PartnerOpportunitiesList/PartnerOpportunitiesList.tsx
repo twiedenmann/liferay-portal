@@ -31,7 +31,7 @@ interface IProps {
 	columnsDates: TableColumn<PartnerOpportunitiesItem>[];
 	name: string;
 	newButtonDeal?: boolean;
-	opportunityFilter?: string;
+	renewalOpportunitiesFilter?: string;
 	sort: string;
 }
 
@@ -42,10 +42,12 @@ const PartnerOpportunitiesList = ({
 	columnsDates,
 	name,
 	newButtonDeal,
-	opportunityFilter,
+	renewalOpportunitiesFilter,
 	sort,
 }: IProps) => {
-	const {filters, filtersTerm, onFilter} = useFilters();
+	const {filters, filtersTerm, onFilter} = useFilters(
+		renewalOpportunitiesFilter
+	);
 	const [isVisibleModal, setIsVisibleModal] = useState(false);
 	const [modalContent, setModalContent] = useState<
 		PartnerOpportunitiesItem
@@ -59,16 +61,15 @@ const PartnerOpportunitiesList = ({
 		pagination.activePage,
 		pagination.activeDelta,
 		filtersTerm,
-		sort,
-		opportunityFilter
+		sort
 	);
 	const {data: dataCSV} = useGetListItemsFromPartnerOpportunities(
 		BASE_PAGE,
 		MAX_ITEMS,
 		filtersTerm,
-		sort,
-		opportunityFilter
+		sort
 	);
+
 	const {totalCount: totalPagination} = data;
 	const filteredData = data.items;
 	const filteredCSVData = dataCSV.items;
@@ -85,8 +86,8 @@ const PartnerOpportunitiesList = ({
 		},
 		...columnsDates,
 		{
-			columnKey: PartnerOpportunitiesColumnKey.DEAL_AMOUNT,
-			label: 'Deal Amount',
+			columnKey: PartnerOpportunitiesColumnKey.SUBSCRIPTION_ARR,
+			label: 'Subscription ARR',
 		},
 		{
 			columnKey: PartnerOpportunitiesColumnKey.PARTNER_REP_NAME,

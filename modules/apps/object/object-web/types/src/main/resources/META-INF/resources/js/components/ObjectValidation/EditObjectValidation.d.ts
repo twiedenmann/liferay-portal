@@ -7,8 +7,10 @@
 
 import {SidebarCategory} from '@liferay/object-js-components-web';
 interface EditObjectValidationProps {
+	baseResourceURL: string;
 	creationLanguageId: Liferay.Language.Locale;
 	learnResources: ObjectWebLearnResources;
+	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectValidationRuleElements: SidebarCategory[];
 	objectValidationRuleId: number;
@@ -21,8 +23,10 @@ export interface PartialValidationFields {
 	value: string;
 }
 export default function EditObjectValidation({
+	baseResourceURL,
 	creationLanguageId,
 	learnResources,
+	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	objectValidationRuleElements,
 	objectValidationRuleId,

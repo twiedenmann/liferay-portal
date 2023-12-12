@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {useForm} from 'react-hook-form';
 
+import {useMarketplaceContext} from '../../context/MarketplaceContext';
+import {useDeliveryProduct} from '../../hooks/data/useProduct';
 import useCart from '../../hooks/useCart';
 import {
 	getPaymentMethodURL,
@@ -13,53 +15,88 @@ import {
 	postEmailAppInformation,
 } from '../../utils/api';
 import {getUrlParam} from '../../utils/getUrlParam';
+import {getValueFromDeliverySpecifications} from '../../utils/util';
+import AccountEmailInfo from '../CreateLicense/AccountInfo';
 import AccountSelection from './components/AccountSelection';
 import ProductFooter from './components/Footer';
 import {LicenseSelector} from './components/LicenseSelector';
-import ProductCard from './components/ProductCard';
+import ProductCard from './components/ProductCard/ProductCard';
 import {SelectPaymentMethod} from './components/SelectPaymentMethod/SelectPaymentMethod';
+import StepWizard from './components/StepWizard/StepWizard';
 import {initialBillingAddress} from './constants/initialBillingAddress';
-import {paymentMethod} from './enums/paymentMethod';
+import {LicenseType} from './enums/licenseType';
+import {PaymentMethod} from './enums/paymentMethod';
+import {SkuOptions} from './enums/skuOptions';
 import {StepType} from './enums/stepType';
 import useGetAddresses from './hooks/useGetAddresses';
-import useGetChannelInfo from './hooks/useGetChannelInfo';
-import useGetProductSkus from './hooks/useGetProductSkus';
-import useProductPriceModel from './hooks/useProductPriceModel';
 import buildNewCart from './utils/buildNewCart';
 import {getProductOrderTypes} from './utils/getProductOrderTypes';
+import getProductPriceModel from './utils/getProductPriceModel';
 import {getProductSpecificationValues} from './utils/getProductSpecificationValues';
 import getReplaceCurrentURL from './utils/getReplaceCurrentURL';
 import {postCartByPaymentMethod} from './utils/postCartByPaymentMethod';
 
-export type StepComponent = {
-	[key in StepType]?: JSX.Element;
-};
-
 export type GetAppForm = {
-	product?: Product;
-	selectedAccount?: Account;
-	selectedSKU?: SKU;
+	account?: Account;
+	product?: DeliveryProduct;
+	selectedPaymentMethod: PaymentMethod;
+	selectedSKU?: DeliverySKU;
+	selectedTimeline?: string;
+	userAccount?: UserAccount;
 };
 
-const sectionProperties = {
-	[StepType.ACCOUNT]: {
-		backStep: StepType.ACCOUNT,
-		nextStep: StepType.LICENSES,
-		title: 'Account Selection',
-	},
-	[StepType.LICENSES]: {
-		backStep: StepType.ACCOUNT,
-		nextStep: StepType.PAYMENT,
-		title: 'License Selection',
-	},
-	[StepType.PAYMENT]: {
-		backStep: StepType.LICENSES,
-		nextStep: StepType.PAYMENT,
-		title: 'Payment Method',
-	},
+const getProductBasePriceAndTrial = (product: DeliveryProduct) => {
+	const baseValue = {
+		basePrice: 0,
+		firstSku: undefined,
+		isTrial: false,
+		trialSku: undefined,
+	};
+
+	if (!product) {
+		return baseValue;
+	}
+
+	const {isFreeApp} = getProductPriceModel(product);
+	const skus = (product.skus as unknown) as DeliverySKU[];
+
+	if (isFreeApp) {
+		return {
+			...baseValue,
+			firstSku: skus.find((sku) => sku.price.price === 0) ?? skus[0],
+		};
+	}
+
+	const skusLicenseUsageTypes = skus
+		.map(({skuOptions, ...sku}) => ({
+			...sku,
+			skuOptions: skuOptions.find((skuOption) =>
+				[SkuOptions.STANDARD, SkuOptions.TRIAL].includes(
+					skuOption.skuOptionValueKey as SkuOptions
+				)
+			),
+		}))
+		.filter(({skuOptions}) => skuOptions);
+
+	const standardSku = skusLicenseUsageTypes.find(
+		({skuOptions}) => skuOptions?.skuOptionValueKey === SkuOptions.STANDARD
+	);
+
+	const trialSku = skusLicenseUsageTypes.find(
+		({skuOptions}) => skuOptions?.skuOptionValueKey === SkuOptions.TRIAL
+	);
+
+	return {
+		basePrice: standardSku?.price?.price,
+		firstSku: skus[0],
+		standardSku,
+		trialSku,
+	};
 };
 
 const GetAppFlow = () => {
+	const [loading, setLoading] = useState(false);
+	const {channel, myUserAccount} = useMarketplaceContext();
 	const [billingAddress, setBillingAddress] = useState<BillingAddress>(
 		initialBillingAddress
 	);
@@ -67,201 +104,328 @@ const GetAppFlow = () => {
 	const [enablePurchaseButton, setEnablePurchaseButton] = useState<boolean>(
 		false
 	);
-	const [enableTrialMethod, setEnableTrialMethod] = useState<boolean>(false);
-	const [licenseSelected, setLincenseSelected] = useState<boolean>(false);
-	const [orderType, setOrderType] = useState<OrderType>();
+
+	const [licenseSelected, setLicenseSelected] = useState<boolean>(false);
 	const [purchaseOrderNumber, setPurchaseOrderNumber] = useState<string>('');
-	const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
-		PaymentMethodSelector
-	>(paymentMethod.PAY);
 	const [step, setStep] = useState<StepType>(StepType.ACCOUNT);
 
-	const {getValues, setValue, watch} = useForm<GetAppForm>({
+	const {setValue, watch} = useForm<GetAppForm>({
 		defaultValues: {
-			product: undefined,
-			selectedAccount: undefined,
+			account: undefined,
+			selectedPaymentMethod: PaymentMethod.PAY,
 			selectedSKU: undefined,
+			selectedTimeline: '',
 		},
 	});
 
-	const urlProductId = getUrlParam('productId');
+	const {account, selectedPaymentMethod, selectedSKU} = watch();
 
-	const {product, selectedAccount, selectedSKU} = getValues();
+	const {data: product} = useDeliveryProduct(getUrlParam('productId') ?? '');
 
-	const productId = product?.productId || urlProductId;
-	const productName = product?.name.en_US;
+	const {basePrice, firstSku, trialSku} = getProductBasePriceAndTrial(
+		(product as unknown) as DeliveryProduct
+	);
+	const hasTrial = !!trialSku;
+	const sku = trialSku ?? firstSku;
+	const {addresses} = useGetAddresses(account?.id);
 
-	const {sku} = useGetProductSkus(setEnableTrialMethod, product);
-	const {channel} = useGetChannelInfo();
-	const {addresses} = useGetAddresses(selectedAccount?.id);
-	const {isFreeApp, priceModel} = useProductPriceModel(product);
+	const {isFreeApp, priceModel} = getProductPriceModel(product);
+
+	const productSpecificationValues = getProductSpecificationValues(
+		product?.productSpecifications || []
+	);
+
+	const orderType = getProductOrderTypes(productSpecificationValues);
+	const productCreatorAccountName = product?.catalogName || '';
 
 	const cartUtil = useCart({
-		accountId: selectedAccount?.id!,
+		accountId: account?.id!,
 		channelId: channel?.id,
 		orderType,
+		product: product as DeliveryProduct,
+		setValue,
 	});
 
 	useEffect(() => {
-		if (cartUtil?.cartItems?.length) {
-			setLincenseSelected(true);
-			setEnablePurchaseButton(true);
-		}
+		setLicenseSelected(!!cartUtil?.cartItems?.length);
+		setEnablePurchaseButton(!!cartUtil?.cartItems?.length);
 	}, [cartUtil?.cartItems?.length]);
 
-	useEffect(() => {
-		(async () => {
-			const productSpecificationValues = await getProductSpecificationValues(
-				Number(productId)
+	async function handleGetApp(orderId?: number) {
+		setLoading(true);
+
+		try {
+			const productSpecificationValues = getProductSpecificationValues(
+				product?.productSpecifications || []
 			);
+
+			const productType = productSpecificationValues;
 
 			const orderType = await getProductOrderTypes(
 				productSpecificationValues
 			);
 
-			setOrderType(orderType);
-		})();
-	}, [productId]);
+			const cart = buildNewCart({
+				billingAddress,
+				channel,
+				email,
+				isFreeApp,
+				orderType,
+				product,
+				purchaseOrderNumber,
+				selectedAccount: account,
+				selectedPaymentMethod,
+				selectedSKU,
+				sku: sku as any,
+			});
 
-	async function handleGetApp(orderId?: number) {
-		const productSpecificationValues = await getProductSpecificationValues(
-			Number(productId)
-		);
+			const cartResponse = orderId
+				? await cartUtil.updateCartItems(orderId, {
+						...cart,
+						cartItems: cartUtil.cartItems,
+				  })
+				: await postCartByPaymentMethod(cart, channel.id);
 
-		const productType = productSpecificationValues?.en_US;
+			await postCheckoutCart({cartId: cartResponse.id});
 
-		const orderType = await getProductOrderTypes(
-			productSpecificationValues
-		);
+			await postEmailAppInformation({
+				dashboardLink: getReplaceCurrentURL(
+					'get-app',
+					'customer-dashboard'
+				),
+				orderID: cartResponse.id,
+				priceModel,
+				productName: product?.name,
+				productType,
+			});
 
-		const cart = buildNewCart({
-			billingAddress,
-			channel,
-			email,
-			isFreeApp,
-			orderType,
-			product,
-			purchaseOrderNumber,
-			selectedAccount,
-			selectedPaymentMethod,
-			selectedSKU,
-			sku,
-		});
-
-		const cartResponse = orderId
-			? await cartUtil.updateCartItems(orderId, {
-					...cart,
-					cartItems: cartUtil.cartItems,
-			  })
-			: await postCartByPaymentMethod(cart, channel.id);
-
-		await postCheckoutCart({cartId: cartResponse.id});
-
-		await postEmailAppInformation({
-			dashboardLink: getReplaceCurrentURL(
+			const nextStepsCallbackURL = getReplaceCurrentURL(
 				'get-app',
-				'customer-dashboard'
-			),
-			orderID: cartResponse.id,
-			priceModel,
-			productName,
-			productType,
-		});
-
-		const nextStepsCallbackURL = getReplaceCurrentURL(
-			'get-app',
-			'next-steps',
-			`${encodeURIComponent(cartResponse.id)}`
-		);
-
-		if (selectedPaymentMethod === paymentMethod.PAY) {
-			const paymentMethodURL = await getPaymentMethodURL(
-				cartResponse.id,
-				nextStepsCallbackURL
+				'next-steps',
+				`${encodeURIComponent(cartResponse.id)}`
 			);
 
-			window.location.href = paymentMethodURL;
+			if (selectedPaymentMethod === PaymentMethod.PAY) {
+				const paymentMethodURL = await getPaymentMethodURL(
+					cartResponse.id,
+					nextStepsCallbackURL
+				);
 
-			return;
+				window.location.href = paymentMethodURL;
+
+				return;
+			}
+
+			window.location.href = nextStepsCallbackURL;
+		}
+		catch (error) {
+
+			// console.error('Unable to handleGetApp', error);
+
 		}
 
-		window.location.href = nextStepsCallbackURL;
+		setLoading(false);
 	}
 
-	const StepFormComponent: StepComponent = {
-		[StepType.ACCOUNT]: (
-			<AccountSelection
-				onSelectAccount={(account: Account) => {
-					setValue('selectedAccount', account);
-				}}
-				selectedAccount={getValues('selectedAccount')}
-			/>
-		),
-		[StepType.LICENSES]: (
-			<LicenseSelector
-				cart={cartUtil}
-				form={{
-					getValues,
-					setValue,
-				}}
-				onSelectLicense={(sku?: SKU) => setValue('selectedSKU', sku)}
-				selectedPaymentMethod={setSelectedPaymentMethod}
-				selectedProduct={getValues('product')}
-				setLicenseSelected={setLincenseSelected}
-				sku={sku}
-			/>
-		),
-		[StepType.PAYMENT]: (
-			<SelectPaymentMethod
-				addresses={addresses}
-				billingAddress={billingAddress}
-				email={email}
-				enableTrialMethod={enableTrialMethod}
-				purchaseOrderNumber={purchaseOrderNumber}
-				selectedPaymentMethod={selectedPaymentMethod}
-				setBillingAddress={setBillingAddress}
-				setEmail={setEmail}
-				setEnablePurchaseButton={setEnablePurchaseButton}
-				setPurchaseOrderNumber={setPurchaseOrderNumber}
-				setSelectedPaymentMethod={setSelectedPaymentMethod}
-				step={step}
-			/>
-		),
+	const StepsInformation = useMemo(
+		() => ({
+			[StepType.ACCOUNT]: {
+				backStep: StepType.ACCOUNT,
+				component: (
+					<AccountSelection
+						onSelectAccount={(account: Account) => {
+							setValue('account', account);
+						}}
+						selectedAccount={account}
+						userAccount={myUserAccount}
+					/>
+				),
+				nextStep: StepType.LICENSES,
+				stepTitle: 'Account',
+				title: 'Account Selection',
+			},
+			[StepType.LICENSES]: {
+				backStep: StepType.ACCOUNT,
+				component: (
+					<LicenseSelector
+						cartUtil={cartUtil}
+						formUtils={{
+							setValue,
+							watch,
+						}}
+						onSelectLicense={(sku?: DeliverySKU) =>
+							setValue('selectedSKU', sku)
+						}
+						selectedProduct={product}
+						setLicenseSelected={setLicenseSelected}
+						sku={sku as DeliverySKU}
+						trialSKU={trialSku}
+					/>
+				),
+				nextStep: StepType.PAYMENT,
+				stepTitle: 'Licenses',
+				title: 'License Selection',
+			},
+			[StepType.PAYMENT]: {
+				backStep: StepType.LICENSES,
+				component: (
+					<SelectPaymentMethod
+						addresses={addresses}
+						billingAddress={billingAddress}
+						email={email}
+						enableTrialMethod={hasTrial}
+						form={{
+							setValue,
+							watch,
+						}}
+						purchaseOrderNumber={purchaseOrderNumber}
+						selectedPaymentMethod={selectedPaymentMethod}
+						setBillingAddress={setBillingAddress}
+						setEmail={setEmail}
+						setEnablePurchaseButton={setEnablePurchaseButton}
+						setPurchaseOrderNumber={setPurchaseOrderNumber}
+						step={step}
+					/>
+				),
+				nextStep: StepType.PAYMENT,
+				stepTitle: 'Payment Method',
+				title: 'Payment Method',
+			},
+		}),
+		[
+			account,
+			addresses,
+			billingAddress,
+			cartUtil,
+			email,
+			hasTrial,
+			myUserAccount,
+			product,
+			purchaseOrderNumber,
+			selectedPaymentMethod,
+			setValue,
+			sku,
+			step,
+			trialSku,
+			watch,
+		]
+	);
+
+	const FormattedValues = () => {
+		if (step === StepType.LICENSES || step === StepType.PAYMENT) {
+			return (
+				<span className="price-text-value">
+					{cartUtil?.cart?.id && watch('selectedTimeline') !== 'trial'
+						? `${cartUtil?.cart?.summary?.totalFormatted}`
+						: `$0`}
+				</span>
+			);
+		}
+
+		if (basePrice) {
+			if (hasTrial) {
+				return <span>30-day trial or ${basePrice}</span>;
+			}
+
+			return <span>${basePrice}</span>;
+		}
+
+		return <span className="price-text-value">Free</span>;
 	};
+
+	const getLicenseTagText = (product: DeliveryProduct) => {
+		const licenseTypeSpecification = getValueFromDeliverySpecifications(
+			product.productSpecifications,
+			'license-type'
+		).toLowerCase();
+
+		if (licenseTypeSpecification) {
+			return licenseTypeSpecification === LicenseType.Perpetual
+				? 'One-Time'
+				: 'Annually';
+		}
+	};
+
+	if (!product) {
+		return null;
+	}
+
+	const PriceTypeInfo = () => (
+		<div className="align-items-end d-flex flex-column price-text">
+			<strong className="mr-1">Price</strong>
+
+			<div className="mr-1 py-2">
+				<FormattedValues />
+			</div>
+
+			{!!basePrice && (
+				<div className="license-tag px-2">
+					{getLicenseTagText(product)}
+				</div>
+			)}
+		</div>
+	);
+
+	const ExtendBanner = () => (
+		<div className="d-flex flex-row justify-content-between">
+			<strong className="account-banner-title-text align-self-center">
+				Account Selected
+			</strong>
+
+			<AccountEmailInfo userAccount={myUserAccount} />
+		</div>
+	);
 
 	return (
 		<>
 			<ProductCard
-				cartUtil={cartUtil}
-				productId={Number(getUrlParam('productId'))}
-				selectedAccount={watch('selectedAccount')}
-				setProductToForm={(product: Product) =>
-					setValue('product', product)
-				}
-				step={step}
+				ExtendBanner={ExtendBanner}
+				RightSideBanner={PriceTypeInfo}
+				creatorAccountName={productCreatorAccountName}
+				product={product}
+				showExtendBanner={!!account}
 			/>
 
 			<div className="border d-flex flex-column mt-7 p-5 rounded">
 				<div className="d-flex flex-column">
-					<div className="align-self-center h1 mb-6">
-						{sectionProperties[step].title}
-					</div>
-					<div>{StepFormComponent[step]}</div>
-				</div>
+					{!isFreeApp && product && (
+						<div className="d-flex justify-content-center mb-6">
+							<StepWizard
+								className="col-8"
+								currentStep={step}
+								stepsInformation={StepsInformation}
+								wizardSteps={{
+									[StepType.ACCOUNT]:
+										step !== StepType.ACCOUNT && !!account,
+									[StepType.LICENSES]:
+										step !== StepType.LICENSES &&
+										licenseSelected,
+									[StepType.PAYMENT]: false,
+								}}
+							/>
+						</div>
+					)}
 
+					<div className="align-self-center h1 mb-6">
+						{StepsInformation[step]?.title}
+					</div>
+
+					<div>{StepsInformation[step].component}</div>
+				</div>
 				<ProductFooter
 					addresses={addresses}
 					cartUtil={cartUtil}
+					disabled={loading}
 					enablePurchaseButton={enablePurchaseButton}
 					handleGetApp={handleGetApp}
 					isFreeApp={isFreeApp}
 					licenseSelected={licenseSelected}
-					sectionProperties={sectionProperties}
-					selectedAccount={selectedAccount}
+					selectedAccount={account}
 					selectedPaymentMethod={selectedPaymentMethod}
 					selectedSKU={selectedSKU}
 					setStep={setStep}
 					step={step}
+					stepsNavigation={StepsInformation}
 				/>
 			</div>
 		</>

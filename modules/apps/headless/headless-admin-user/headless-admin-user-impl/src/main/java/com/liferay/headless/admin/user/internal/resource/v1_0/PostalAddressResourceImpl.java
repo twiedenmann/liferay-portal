@@ -11,7 +11,6 @@ import com.liferay.headless.admin.user.dto.v1_0.PostalAddress;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.PostalAddressUtil;
 import com.liferay.headless.admin.user.resource.v1_0.PostalAddressResource;
-import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Country;
@@ -34,6 +33,7 @@ import com.liferay.portal.vulcan.pagination.Page;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.ws.rs.BadRequestException;
 
@@ -138,16 +138,15 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 			country = _getCountryByTitle(postalAddress);
 
 			address.setCountryId(country.getCountryId());
+			address.setRegionId(_getRegionId(postalAddress, country));
 		}
 
 		if (postalAddress.getAddressLocality() != null) {
 			address.setCity(postalAddress.getAddressLocality());
 		}
 
-		if (postalAddress.getAddressRegion() != null) {
-			if (country == null) {
-				throw new BadRequestException("Country is not specified");
-			}
+		if ((postalAddress.getAddressRegion() != null) && (country == null)) {
+			country = _countryService.getCountry(address.getCountryId());
 
 			address.setRegionId(_getRegionId(postalAddress, country));
 		}
@@ -290,7 +289,7 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 
 	private ListType _getListType(PostalAddress postalAddress) {
 		ListType listType = _listTypeLocalService.getListType(
-			postalAddress.getAddressType(),
+			contextCompany.getCompanyId(), postalAddress.getAddressType(),
 			"com.liferay.account.model.AccountEntry.address");
 
 		if (listType == null) {
@@ -301,15 +300,17 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 	}
 
 	private long _getRegionId(PostalAddress postalAddress, Country country) {
-		if (postalAddress.getAddressType() == null) {
-			return 0;
-		}
-
 		List<Region> regions = _regionService.getRegions(
 			country.getCountryId());
 
-		if (regions.isEmpty()) {
-			return 0;
+		if ((postalAddress.getAddressRegion() == null) ||
+			Objects.equals(postalAddress.getAddressRegion(), "")) {
+
+			if (regions.isEmpty()) {
+				return 0;
+			}
+
+			throw new BadRequestException("Region not found");
 		}
 
 		Iterator<Region> regionIterator = regions.iterator();
@@ -348,9 +349,6 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 
 	@Reference
 	private CountryService _countryService;
-
-	@Reference
-	private Language _language;
 
 	@Reference
 	private ListTypeLocalService _listTypeLocalService;

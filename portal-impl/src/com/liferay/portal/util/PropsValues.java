@@ -363,10 +363,6 @@ public class PropsValues {
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.COMPANY_LOGIN_PREPOPULATE_DOMAIN));
 
-	public static final boolean COMPANY_SECURITY_AUTH_REQUIRES_HTTPS =
-		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS));
-
 	public static final String COMPANY_SECURITY_AUTH_TYPE = PropsUtil.get(
 		PropsKeys.COMPANY_SECURITY_AUTH_TYPE);
 
@@ -1301,10 +1297,6 @@ public class PropsValues {
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.MESSAGE_BOARDS_EXPIRE_BAN_INTERVAL));
 
-	public static final long MESSAGE_BOARDS_EXPIRE_BAN_JOB_INTERVAL =
-		GetterUtil.getLong(
-			PropsUtil.get(PropsKeys.MESSAGE_BOARDS_EXPIRE_BAN_JOB_INTERVAL));
-
 	public static final boolean MESSAGE_BOARDS_PINGBACK_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.MESSAGE_BOARDS_PINGBACK_ENABLED));
@@ -2095,14 +2087,6 @@ public class PropsValues {
 	public static int SESSION_TIMEOUT = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.SESSION_TIMEOUT));
 
-	public static final boolean SESSION_TIMEOUT_AUTO_EXTEND =
-		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.SESSION_TIMEOUT_AUTO_EXTEND));
-
-	public static final int SESSION_TIMEOUT_AUTO_EXTEND_OFFSET =
-		GetterUtil.getInteger(
-			PropsUtil.get(PropsKeys.SESSION_TIMEOUT_AUTO_EXTEND_OFFSET));
-
 	public static final boolean SESSION_TIMEOUT_REDIRECT_ON_EXPIRE =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.SESSION_TIMEOUT_REDIRECT_ON_EXPIRE));
@@ -2227,9 +2211,6 @@ public class PropsValues {
 
 	public static final String[] SPRING_INFRASTRUCTURE_CONFIGS =
 		PropsUtil.getArray(PropsKeys.SPRING_INFRASTRUCTURE_CONFIGS);
-
-	public static final int SQL_DATA_MAX_PARAMETERS = GetterUtil.getInteger(
-		PropsUtil.get(PropsKeys.SQL_DATA_MAX_PARAMETERS));
 
 	public static int STAGING_DRAFT_EXPORT_IMPORT_CONFIGURATION_CHECK_INTERVAL =
 		GetterUtil.getInteger(
@@ -2384,6 +2365,9 @@ public class PropsValues {
 	public static final boolean UPGRADE_LOG_CONTEXT_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.UPGRADE_LOG_CONTEXT_ENABLED));
+
+	public static final String UPGRADE_REPORT_DIR = GetterUtil.getString(
+		PropsUtil.get(PropsKeys.UPGRADE_REPORT_DIR));
 
 	public static final long UPGRADE_REPORT_DL_STORAGE_SIZE_TIMEOUT =
 		GetterUtil.getLong(
@@ -2579,6 +2563,9 @@ public class PropsValues {
 	public static final boolean WORK_DIR_OVERRIDE_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.WORK_DIR_OVERRIDE_ENABLED));
+
+	public static final int XML_RPC_MAX_PARAMETERS = GetterUtil.getInteger(
+		PropsUtil.get(PropsKeys.XML_RPC_MAX_PARAMETERS), 50);
 
 	public static final boolean XML_SECURITY_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.XML_SECURITY_ENABLED));

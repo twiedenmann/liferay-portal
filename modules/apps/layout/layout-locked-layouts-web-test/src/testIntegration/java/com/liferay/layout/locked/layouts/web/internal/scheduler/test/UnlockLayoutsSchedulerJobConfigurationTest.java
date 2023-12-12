@@ -9,8 +9,8 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.layout.manager.LayoutLockManager;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.function.UnsafeRunnable;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
-import com.liferay.portal.kernel.lock.LockManager;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
@@ -42,6 +42,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+
 /**
  * @author Jürgen Kappler
  */
@@ -59,15 +62,29 @@ public class UnlockLayoutsSchedulerJobConfigurationTest {
 	@Before
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
-
-		_lock = _getLock();
 	}
 
 	@Test
 	public void testUnlockLayouts() throws Exception {
-		_testUnlockLayouts(false, _lock, 0);
-		_testUnlockLayouts(true, _lock, _LOCK_MINUTE_ADDITION + 1);
-		_testUnlockLayouts(true, null, _LOCK_MINUTE_ADDITION - 1);
+		Lock lock = _getLock();
+
+		_testUnlockLayouts(lock.getLockId(), false, 0, lock);
+		_testUnlockLayouts(
+			lock.getLockId(), true, _LOCK_MINUTE_ADDITION + 1, lock);
+		_testUnlockLayouts(
+			lock.getLockId(), true, _LOCK_MINUTE_ADDITION - 1, null);
+
+		lock = _getLock();
+
+		_testUnlockLayouts(lock.getLockId(), true, false, 1, 1, lock);
+		_testUnlockLayouts(lock.getLockId(), true, true, 100, 1, null);
+
+		lock = _getLock();
+
+		_testUnlockLayouts(
+			lock.getLockId(), true, true, 100, _LOCK_MINUTE_ADDITION + 1, lock);
+		_testUnlockLayouts(
+			lock.getLockId(), true, true, 100, _LOCK_MINUTE_ADDITION - 1, null);
 	}
 
 	private Layout _getDraftLayout() throws Exception {
@@ -112,19 +129,50 @@ public class UnlockLayoutsSchedulerJobConfigurationTest {
 	}
 
 	private void _testUnlockLayouts(
-			boolean allowAutomaticUnlockingProcess, Lock expectedLock,
-			int timeWithoutAutosave)
+			long actualLockId, boolean allowAutomaticUnlockingProcess,
+			boolean allowAutomaticUnlockingProcessGroupConfiguration,
+			int autosaveMinutes, int autosaveMinutesGroupConfiguration,
+			Lock expectedLock)
+		throws Exception {
+
+		Configuration configuration =
+			_configurationAdmin.createFactoryConfiguration(
+				"com.liferay.layout.configuration." +
+					"LockedLayoutsGroupConfiguration.scoped",
+				StringPool.QUESTION);
+
+		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
+				new ConfigurationTemporarySwapper(
+					configuration.getPid(),
+					HashMapDictionaryBuilder.<String, Object>put(
+						"allowAutomaticUnlockingProcess",
+						allowAutomaticUnlockingProcessGroupConfiguration
+					).put(
+						"autosaveMinutes", autosaveMinutesGroupConfiguration
+					).put(
+						"groupId", _group.getGroupId()
+					).build())) {
+
+			_testUnlockLayouts(
+				actualLockId, allowAutomaticUnlockingProcess, autosaveMinutes,
+				expectedLock);
+		}
+	}
+
+	private void _testUnlockLayouts(
+			long actualLockId, boolean allowAutomaticUnlockingProcess,
+			int autosaveMinutes, Lock expectedLock)
 		throws Exception {
 
 		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
 				new ConfigurationTemporarySwapper(
 					"com.liferay.layout.locked.layouts.web.internal." +
-						"configuration.LockedLayoutsConfiguration",
+						"configuration.LockedLayoutsCompanyConfiguration",
 					HashMapDictionaryBuilder.<String, Object>put(
 						"allowAutomaticUnlockingProcess",
 						allowAutomaticUnlockingProcess
 					).put(
-						"timeWithoutAutosave", timeWithoutAutosave
+						"autosaveMinutes", autosaveMinutes
 					).build())) {
 
 			UnsafeRunnable<Exception> unsafeRunnable =
@@ -132,14 +180,16 @@ public class UnlockLayoutsSchedulerJobConfigurationTest {
 
 			unsafeRunnable.run();
 
-			Lock lock = _lockLocalService.fetchLock(
-				_lock.getClassName(), _lock.getKey());
+			Lock lock = _lockLocalService.fetchLock(actualLockId);
 
 			Assert.assertEquals(expectedLock, lock);
 		}
 	}
 
 	private static final int _LOCK_MINUTE_ADDITION = 10;
+
+	@Inject
+	private ConfigurationAdmin _configurationAdmin;
 
 	@DeleteAfterTestRun
 	private Group _group;
@@ -150,13 +200,8 @@ public class UnlockLayoutsSchedulerJobConfigurationTest {
 	@Inject
 	private LayoutLockManager _layoutLockManager;
 
-	private Lock _lock;
-
 	@Inject
 	private LockLocalService _lockLocalService;
-
-	@Inject
-	private LockManager _lockManager;
 
 	@Inject(
 		filter = "component.name=com.liferay.layout.locked.layouts.web.internal.scheduler.UnlockLayoutsSchedulerJobConfiguration"

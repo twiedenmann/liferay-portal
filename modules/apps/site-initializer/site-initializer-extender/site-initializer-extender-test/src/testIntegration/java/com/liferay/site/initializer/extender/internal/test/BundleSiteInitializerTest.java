@@ -632,7 +632,7 @@ public class BundleSiteInitializerTest {
 		Assert.assertNotNull(clientExtensionEntry);
 
 		CustomElementCET customElementCET =
-			(CustomElementCET)_cetFactory.create(clientExtensionEntry);
+			(CustomElementCET)_cetFactory.create(clientExtensionEntry, true);
 
 		Assert.assertEquals(
 			"liferay-test-remote-app", customElementCET.getHTMLElementName());
@@ -1416,7 +1416,7 @@ public class BundleSiteInitializerTest {
 			"Test Fragment Entry 2", testFragmentEntry2.getName());
 	}
 
-	private void _assertJournalArticles() throws Exception {
+	private void _assertJournalArticles1() throws Exception {
 		JournalArticle journalArticle1 =
 			_journalArticleLocalService.fetchArticle(
 				_group.getGroupId(), "test-journal-article-1");
@@ -1454,6 +1454,63 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			"TESTJOURNALFOLDER2", journalFolder2.getExternalReferenceCode());
 		Assert.assertEquals("Test Journal Folder 2", journalFolder2.getName());
+	}
+
+	private void _assertJournalArticles2() throws Exception {
+		JournalArticle journalArticle1 =
+			_journalArticleLocalService.fetchArticle(
+				_group.getGroupId(), "test-journal-article-1");
+
+		Assert.assertNotNull(journalArticle1);
+		Assert.assertEquals(
+			"TEST DDM TEMPLATE KEY 1", journalArticle1.getDDMTemplateKey());
+		Assert.assertEquals(
+			"Test Journal Article 1", journalArticle1.getTitle());
+
+		JournalArticle journalArticle2 =
+			_journalArticleLocalService.fetchArticle(
+				_group.getGroupId(), "test-journal-article-2");
+
+		Assert.assertNotNull(journalArticle2);
+		Assert.assertEquals(
+			"TEST DDM TEMPLATE KEY 1", journalArticle2.getDDMTemplateKey());
+		Assert.assertEquals(
+			"Test Journal Article 2 Update", journalArticle2.getTitle());
+
+		JournalArticle journalArticle3 =
+			_journalArticleLocalService.fetchArticle(
+				_group.getGroupId(), "test-journal-article-3");
+
+		Assert.assertNotNull(journalArticle3);
+		Assert.assertTrue(
+			Validator.isNull(journalArticle3.getDDMTemplateKey()));
+		Assert.assertEquals(
+			"Test Journal Article 3", journalArticle3.getTitle());
+
+		List<JournalFolder> journalFolders = _journalFolderService.getFolders(
+			_group.getGroupId());
+
+		Assert.assertEquals(
+			journalFolders.toString(), 3, journalFolders.size());
+
+		JournalFolder journalFolder1 = journalFolders.get(0);
+
+		Assert.assertEquals(
+			"TESTJOURNALFOLDER1", journalFolder1.getExternalReferenceCode());
+		Assert.assertEquals("Test Journal Folder 1", journalFolder1.getName());
+
+		JournalFolder journalFolder2 = journalFolders.get(1);
+
+		Assert.assertEquals(
+			"TESTJOURNALFOLDER2", journalFolder2.getExternalReferenceCode());
+		Assert.assertEquals(
+			"Test Journal Folder 2 Update", journalFolder2.getName());
+
+		JournalFolder journalFolder3 = journalFolders.get(2);
+
+		Assert.assertEquals(
+			"TESTJOURNALFOLDER3", journalFolder3.getExternalReferenceCode());
+		Assert.assertEquals("Test Journal Folder 3", journalFolder3.getName());
 	}
 
 	private void _assertKBArticles() throws Exception {
@@ -1515,7 +1572,7 @@ public class BundleSiteInitializerTest {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
 				_group.getGroupId(), "Test Display Page Template",
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE);
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
 
 		Assert.assertNotNull(layoutPageTemplateEntry);
 		Assert.assertEquals(
@@ -1564,7 +1621,7 @@ public class BundleSiteInitializerTest {
 		layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
 				_group.getGroupId(), "Test Master Page",
-				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT);
+				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT);
 
 		Assert.assertNotNull(layoutPageTemplateEntry);
 		Assert.assertEquals(
@@ -2833,7 +2890,7 @@ public class BundleSiteInitializerTest {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
 				_group.getGroupId(), "Test Display Page Template",
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE);
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
 
 		role = _roleLocalService.fetchRole(
 			_group.getCompanyId(), "Test Role 4");
@@ -2906,7 +2963,7 @@ public class BundleSiteInitializerTest {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
 				_group.getGroupId(), "Test Display Page Template",
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE);
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
 
 		String className =
 			"com.liferay.layout.page.template.model.LayoutPageTemplateEntry";
@@ -2926,7 +2983,7 @@ public class BundleSiteInitializerTest {
 		layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
 				_group.getGroupId(), "Test Master Page",
-				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT);
+				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT);
 
 		resourcePermission =
 			_resourcePermissionLocalService.fetchResourcePermission(
@@ -3568,7 +3625,7 @@ public class BundleSiteInitializerTest {
 
 		WorkflowDefinition workflowDefinitionTest1 =
 			workflowDefinitionResource.getWorkflowDefinitionByName(
-				"Test Workflow Definition 1", 1);
+				"Test Workflow Definition 1", null, 1);
 
 		Assert.assertNotNull(workflowDefinitionTest1);
 		Assert.assertEquals(
@@ -3591,7 +3648,7 @@ public class BundleSiteInitializerTest {
 
 		WorkflowDefinition workflowDefinitionTest2 =
 			workflowDefinitionResource.getWorkflowDefinitionByName(
-				"Test Workflow Definition 2", 1);
+				"Test Workflow Definition 2", null, 1);
 
 		Assert.assertNotNull(workflowDefinitionTest2);
 		Assert.assertEquals(
@@ -3694,7 +3751,7 @@ public class BundleSiteInitializerTest {
 		_assertExpandoColumns1();
 		_assertExpandoValues1();
 		_assertFragmentEntries();
-		_assertJournalArticles();
+		_assertJournalArticles1();
 		_assertKBArticles();
 		_assertLayoutPageTemplateEntries();
 		_assertLayoutSets();
@@ -3732,6 +3789,7 @@ public class BundleSiteInitializerTest {
 		_assertDDMTemplate2();
 		_assertExpandoColumns2();
 		_assertExpandoValues2();
+		_assertJournalArticles2();
 		_assertLayouts2();
 		_assertListTypeDefinitions2();
 		_assertNotificationTemplate2();

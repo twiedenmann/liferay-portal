@@ -4,65 +4,43 @@
  */
 
 import ClayIcon from '@clayui/icon';
-import {useCallback, useEffect, useState} from 'react';
 
 import {CardButton} from '../../../../components/CardButton/CardButton';
 
 import './index.scss';
 
-import {UseFormGetValues, UseFormSetValue} from 'react-hook-form';
+import {UseFormSetValue, UseFormWatch} from 'react-hook-form';
 
 import useCart from '../../../../hooks/useCart';
 import {GetAppForm} from '../../GetAppPage';
-import {paymentMethod} from '../../enums/paymentMethod';
+import {PaymentMethod} from '../../enums/paymentMethod';
 import {PaidTimeline} from './components/PaidTimeline';
 import {TrialTimeline} from './components/TrialTimeline';
 
-interface LicenseSelectorProps {
-	cart: ReturnType<typeof useCart>;
-	form: {
-		getValues: UseFormGetValues<GetAppForm>;
+type LicenseSelectorProps = {
+	cartUtil: ReturnType<typeof useCart>;
+	formUtils: {
 		setValue: UseFormSetValue<GetAppForm>;
+		watch: UseFormWatch<GetAppForm>;
 	};
-	onSelectLicense: (sku?: SKU) => void;
-	selectedPaymentMethod: React.Dispatch<
-		React.SetStateAction<PaymentMethodSelector>
-	>;
-	selectedProduct?: Product;
+	onSelectLicense: (sku?: DeliverySKU) => void;
+	selectedProduct?: DeliveryProduct;
 	setLicenseSelected: (licenseSelected: boolean) => void;
-	sku: SKU;
-}
+	sku: DeliverySKU;
+	trialSKU: any;
+};
 
 export function LicenseSelector({
-	cart,
+	cartUtil,
+	formUtils,
 	onSelectLicense,
-	selectedPaymentMethod,
 	selectedProduct,
 	setLicenseSelected,
-	sku,
+	trialSKU,
 }: LicenseSelectorProps) {
-	const [selectedTimeline, setSelectedTimeline] = useState('');
-	const [trialSKU, setTrialSKU] = useState<SKU>();
-	const [disabledButton, setDisabledButton] = useState<boolean>(false);
-
-	const hasTrialSkuVerification = useCallback(() => {
-		sku.skuOptions.forEach((option) => {
-			if (option.key === 'trial' && option.value === 'yes') {
-				setTrialSKU(sku);
-			}
-		});
-	}, [sku]);
-
-	useEffect(() => {
-		hasTrialSkuVerification();
-	}, [hasTrialSkuVerification]);
-
-	const handleLicenseSelect = (licenseSelected: boolean) => {
-		if (licenseSelected) {
-			onSelectLicense(trialSKU);
-			setLicenseSelected(true);
-			setDisabledButton(true);
-		}
+	const handleLicenseSelect = () => {
+		onSelectLicense(trialSKU);
+		setLicenseSelected(true);
 	};
 
 	return (
@@ -70,46 +48,57 @@ export function LicenseSelector({
 			<div className="license-selector mb-6">
 				<CardButton
 					description="Try now. Pay Later"
-					disabled={disabledButton}
+					disabled={!trialSKU}
 					icon={
 						<span className="license-icon">
 							<ClayIcon symbol="check-circle" />
 						</span>
 					}
 					onClick={() => {
-						selectedPaymentMethod(paymentMethod.TRIAL);
-						setSelectedTimeline('trial');
+						formUtils.setValue(
+							'selectedPaymentMethod',
+							PaymentMethod.TRIAL
+						);
+						formUtils.setValue('selectedTimeline', 'trial');
 					}}
-					selected={selectedTimeline === 'trial'}
+					selected={formUtils.watch('selectedTimeline') === 'trial'}
 					title={
-						selectedTimeline === 'trial' ? '30-day Trial' : 'Trial'
+						formUtils.watch('selectedTimeline') === 'trial'
+							? '30-day Trial'
+							: 'Trial'
 					}
 				/>
+
 				<CardButton
 					description="Pay Today"
-					disabled={false}
 					icon={
 						<span className="license-icon">
 							<ClayIcon symbol="credit-card" />
 						</span>
 					}
 					onClick={() => {
-						selectedPaymentMethod(paymentMethod.PAY);
-						setSelectedTimeline('paid');
+						formUtils.setValue('selectedTimeline', 'paid');
+						formUtils.setValue(
+							'selectedPaymentMethod',
+							PaymentMethod.PAY
+						);
 					}}
-					selected={selectedTimeline === 'paid'}
+					selected={formUtils.watch('selectedTimeline') === 'paid'}
 					title="Paid"
 				/>
 			</div>
 
-			{selectedTimeline && (
+			{formUtils.watch('selectedTimeline') && (
 				<div className="timeline-container">
-					{selectedTimeline === 'trial' ? (
+					{formUtils.watch('selectedTimeline') === 'trial' ? (
 						<TrialTimeline
-							setLicenseSelected={handleLicenseSelect}
+							handleLicenseSelect={handleLicenseSelect}
 						/>
 					) : (
-						<PaidTimeline cart={cart} product={selectedProduct} />
+						<PaidTimeline
+							cartUtil={cartUtil}
+							product={selectedProduct}
+						/>
 					)}
 				</div>
 			)}

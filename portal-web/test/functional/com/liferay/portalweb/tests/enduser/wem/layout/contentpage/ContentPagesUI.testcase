@@ -119,6 +119,7 @@ definition {
 		ContentPages.viewFragmentText(
 			fragmentName = "paragraph",
 			id = "element-text",
+			position = 2,
 			text = "Enjoy using the best DXP on Earth!");
 	}
 
@@ -225,6 +226,7 @@ definition {
 	@description = "This is a test for LPS-158746. Could add and remove fragment to Favorites session and widget to Highlighted session on content page."
 	@priority = 5
 	test CouldAddAndRemoveFragmentToFavoritesSessionAndWidgetToHighlightedSession {
+		property portal.acceptance = "true";
 		property portal.release = "false";
 
 		task ("When go to edit content page") {
@@ -604,7 +606,7 @@ definition {
 			var leftSidebarPanelWidth = selenium.getElementWidth("Sidebar#PANEL_OPEN");
 			var bodyWidth = selenium.getElementWidth("//body");
 			var rightSidebarWidth = selenium.getElementWidth("PageEditor#ITEM_CONFIGURATION_SIDEBAR");
-			var gridFragmentWidth = selenium.getElementWidth("//div[@aria-label='Grid']");
+			var gridFragmentWidth = selenium.getElementWidth("//div[@data-name='Grid']");
 			var leftSidebarWidth = ${leftSidebarButtonsWidth} + ${leftSidebarPanelWidth};
 			var offsetWidth = selenium.getAttribute("//div[contains(@class,'overflow-auto')]@offsetWidth");
 			var clientWidth = selenium.getAttribute("//div[contains(@class,'overflow-auto')]@clientWidth");
@@ -621,6 +623,8 @@ definition {
 	@description = "This is a test for LPS-170955. View Autosave icon styles are adjusted."
 	@priority = 5
 	test ViewAutosaveIconStyles {
+		property portal.acceptance = "true";
+
 		task ("Given a page designer navigates to the page editor") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
@@ -1017,12 +1021,12 @@ definition {
 
 			for (var i : list "1,2,3,4") {
 				AssertAttributeValue(
-					attribute1 = "title",
 					category = "Brand Colors",
 					index = ${n},
 					locator1 = "PageEditor#COLOR_SWATCH_ITEM",
 					panel = "Color System",
-					value1 = "Brand Color ${i}");
+					value1 = "title",
+					value2 = "Brand Color ${i}");
 
 				var n = ${n} + 1;
 			}
@@ -1069,7 +1073,7 @@ definition {
 
 			PagesAdmin.openPageEllipsisMenu(pageName = "Test Page Name");
 
-			MenuItem.viewOrder(menuItemList = "Edit,Translate,View,Preview Draft,Discard Draft,Orphan Widgets,Copy,Export for Translation,Import Translation,Configure,Permissions,Delete");
+			MenuItem.viewOrder(menuItemList = "Edit,Translate,View,Preview Draft,Discard Draft,Orphan Widgets,Convert to Page Template,Make a Copy,Export for Translation,Import Translation,Configure,Permissions,Delete");
 		}
 	}
 
@@ -1113,7 +1117,7 @@ definition {
 			var leftSidebarPanelWidth = selenium.getElementWidth("Sidebar#PANEL_OPEN");
 			var bodyWidth = selenium.getElementWidth("//body");
 			var rightSidebarWidth = selenium.getElementWidth("PageEditor#ITEM_CONFIGURATION_SIDEBAR");
-			var headingFragmentWidth = selenium.getElementWidth("//div[@aria-label='Heading']");
+			var headingFragmentWidth = selenium.getElementWidth("//div[@data-name='Heading']");
 			var leftSidebarWidth = ${leftSidebarButtonsWidth} + ${leftSidebarPanelWidth};
 
 			var bothSidebarWidth = ${leftSidebarWidth} + ${rightSidebarWidth};

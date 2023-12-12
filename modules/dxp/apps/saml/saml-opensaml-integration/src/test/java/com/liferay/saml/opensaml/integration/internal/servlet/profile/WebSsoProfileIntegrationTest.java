@@ -5,11 +5,11 @@
 
 package com.liferay.saml.opensaml.integration.internal.servlet.profile;
 
+import com.liferay.portal.kernel.cookies.CookiesManager;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
-import com.liferay.portal.uuid.PortalUUIDImpl;
 import com.liferay.saml.constants.SamlWebKeys;
 import com.liferay.saml.opensaml.integration.internal.BaseSamlTestCase;
 import com.liferay.saml.opensaml.integration.internal.bootstrap.SecurityConfigurationBootstrap;
@@ -53,8 +53,10 @@ import net.shibboleth.utilities.java.support.security.IdentifierGenerationStrate
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -95,6 +97,7 @@ import org.opensaml.security.credential.Credential;
 import org.opensaml.xmlsec.signature.Signature;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -111,13 +114,21 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
+	@BeforeClass
+	public static void setUpClass() {
+		_cookiesManagerServiceRegistration = _bundleContext.registerService(
+			CookiesManager.class, Mockito.mock(CookiesManager.class), null);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		_cookiesManagerServiceRegistration.unregister();
+	}
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
-
-		ReflectionTestUtil.setFieldValue(
-			_relayStateHelperImpl, "_portalUUID", new PortalUUIDImpl());
 
 		_samlSpAuthRequestLocalService = getMockPortletService(
 			SamlSpAuthRequestLocalServiceUtil.class,
@@ -611,7 +622,8 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 		ReflectionTestUtil.setFieldValue(
 			metadataManagerImpl, "_credentialResolver", credentialResolver);
 		ReflectionTestUtil.setFieldValue(
-			metadataManagerImpl, "_localEntityManager", credentialResolver);
+			metadataManagerImpl, "_localEntityManager",
+			keyStoreLocalEntityManager);
 		ReflectionTestUtil.setFieldValue(
 			metadataManagerImpl, "_portal", portal);
 		ReflectionTestUtil.setFieldValue(
@@ -1269,6 +1281,11 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 			assertion.getSignature(), messageContext,
 			metadataManagerImpl.getSignatureTrustEngine());
 	}
+
+	private static final BundleContext _bundleContext =
+		SystemBundleUtil.getBundleContext();
+	private static ServiceRegistration<CookiesManager>
+		_cookiesManagerServiceRegistration;
 
 	private final RelayStateHelperImpl _relayStateHelperImpl =
 		new RelayStateHelperImpl();

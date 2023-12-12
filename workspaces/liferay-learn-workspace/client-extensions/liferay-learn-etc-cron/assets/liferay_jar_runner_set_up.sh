@@ -37,7 +37,7 @@ function copy_images {
 	# Include must come before exclude.
 	#
 
-	rsync --include="images/*" --include="*/" --exclude="*" --prune-empty-dirs --recursive ~/liferay-learn/docs /public_html/images
+	rsync --include="images/*" --include="*/" --exclude="*" --prune-empty-dirs --recursive ~/liferay-learn/docs/ /public_html/images
 }
 
 function generate_zip_files {
@@ -46,9 +46,9 @@ function generate_zip_files {
 		return
 	fi
 
-	pushd ~/liferay-learn > /dev/null
+	pushd ~/liferay-learn/docs > /dev/null
 
-	for zip_dir_name in $(find docs -name \*.zip -type d)
+	for zip_dir_name in $(find * -name \*.zip -type d)
 	do
 		pushd "${zip_dir_name}"
 
@@ -167,7 +167,7 @@ function prepare_import {
 }
 
 function replace_tokens {
-	pushd  ~/liferay-learn/docs
+	pushd ~/liferay-learn/docs
 
 	./replace_tokens.sh
 
@@ -186,9 +186,9 @@ function send_slack_message {
 
 	local text="$(date) *${LCP_PROJECT_ID}*->*${LCP_SERVICE_ID}* <${log_url}|${HOSTNAME}> \n>${slack_message}"
 
-	curl \
+	eval curl \
 		-X POST \
-		-d "payload={\"channel\": \"${LIFERAY_LEARN_ETC_CRON_SLACK_CHANNEL}\", \"icon_emoji\": \":robot_face:\", \"text\": \"${text}\", \"username\": \"devopsbot\"}" ${LIFERAY_LEARN_ETC_CRON_SLACK_ENDPOINT}
+		-d "'{\"channel\": \"${LIFERAY_LEARN_ETC_CRON_SLACK_CHANNEL}\", \"icon_emoji\": \":robot_face:\", \"text\": \"${text}\", \"username\": \"devopsbot\"}'" ${LIFERAY_LEARN_ETC_CRON_SLACK_ENDPOINT}
 }
 
 function update_examples {

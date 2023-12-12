@@ -5,19 +5,22 @@
 
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
-import {Dispatch} from 'react';
+import {useNavigate} from 'react-router-dom';
 
-import {showAccountImage} from '../../utils/util';
+import {getAccountImage} from '../../utils/util';
 import {DashboardNavigationList} from './DashboardNavigationList';
 
 import './DashboardNavigation.scss';
+import {Liferay} from '../../liferay/liferay';
+import CommerceSelectAccountImpl from '../../services/rest/CommerceSelectAccount';
 import {AppProps} from '../DashboardTable/DashboardTable';
 export interface DashboardListItems {
 	itemIcon: string;
 	itemName: string;
-	itemSelected: boolean;
+	itemSelected?: boolean;
 	itemTitle: string;
 	items?: AppProps[];
+	path: string;
 }
 
 interface DashboardNavigationProps {
@@ -26,9 +29,6 @@ interface DashboardNavigationProps {
 	accounts: Account[];
 	currentAccount: Account;
 	dashboardNavigationItems: DashboardListItems[];
-	onSelectAppChange?: (value: AppProps | undefined) => void;
-	setDashboardNavigationItems: (values: DashboardListItems[]) => void;
-	setSelectedAccount: Dispatch<React.SetStateAction<Account>>;
 }
 
 export function DashboardNavigation({
@@ -37,10 +37,9 @@ export function DashboardNavigation({
 	accounts,
 	currentAccount,
 	dashboardNavigationItems,
-	onSelectAppChange,
-	setDashboardNavigationItems,
-	setSelectedAccount,
 }: DashboardNavigationProps) {
+	const navigate = useNavigate();
+
 	return (
 		<div className="dashboard-navigation-container">
 			<ClayDropDown
@@ -50,11 +49,14 @@ export function DashboardNavigation({
 							<img
 								alt="account logo"
 								className="dashboard-navigation-header-logo"
-								src={showAccountImage(accountIcon)}
+								src={getAccountImage(accountIcon)}
 							/>
 
 							<div className="dashboard-navigation-header-text-container">
-								<span className="dashboard-navigation-header-title">
+								<span
+									className="dashboard-navigation-header-title"
+									title={currentAccount?.name}
+								>
 									{currentAccount?.name}
 								</span>
 
@@ -74,8 +76,21 @@ export function DashboardNavigation({
 				<ClayDropDown.ItemList>
 					{accounts.map((account) => (
 						<ClayDropDown.Item
+							active={account.id === currentAccount?.id}
 							key={account.id}
-							onClick={() => setSelectedAccount(account)}
+							onClick={() =>
+								CommerceSelectAccountImpl.selectAccount(
+									account.id
+								).then(() => {
+									Liferay.CommerceContext.account = {
+										accountId: account.id,
+									};
+
+									navigate('/');
+
+									window.location.reload();
+								})
+							}
 						>
 							{account.name}
 						</ClayDropDown.Item>
@@ -84,16 +99,10 @@ export function DashboardNavigation({
 			</ClayDropDown>
 
 			<div className="dashboard-navigation-body">
-				{dashboardNavigationItems.map((navigationMock) => (
+				{dashboardNavigationItems.map((navigationMock, index) => (
 					<DashboardNavigationList
-						dashboardNavigationItems={dashboardNavigationItems}
-						key={navigationMock.itemName}
+						key={index}
 						navigationItemMock={navigationMock}
-						navigationItemsMock={dashboardNavigationItems}
-						onSelectAppChange={onSelectAppChange}
-						setDashboardNavigationItems={
-							setDashboardNavigationItems
-						}
 					/>
 				))}
 			</div>

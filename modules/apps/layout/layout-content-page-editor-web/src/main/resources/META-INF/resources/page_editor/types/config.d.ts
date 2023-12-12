@@ -14,6 +14,7 @@ export interface Config {
 	addFragmentEntryLinksURL: string;
 	addItemURL: string;
 	addPortletURL: string;
+	addRuleURL: string;
 	addSegmentsExperienceURL: string;
 
 	assetCategoryTreeNodeItemSelectorURL: string;
@@ -88,12 +89,13 @@ export interface Config {
 		}
 	>;
 
-	defaultLanguageId: string;
+	defaultLanguageId: Liferay.Language.Locale;
 	defaultSegmentsEntryId: string;
 	defaultSegmentsExperienceId: string;
 	defaultStyleBookEntryImagePreviewURL: string;
 	defaultStyleBookEntryName: string;
 	deleteFragmentEntryLinkCommentURL: string;
+	deleteRuleURL: string;
 	deleteSegmentsExperienceURL: string;
 	discardDraftURL: string;
 	duplicateItemURL: string;
@@ -133,6 +135,8 @@ export interface Config {
 	getLayoutPageTemplateCollectionsURL: string;
 	getPageContentsURL: string;
 	getPortletsURL: string;
+	getRolesURL: string;
+	getUsersURL: string;
 	imageSelectorURL: string;
 	infoItemPreviewSelectorURL: string;
 	infoItemSelectorURL: string;
@@ -207,6 +211,7 @@ export interface Config {
 	updateItemConfigURL: string;
 	updateLayoutPageTemplateDataURL: string;
 	updateRowColumnsURL: string;
+	updateRuleURL: string;
 	updateSegmentsExperiencePriorityURL: string;
 	updateSegmentsExperienceURL: string;
 	videoItemSelectorURL: string;

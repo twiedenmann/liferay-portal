@@ -4,9 +4,11 @@
  */
 
 import {useState} from 'react';
+import {UseFormSetValue, UseFormWatch} from 'react-hook-form';
 
 import {Input} from '../../../../components/Input/Input';
-import {paymentMethod} from '../../enums/paymentMethod';
+import {GetAppForm} from '../../GetAppPage';
+import {PaymentMethod} from '../../enums/paymentMethod';
 import {StepType} from '../../enums/stepType';
 import {BillingAddress} from './components/BillingAddress/BillingAddress';
 import {PaymentMethodMode} from './components/PaymentMethodMode/PaymentMethodMode';
@@ -18,13 +20,16 @@ interface SelectPaymentMethodProps {
 	billingAddress: BillingAddress;
 	email: string;
 	enableTrialMethod: boolean;
+	form: {
+		setValue: UseFormSetValue<GetAppForm>;
+		watch: UseFormWatch<GetAppForm>;
+	};
 	purchaseOrderNumber: string;
 	selectedPaymentMethod: PaymentMethodSelector;
 	setBillingAddress: (value: BillingAddress) => void;
 	setEmail: (value: string) => void;
 	setEnablePurchaseButton: (value: boolean) => void;
 	setPurchaseOrderNumber: (value: string) => void;
-	setSelectedPaymentMethod: (value: PaymentMethodSelector) => void;
 	step: StepType;
 }
 
@@ -33,13 +38,13 @@ export function SelectPaymentMethod({
 	billingAddress,
 	email,
 	enableTrialMethod,
+	form,
 	purchaseOrderNumber,
 	selectedPaymentMethod,
 	setBillingAddress,
 	setEmail,
 	setEnablePurchaseButton,
 	setPurchaseOrderNumber,
-	setSelectedPaymentMethod,
 	step,
 }: SelectPaymentMethodProps) {
 	const [selectedAddress, setSelectedAddress] = useState('');
@@ -50,21 +55,25 @@ export function SelectPaymentMethod({
 			<div className="d-flex justify-content-between mb-6">
 				<PaymentMethodSelector
 					enableTrial={enableTrialMethod}
-					selectedPaymentMethod={selectedPaymentMethod as string}
-					setSelectedPaymentMethod={setSelectedPaymentMethod}
+					selectedPaymentMethod={
+						selectedPaymentMethod as PaymentMethod
+					}
+					setSelectedPaymentMethod={(value: PaymentMethod) =>
+						form.setValue('selectedPaymentMethod', value)
+					}
 					step={step}
 				/>
 			</div>
 
-			{selectedPaymentMethod === paymentMethod.TRIAL && <TrialMethod />}
+			{selectedPaymentMethod === PaymentMethod.TRIAL && <TrialMethod />}
 
-			{selectedPaymentMethod === paymentMethod.PAY && (
+			{selectedPaymentMethod === PaymentMethod.PAY && (
 				<PaymentMethodMode
 					selectedPaymentMethod={selectedPaymentMethod}
 				/>
 			)}
 
-			{selectedPaymentMethod === paymentMethod.ORDER && (
+			{selectedPaymentMethod === PaymentMethod.ORDER && (
 				<>
 					<Input
 						label="Purchase order number"

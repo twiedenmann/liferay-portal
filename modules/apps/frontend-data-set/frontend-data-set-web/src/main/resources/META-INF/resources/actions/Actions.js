@@ -10,7 +10,8 @@ import React, {useContext, useState} from 'react';
 import FrontendDataSetContext from '../FrontendDataSetContext';
 import {ACTION_ITEM_TARGETS} from '../utils/actionItems/constants';
 import {formatActionURL} from '../utils/index';
-import {openPermissionsModal, resolveModalSize} from '../utils/modals/index';
+import {openPermissionsModal} from '../utils/modals/openPermissionsModal';
+import {resolveModalSize} from '../utils/modals/resolveModalSize';
 import ViewsContext from '../views/ViewsContext';
 import ActionsDropdown from './ActionsDropdown';
 import QuickActions from './QuickActions';
@@ -27,7 +28,14 @@ const formatActions = (actions, itemData) => {
 	return actions
 		? actions.reduce((actions, action) => {
 				if (action.data?.permissionKey) {
-					if (itemData.actions[action.data.permissionKey]) {
+					if (
+						itemData.actions &&
+						Object.keys(itemData.actions).some(
+							(itemAction) =>
+								itemAction.toLowerCase() ===
+								action.data.permissionKey.toLowerCase()
+						)
+					) {
 						if (action.target === 'headless') {
 							return [
 								...actions,

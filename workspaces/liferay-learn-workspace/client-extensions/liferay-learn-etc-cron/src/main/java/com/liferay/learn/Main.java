@@ -77,6 +77,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -94,6 +95,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
@@ -128,7 +130,61 @@ public class Main {
 			GetterUtil.getBoolean(
 				System.getenv("LIFERAY_LEARN_ETC_CRON_OFFLINE")));
 
-		main.uploadToLiferay();
+		String exceptionMessage = null;
+
+		try {
+			main.uploadToLiferay();
+		}
+		catch (Exception exception) {
+			exceptionMessage = exception.getMessage();
+		}
+
+		sendSlackMessage(exceptionMessage);
+	}
+
+	public static void sendSlackMessage(String exceptionMessage)
+		throws Exception {
+
+		HttpPost httpPost = new HttpPost(
+			System.getenv("LIFERAY_LEARN_ETC_CRON_SLACK_ENDPOINT"));
+
+		String slackMessage = StringBundler.concat(
+			new Date(), " *", System.getenv("LCP_PROJECT_ID"), "*->*",
+			System.getenv("LCP_SERVICE_ID"), "* <https://console.",
+			System.getenv("LCP_INFRASTRUCTURE_DOMAIN"), "/projects/",
+			System.getenv("LCP_PROJECT_ID"), "/services/",
+			System.getenv("LCP_SERVICE_ID"), "/logs?instanceId=",
+			System.getenv("HOSTNAME"), "&logServiceId=",
+			System.getenv("LCP_SERVICE_ID"), "|", System.getenv("HOSTNAME"),
+			"> \n>");
+
+		if (Validator.isNotNull(exceptionMessage)) {
+			slackMessage +=
+				":red-alert:Import job finished with return code 1\n>" +
+					exceptionMessage;
+		}
+		else {
+			slackMessage += ":sunflower:Import job finished with return code 0";
+		}
+
+		httpPost.setEntity(
+			new StringEntity(
+				StringBundler.concat(
+					"{\"channel\": \"",
+					System.getenv("LIFERAY_LEARN_ETC_CRON_SLACK_CHANNEL"),
+					"\", \"icon_emoji\": \":robot_face:\", \"text\": \"",
+					slackMessage, "\", \"username\": \"devopsbot\"}")));
+
+		httpPost.setHeader("Accept", "application/json");
+		httpPost.setHeader("Content-type", "application/json");
+
+		HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+
+		try (CloseableHttpClient closeableHttpClient =
+				httpClientBuilder.build()) {
+
+			closeableHttpClient.execute(httpPost);
+		}
 	}
 
 	public Main(
@@ -173,14 +229,12 @@ public class Main {
 
 			_liferayContentStructureId = dataDefinition.getId();
 
-			_loadTaxonomyCategories();
+			_loadTaxonomyVocabularies();
 		}
 	}
 
 	public void uploadToLiferay() throws Exception {
-		if (!_validateUUIDs()) {
-			System.exit(1);
-		}
+		_validateUUIDs();
 
 		long start = System.currentTimeMillis();
 
@@ -269,7 +323,11 @@ public class Main {
 						_structuredContentResource.putStructuredContent(
 							siteStructuredContent.getId(), structuredContent);
 
-					_setVisibility(fileName, siteStructuredContent);
+					_structuredContentResource.
+						putStructuredContentPermissionsPage(
+							importedStructuredContent.getId(),
+							_getPermissions(
+								fileName, importedStructuredContent.getId()));
 
 					updatedStructuredContentCount++;
 				}
@@ -296,14 +354,15 @@ public class Main {
 						"Adding structured content " +
 							structuredContent.getFriendlyUrlPath());
 
+					structuredContent.setPermissions(
+						_getPermissions(fileName, structuredContent.getId()));
+
 					importedStructuredContent =
 						_structuredContentResource.
 							postStructuredContentFolderStructuredContent(
 								structuredContent.
 									getStructuredContentFolderId(),
 								structuredContent);
-
-					_setVisibility(fileName, structuredContent);
 
 					addedStructuredContentCount++;
 				}
@@ -370,7 +429,7 @@ public class Main {
 				System.out.println(errorMessage);
 			}
 
-			System.exit(1);
+			throw new Exception(_errorMessages.size() + " error messages");
 		}
 	}
 
@@ -474,8 +533,9 @@ public class Main {
 			Matcher.quoteReplacement(File.separator));
 
 		for (String part : parts) {
-			if (part.equalsIgnoreCase("en") || part.equalsIgnoreCase("ja") ||
-				part.equalsIgnoreCase("latest")) {
+			if (StringUtil.equalsIgnoreCase(part, "en") ||
+				StringUtil.equalsIgnoreCase(part, "ja") ||
+				StringUtil.equalsIgnoreCase(part, "latest")) {
 
 				continue;
 			}
@@ -609,10 +669,9 @@ public class Main {
 		HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
 		try (CloseableHttpClient closeableHttpClient =
-				httpClientBuilder.build()) {
-
+				httpClientBuilder.build();
 			CloseableHttpResponse closeableHttpResponse =
-				closeableHttpClient.execute(httpPost);
+				closeableHttpClient.execute(httpPost)) {
 
 			StatusLine statusLine = closeableHttpResponse.getStatusLine();
 
@@ -667,6 +726,90 @@ public class Main {
 		}
 
 		return parentMarkdownFile;
+	}
+
+	private Permission[] _getPermissions(
+			String fileName, Long structuredContentId)
+		throws Exception {
+
+		List<Permission> permissions = new ArrayList<>();
+
+		if (structuredContentId != null) {
+			Page<Permission> structuredContentPermissionsPage =
+				_structuredContentResource.getStructuredContentPermissionsPage(
+					structuredContentId, null);
+
+			for (Permission permission :
+					structuredContentPermissionsPage.getItems()) {
+
+				if (Objects.equals(permission.getRoleName(), "Owner")) {
+					continue;
+				}
+
+				permission.setActionIds(new String[0]);
+
+				permissions.add(permission);
+			}
+		}
+
+		SnakeYamlFrontMatterVisitor snakeYamlFrontMatterVisitor =
+			new SnakeYamlFrontMatterVisitor();
+
+		File file = new File(fileName);
+
+		snakeYamlFrontMatterVisitor.visit(
+			_parser.parse(
+				_processMarkdown(
+					FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+					file)));
+
+		Map<String, Object> data = snakeYamlFrontMatterVisitor.getData();
+
+		if ((data == null) || !data.containsKey("visibility")) {
+			permissions.add(
+				new Permission() {
+					{
+						actionIds = new String[] {"VIEW"};
+						roleName = "Guest";
+					}
+				});
+
+			return permissions.toArray(new Permission[0]);
+		}
+
+		Object visibilityObject = data.get("visibility");
+
+		if (!(visibilityObject instanceof ArrayList)) {
+			return null;
+		}
+
+		for (Object object : (ArrayList)visibilityObject) {
+			if (!(object instanceof String)) {
+				continue;
+			}
+
+			permissions.add(
+				new Permission() {
+					{
+						actionIds = new String[] {"ADD_DISCUSSION", "VIEW"};
+						roleName = (String)object;
+					}
+				});
+		}
+
+		if (permissions.isEmpty()) {
+			return null;
+		}
+
+		permissions.add(
+			new Permission() {
+				{
+					actionIds = new String[0];
+					roleName = "Guest";
+				}
+			});
+
+		return permissions.toArray(new Permission[0]);
 	}
 
 	private String _getProduct(File file) {
@@ -926,8 +1069,7 @@ public class Main {
 		_dataDefinitionResource = dataDefinitionResourceBuilder.header(
 			"Authorization", authorization
 		).endpoint(
-			_liferayURL.getHost(), _liferayURL.getPort(),
-			_liferayURL.getProtocol()
+			_liferayURL
 		).build();
 
 		SiteResource.Builder siteResourceBuilder = SiteResource.builder();
@@ -935,8 +1077,7 @@ public class Main {
 		_siteResource = siteResourceBuilder.header(
 			"Authorization", authorization
 		).endpoint(
-			_liferayURL.getHost(), _liferayURL.getPort(),
-			_liferayURL.getProtocol()
+			_liferayURL
 		).build();
 
 		StructuredContentFolderResource.Builder
@@ -947,8 +1088,7 @@ public class Main {
 			structuredContentFolderResourceBuilder.header(
 				"Authorization", authorization
 			).endpoint(
-				_liferayURL.getHost(), _liferayURL.getPort(),
-				_liferayURL.getProtocol()
+				_liferayURL
 			).build();
 
 		StructuredContentResource.Builder structuredContentResourceBuilder =
@@ -957,8 +1097,7 @@ public class Main {
 		_structuredContentResource = structuredContentResourceBuilder.header(
 			"Authorization", authorization
 		).endpoint(
-			_liferayURL.getHost(), _liferayURL.getPort(),
-			_liferayURL.getProtocol()
+			_liferayURL
 		).build();
 
 		TaxonomyCategoryResource.Builder taxonomyCategoryResourceBuilder =
@@ -967,8 +1106,7 @@ public class Main {
 		_taxonomyCategoryResource = taxonomyCategoryResourceBuilder.header(
 			"Authorization", authorization
 		).endpoint(
-			_liferayURL.getHost(), _liferayURL.getPort(),
-			_liferayURL.getProtocol()
+			_liferayURL
 		).build();
 
 		TaxonomyVocabularyResource.Builder taxonomyVocabularyResourceBuilder =
@@ -977,13 +1115,79 @@ public class Main {
 		_taxonomyVocabularyResource = taxonomyVocabularyResourceBuilder.header(
 			"Authorization", authorization
 		).endpoint(
-			_liferayURL.getHost(), _liferayURL.getPort(),
-			_liferayURL.getProtocol()
+			_liferayURL
 		).build();
 	}
 
-	private void _loadTaxonomyCategories() throws Exception {
-		_taxonomyCategoriesJSONObject = new JSONObject();
+	private void _loadTaxonomyCategories(
+			Map<String, String> existingTaxonomyCategories,
+			JSONObject jsonObject, String parentTaxonomyCategoryId,
+			long taxonomyVocabularyId)
+		throws Exception {
+
+		if (!jsonObject.has("taxonomyCategories")) {
+			return;
+		}
+
+		JSONArray jsonArray = jsonObject.getJSONArray("taxonomyCategories");
+
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject taxonomyCategoryJSONObject = jsonArray.getJSONObject(i);
+
+			String name = taxonomyCategoryJSONObject.getString("name");
+
+			if (!existingTaxonomyCategories.containsKey(name)) {
+				TaxonomyCategory taxonomyCategory = new TaxonomyCategory();
+
+				taxonomyCategory.setName(name);
+				taxonomyCategory.setTaxonomyVocabularyId(taxonomyVocabularyId);
+
+				if (parentTaxonomyCategoryId != null) {
+					taxonomyCategory =
+						_taxonomyCategoryResource.
+							postTaxonomyCategoryTaxonomyCategory(
+								parentTaxonomyCategoryId, taxonomyCategory);
+				}
+				else {
+					taxonomyCategory =
+						_taxonomyCategoryResource.
+							postTaxonomyVocabularyTaxonomyCategory(
+								taxonomyCategory.getTaxonomyVocabularyId(),
+								taxonomyCategory);
+				}
+
+				_taxonomyCategoriesJSONObject.put(
+					name, taxonomyCategory.getId());
+			}
+			else {
+				_taxonomyCategoriesJSONObject.put(
+					name, existingTaxonomyCategories.get(name));
+			}
+
+			_loadTaxonomyCategories(
+				existingTaxonomyCategories, taxonomyCategoryJSONObject,
+				_taxonomyCategoriesJSONObject.getString(name),
+				taxonomyVocabularyId);
+		}
+	}
+
+	private void _loadTaxonomyVocabularies() throws Exception {
+		File file = new File(
+			_markdownImportDirName + "/../taxonomy-vocabularies.json");
+
+		if (!file.exists()) {
+			return;
+		}
+
+		JSONObject taxonomyVocabulariesJSONObject = new JSONObject(
+			FileUtils.readFileToString(file, StandardCharsets.UTF_8));
+
+		if (taxonomyVocabulariesJSONObject.isEmpty()) {
+			return;
+		}
+
+		Map<String, String> existingTaxonomyCategories = new HashMap<>();
+		Map<String, Long> existingTaxonomyVocabularies = new HashMap<>();
 
 		com.liferay.headless.admin.taxonomy.client.pagination.Page
 			<TaxonomyVocabulary> taxonomyVocabulariesPage =
@@ -996,11 +1200,14 @@ public class Main {
 		for (TaxonomyVocabulary taxonomyVocabulary :
 				taxonomyVocabulariesPage.getItems()) {
 
+			existingTaxonomyVocabularies.put(
+				taxonomyVocabulary.getName(), taxonomyVocabulary.getId());
+
 			com.liferay.headless.admin.taxonomy.client.pagination.Page
 				<TaxonomyCategory> taxonomyCategoriesPage =
 					_taxonomyCategoryResource.
 						getTaxonomyVocabularyTaxonomyCategoriesPage(
-							taxonomyVocabulary.getId(), null, null, null, null,
+							taxonomyVocabulary.getId(), true, null, null, null,
 							com.liferay.headless.admin.taxonomy.client.
 								pagination.Pagination.of(-1, -1),
 							null);
@@ -1008,38 +1215,38 @@ public class Main {
 			for (TaxonomyCategory taxonomyCategory :
 					taxonomyCategoriesPage.getItems()) {
 
-				_taxonomyCategoriesJSONObject.put(
+				existingTaxonomyCategories.put(
 					taxonomyCategory.getName(), taxonomyCategory.getId());
-
-				_loadTaxonomyCategories(taxonomyCategory);
 			}
 		}
-	}
 
-	private void _loadTaxonomyCategories(
-			TaxonomyCategory parentTaxonomyCategory)
-		throws Exception {
+		JSONArray jsonArray = taxonomyVocabulariesJSONObject.getJSONArray(
+			"taxonomyVocabularies");
 
-		if (parentTaxonomyCategory.getNumberOfTaxonomyCategories() == 0) {
-			return;
-		}
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject taxonomyVocabularyJSONObject = jsonArray.getJSONObject(
+				i);
 
-		com.liferay.headless.admin.taxonomy.client.pagination.Page
-			<TaxonomyCategory> taxonomyCategoriesPage =
-				_taxonomyCategoryResource.
-					getTaxonomyCategoryTaxonomyCategoriesPage(
-						parentTaxonomyCategory.getId(), null, null, null,
-						com.liferay.headless.admin.taxonomy.client.pagination.
-							Pagination.of(-1, -1),
-						null);
+			String name = taxonomyVocabularyJSONObject.getString("name");
 
-		for (TaxonomyCategory taxonomyCategory :
-				taxonomyCategoriesPage.getItems()) {
+			Long taxonomyVocabularyId = existingTaxonomyVocabularies.get(name);
 
-			_taxonomyCategoriesJSONObject.put(
-				taxonomyCategory.getName(), taxonomyCategory.getId());
+			if (taxonomyVocabularyId == null) {
+				TaxonomyVocabulary taxonomyVocabulary =
+					new TaxonomyVocabulary();
 
-			_loadTaxonomyCategories(taxonomyCategory);
+				taxonomyVocabulary.setName(name);
+
+				taxonomyVocabulary =
+					_taxonomyVocabularyResource.postSiteTaxonomyVocabulary(
+						_liferaySiteId, taxonomyVocabulary);
+
+				taxonomyVocabularyId = taxonomyVocabulary.getId();
+			}
+
+			_loadTaxonomyCategories(
+				existingTaxonomyCategories, taxonomyVocabularyJSONObject, null,
+				taxonomyVocabularyId);
 		}
 	}
 
@@ -1460,77 +1667,6 @@ public class Main {
 		return line;
 	}
 
-	private void _setVisibility(
-			String fileName, StructuredContent structuredContent)
-		throws Exception {
-
-		SnakeYamlFrontMatterVisitor snakeYamlFrontMatterVisitor =
-			new SnakeYamlFrontMatterVisitor();
-
-		File file = new File(fileName);
-
-		snakeYamlFrontMatterVisitor.visit(
-			_parser.parse(
-				_processMarkdown(
-					FileUtils.readFileToString(file, StandardCharsets.UTF_8),
-					file)));
-
-		Map<String, Object> data = snakeYamlFrontMatterVisitor.getData();
-
-		if ((data == null) || !data.containsKey("visibility")) {
-			Permission[] permissions = {
-				new Permission() {
-					{
-						actionIds = new String[] {"VIEW"};
-						roleName = "Guest";
-					}
-				}
-			};
-
-			_structuredContentResource.putStructuredContentPermissionsPage(
-				structuredContent.getId(), permissions);
-
-			return;
-		}
-
-		Object roleNames = data.get("visibility");
-
-		if (!(roleNames instanceof ArrayList)) {
-			return;
-		}
-
-		List<Permission> permissions = new ArrayList<>();
-
-		for (Object roleNamesObject : (ArrayList)roleNames) {
-			if (!(roleNamesObject instanceof String)) {
-				continue;
-			}
-
-			permissions.add(
-				new Permission() {
-					{
-						actionIds = new String[] {"ADD_DISCUSSION", "VIEW"};
-						roleName = (String)roleNamesObject;
-					}
-				});
-		}
-
-		if (permissions.isEmpty()) {
-			return;
-		}
-
-		permissions.add(
-			new Permission() {
-				{
-					actionIds = new String[0];
-					roleName = "Guest";
-				}
-			});
-
-		_structuredContentResource.putStructuredContentPermissionsPage(
-			structuredContent.getId(), permissions.toArray(new Permission[0]));
-	}
-
 	private String _toFriendlyURLPath(File file) {
 		String filePathString = file.getPath();
 
@@ -1786,7 +1922,7 @@ public class Main {
 		return structuredContent;
 	}
 
-	private boolean _validateUUIDs() throws Exception {
+	private void _validateUUIDs() throws Exception {
 		Set<String> uuids = new HashSet<>();
 
 		for (String fileName : _fileNames) {
@@ -1802,17 +1938,13 @@ public class Main {
 			String uuid = _getUuid(englishText);
 
 			if (Validator.isNull(uuid)) {
-				System.out.println("Missing UUID in " + fileName);
-
-				return false;
+				throw new Exception("Missing UUID in " + fileName);
 			}
 
 			if (uuids.contains(uuid)) {
-				System.out.println(
+				throw new Exception(
 					StringBundler.concat(
 						"Duplicate UUID ", uuid, " in ", fileName));
-
-				return false;
 			}
 
 			uuids.add(uuid);
@@ -1825,15 +1957,11 @@ public class Main {
 					japaneseFile, StandardCharsets.UTF_8);
 
 				if (Validator.isNotNull(_getUuid(japaneseText))) {
-					System.out.println(
+					throw new Exception(
 						"Irrelevant UUID in " + japaneseFile.getPath());
-
-					return false;
 				}
 			}
 		}
-
-		return true;
 	}
 
 	private void _visit(Image image) throws Exception {
@@ -1979,7 +2107,7 @@ public class Main {
 		new HashMap<>();
 	private StructuredContentFolderResource _structuredContentFolderResource;
 	private StructuredContentResource _structuredContentResource;
-	private JSONObject _taxonomyCategoriesJSONObject;
+	private final JSONObject _taxonomyCategoriesJSONObject = new JSONObject();
 	private TaxonomyCategoryResource _taxonomyCategoryResource;
 	private TaxonomyVocabularyResource _taxonomyVocabularyResource;
 	private final List<String> _warningMessages = new ArrayList<>();

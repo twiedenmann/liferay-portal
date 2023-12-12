@@ -68,7 +68,8 @@ export function ModalPublishObjectDefinitions({
 	>(
 		objectDefinitionNodes.filter(
 			(objectDefinitionNode) =>
-				objectDefinitionNode.data?.status?.code === STATUS.DRAFT
+				objectDefinitionNode.data?.status?.code === STATUS.DRAFT &&
+				!objectDefinitionNode.data.linkedObjectDefinition
 		)
 	);
 	const [modalHeaderMessage, setModalHeaderMessage] = useState<string>(
@@ -326,7 +327,26 @@ export function ModalPublishObjectDefinitions({
 			observer={observer}
 			status={modalStatus()}
 		>
-			<ClayModal.Header>{modalHeaderMessage}</ClayModal.Header>
+			{publishObjectDefinitionsStatus !== STATUS.PENDING ? (
+				<ClayModal.Header>{modalHeaderMessage}</ClayModal.Header>
+			) : (
+				<ClayModal.Header withTitle={false}>
+					<ClayModal.ItemGroup>
+						<ClayModal.Item>
+							<ClayModal.Title>
+								<ClayModal.TitleIndicator>
+									<ClayIcon
+										color="blue"
+										symbol="info-circle"
+									/>
+								</ClayModal.TitleIndicator>
+
+								{modalHeaderMessage}
+							</ClayModal.Title>
+						</ClayModal.Item>
+					</ClayModal.ItemGroup>
+				</ClayModal.Header>
+			)}
 
 			<ClayModal.Body>
 				<div className="c-mb-sm-4">
@@ -371,6 +391,7 @@ export function ModalPublishObjectDefinitions({
 							onClick={() =>
 								handleSelectAllObjectDefinitions('checkAll')
 							}
+							size="sm"
 						>
 							{Liferay.Language.get('select-all')}
 						</ClayButton>
@@ -492,6 +513,7 @@ export function ModalPublishObjectDefinitions({
 								aria-labelledby={Liferay.Language.get('close')}
 								displayType="primary"
 								onClick={onClose}
+								size="sm"
 							>
 								{Liferay.Language.get('close')}
 							</ClayButton>
@@ -499,17 +521,20 @@ export function ModalPublishObjectDefinitions({
 					) : (
 						<ClayButton.Group key={2} spaced>
 							<>
-								<ClayButton
-									aria-labelledby={Liferay.Language.get(
-										'cancel'
-									)}
-									className="c-mr-sm-2"
-									displayType="secondary"
-									onClick={onClose}
-								>
-									{Liferay.Language.get('cancel')}
-								</ClayButton>
-
+								{publishObjectDefinitionsStatus !==
+									STATUS.PENDING && (
+									<ClayButton
+										aria-labelledby={Liferay.Language.get(
+											'cancel'
+										)}
+										className="c-mr-sm-2"
+										displayType="secondary"
+										onClick={onClose}
+										size="sm"
+									>
+										{Liferay.Language.get('cancel')}
+									</ClayButton>
+								)}
 								<ClayButton
 									aria-labelledby={
 										publishObjectDefinitionsStatus ===
@@ -528,6 +553,7 @@ export function ModalPublishObjectDefinitions({
 									}
 									displayType="primary"
 									onClick={handleOnClickPublish}
+									size="sm"
 								>
 									{publishObjectDefinitionsStatus ===
 									STATUS.PENDING

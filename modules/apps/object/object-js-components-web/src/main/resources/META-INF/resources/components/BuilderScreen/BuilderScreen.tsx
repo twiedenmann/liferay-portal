@@ -20,6 +20,7 @@ import BuilderListItem from './BuilderListItem';
 import './BuilderScreen.scss';
 
 export function BuilderScreen({
+	builderScreenItems,
 	creationLanguageId,
 	defaultSort,
 	disableEdit,
@@ -27,7 +28,6 @@ export function BuilderScreen({
 	filter,
 	firstColumnHeader,
 	hasDragAndDrop,
-	objectColumns,
 	onChangeColumnOrder,
 	onDeleteColumn,
 	onEditing,
@@ -41,13 +41,13 @@ export function BuilderScreen({
 
 	const filteredItems = useMemo(() => {
 		return filterArrayByQuery({
-			array: objectColumns,
+			array: builderScreenItems,
 			query,
 			str: 'fieldLabel',
 		});
-	}, [objectColumns, query]);
+	}, [builderScreenItems, query]);
 
-	const tableItems = query ? filteredItems : objectColumns;
+	const tableItems = query ? filteredItems : builderScreenItems;
 
 	return (
 		<>
@@ -189,9 +189,10 @@ type TLabelValueObject = {
 	value: string;
 };
 
-type TBuilderScreenColumn = {
+export type TBuilderScreenItem = {
 	defaultSort?: boolean;
 	disableEdit?: boolean;
+	externalReferenceCode?: string;
 	fieldLabel?: string;
 	filterBy?: string;
 	label: LocalizedValue<string>;
@@ -205,6 +206,7 @@ type TBuilderScreenColumn = {
 };
 
 interface IProps {
+	builderScreenItems: TBuilderScreenItem[];
 	creationLanguageId?: Liferay.Language.Locale;
 	defaultSort?: boolean;
 	disableEdit?: boolean;
@@ -216,12 +218,11 @@ interface IProps {
 	filter?: boolean;
 	firstColumnHeader: string;
 	hasDragAndDrop?: boolean;
-	objectColumns: TBuilderScreenColumn[];
 	onChangeColumnOrder?: (draggedIndex: number, targetIndex: number) => void;
 	onDeleteColumn: (objectFieldName: string) => void;
 	onEditing?: (boolean: boolean) => void;
 	onEditingObjectFieldName?: (objectFieldName: string) => void;
-	onVisibleEditModal: (boolean: boolean) => void;
+	onVisibleEditModal?: (boolean: boolean) => void;
 	openModal: () => void;
 	secondColumnHeader: string;
 	thirdColumnHeader?: string;

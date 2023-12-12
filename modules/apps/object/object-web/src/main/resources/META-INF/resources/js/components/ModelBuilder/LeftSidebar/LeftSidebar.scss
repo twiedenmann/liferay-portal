@@ -11,6 +11,12 @@
 		display: flex;
 		justify-content: space-between;
 		padding-right: 0.5rem;
+
+		&:hover {
+			.lfr-objects__model-builder-left-sidebar-show-folders-button {
+				visibility: visible;
+			}
+		}
 	}
 
 	&-current-object-folder-content {
@@ -18,6 +24,10 @@
 		display: flex;
 		gap: 1rem;
 		width: 100%;
+
+		&-title {
+			max-width: 10rem;
+		}
 
 		&:hover {
 			.lfr-objects__model-builder-left-sidebar-go-to-folder-button {
@@ -27,6 +37,14 @@
 					padding-left: 0;
 					padding-right: 0;
 				}
+			}
+		}
+	}
+
+	&-current-object-folder-group {
+		&:hover {
+			.lfr-objects__model-builder-left-sidebar-show-folders-button {
+				visibility: visible;
 			}
 		}
 	}
@@ -54,6 +72,10 @@
 		justify-content: center;
 	}
 
+	&-show-folders-button {
+		visibility: hidden;
+	}
+
 	.container-fluid,
 	.navbar-form {
 		padding: 0 !important;
@@ -62,4 +84,8 @@
 	.navbar-form-autofit {
 		flex-basis: 75px;
 	}
+}
+
+.lfr-objects__model-builder-left-sidebar-dropdown.dropdown-menu {
+	z-index: 1035;
 }

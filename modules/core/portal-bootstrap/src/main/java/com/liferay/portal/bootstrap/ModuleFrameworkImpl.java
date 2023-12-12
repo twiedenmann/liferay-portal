@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.lpkg.StaticLPKGResolver;
 import com.liferay.portal.kernel.module.framework.ThrowableCollector;
+import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -123,6 +124,43 @@ import org.springframework.context.ConfigurableApplicationContext;
  */
 public class ModuleFrameworkImpl implements ModuleFramework {
 
+	@Override
+	public Framework createFramework() throws Exception {
+		if (_log.isDebugEnabled()) {
+			_log.debug("Initializing the OSGi framework");
+		}
+
+		_validateModuleFrameworkBaseDirForEquinox();
+
+		_initRequiredStartupDirs();
+
+		Thread currentThread = Thread.currentThread();
+
+		ServiceLoader<FrameworkFactory> serviceLoader = ServiceLoader.load(
+			FrameworkFactory.class, currentThread.getContextClassLoader());
+
+		Iterator<FrameworkFactory> iterator = serviceLoader.iterator();
+
+		FrameworkFactory frameworkFactory = iterator.next();
+
+		if (_log.isDebugEnabled()) {
+			Class<?> clazz = frameworkFactory.getClass();
+
+			_log.debug("Using the OSGi framework factory " + clazz.getName());
+		}
+
+		Map<String, String> properties = _buildFrameworkProperties(
+			frameworkFactory.getClass());
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("Creating a new OSGi framework instance");
+		}
+
+		_framework = frameworkFactory.newFramework(properties);
+
+		return _framework;
+	}
+
 	public Bundle getBundle(
 			BundleContext bundleContext, InputStream inputStream)
 		throws PortalException {
@@ -165,40 +203,10 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 	@Override
 	public void initFramework() throws Exception {
 		if (_log.isDebugEnabled()) {
-			_log.debug("Initializing the OSGi framework");
-		}
-
-		_validateModuleFrameworkBaseDirForEquinox();
-
-		_initRequiredStartupDirs();
-
-		Thread currentThread = Thread.currentThread();
-
-		ServiceLoader<FrameworkFactory> serviceLoader = ServiceLoader.load(
-			FrameworkFactory.class, currentThread.getContextClassLoader());
-
-		Iterator<FrameworkFactory> iterator = serviceLoader.iterator();
-
-		FrameworkFactory frameworkFactory = iterator.next();
-
-		if (_log.isDebugEnabled()) {
-			Class<?> clazz = frameworkFactory.getClass();
-
-			_log.debug("Using the OSGi framework factory " + clazz.getName());
-		}
-
-		Map<String, String> properties = _buildFrameworkProperties(
-			frameworkFactory.getClass());
-
-		if (_log.isDebugEnabled()) {
-			_log.debug("Creating a new OSGi framework instance");
-		}
-
-		_framework = frameworkFactory.newFramework(properties);
-
-		if (_log.isDebugEnabled()) {
 			_log.debug("Initializing the new OSGi framework instance");
 		}
+
+		Thread currentThread = Thread.currentThread();
 
 		ClassLoader classLoader = currentThread.getContextClassLoader();
 
@@ -721,6 +729,31 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 		return string.substring(beginIndex, endIndex);
 	}
 
+	private OSGiBeanProperties _findOSGiBeanProperties(Object bean) {
+		Class<?> clazz = bean.getClass();
+
+		if (!(bean instanceof BaseLocalService)) {
+			return clazz.getAnnotation(OSGiBeanProperties.class);
+		}
+
+		for (Class<?> interfaceClass : clazz.getInterfaces()) {
+			if ((interfaceClass == BaseLocalService.class) ||
+				!BaseLocalService.class.isAssignableFrom(interfaceClass)) {
+
+				continue;
+			}
+
+			OSGiBeanProperties osgiBeanProperties =
+				interfaceClass.getAnnotation(OSGiBeanProperties.class);
+
+			if (osgiBeanProperties != null) {
+				return osgiBeanProperties;
+			}
+		}
+
+		return null;
+	}
+
 	private Attributes _getExtraManifestAttributes() {
 		try (InputStream inputStream =
 				ModuleFrameworkImpl.class.getResourceAsStream(
@@ -759,17 +792,6 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 
 		return StringUtil.replace(
 			uriString, CharPool.BACK_SLASH, CharPool.FORWARD_SLASH);
-	}
-
-	private Dictionary<String, Object> _getProperties(
-		Object bean, String beanName) {
-
-		Class<?> clazz = bean.getClass();
-
-		OSGiBeanProperties osgiBeanProperties = clazz.getAnnotation(
-			OSGiBeanProperties.class);
-
-		return _getProperties(osgiBeanProperties, beanName);
 	}
 
 	private Dictionary<String, Object> _getProperties(
@@ -1265,10 +1287,7 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 	private ServiceRegistration<?> _registerService(
 		BundleContext bundleContext, String beanName, Object bean) {
 
-		Class<?> clazz = bean.getClass();
-
-		OSGiBeanProperties osgiBeanProperties = clazz.getAnnotation(
-			OSGiBeanProperties.class);
+		OSGiBeanProperties osgiBeanProperties = _findOSGiBeanProperties(bean);
 
 		Set<String> names = OSGiBeanProperties.Service.interfaceNames(
 			bean, osgiBeanProperties,
@@ -1600,10 +1619,9 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 		bundleContext.registerService(
 			ProcessExecutor.class, new LocalProcessExecutor(), null);
 
-		Props props = PropsUtil.getProps();
-
 		bundleContext.registerService(
-			Props.class, props, _getProperties(props, Props.class.getName()));
+			Props.class, PropsUtil.getProps(),
+			_getProperties(null, Props.class.getName()));
 	}
 
 	private void _startConfigurationBundles(Collection<Bundle> bundles)

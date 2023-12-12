@@ -24,6 +24,9 @@ import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.asset.list.util.comparator.ClassNameModelResourceComparator;
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.service.ClientExtensionEntryLocalService;
+import com.liferay.client.extension.type.CET;
+import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.client.extension.util.CETUtil;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
@@ -168,6 +171,7 @@ import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
+import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -181,6 +185,7 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.multipart.BinaryFile;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsEntryLocalService;
@@ -201,6 +206,7 @@ import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessor;
 import com.liferay.template.model.TemplateEntry;
 import com.liferay.template.service.TemplateEntryLocalService;
 
+import java.io.InputStream;
 import java.io.Serializable;
 
 import java.net.URL;
@@ -243,6 +249,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 		AccountRoleResource.Factory accountRoleResourceFactory,
 		AssetCategoryLocalService assetCategoryLocalService,
 		AssetListEntryLocalService assetListEntryLocalService, Bundle bundle,
+		CETManager cetManager,
 		ClientExtensionEntryLocalService clientExtensionEntryLocalService,
 		ConfigurationProvider configurationProvider,
 		DDMStructureLocalService ddmStructureLocalService,
@@ -324,6 +331,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 		_assetCategoryLocalService = assetCategoryLocalService;
 		_assetListEntryLocalService = assetListEntryLocalService;
 		_bundle = bundle;
+		_cetManager = cetManager;
 		_clientExtensionEntryLocalService = clientExtensionEntryLocalService;
 		_configurationProvider = configurationProvider;
 		_ddmStructureLocalService = ddmStructureLocalService;
@@ -524,7 +532,9 @@ public class BundleSiteInitializer implements SiteInitializer {
 			_invoke(() -> _addSiteConfiguration(serviceContext));
 			_invoke(() -> _addSiteSettings(serviceContext));
 			_invoke(() -> _addStyleBookEntries(serviceContext));
-			_invoke(() -> _addOrUpdateSXPBlueprint(serviceContext));
+			_invoke(
+				() -> _addOrUpdateSXPBlueprint(
+					serviceContext, stringUtilReplaceValues));
 			_invoke(() -> _addOrUpdateUserGroups(serviceContext));
 
 			_invoke(
@@ -909,7 +919,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 			if (StringUtil.endsWith(
 					fileName, "fragment-composition-definition.json")) {
 
-				String json = StringUtil.read(url.openStream());
+				String json = URLUtil.toString(url);
 
 				json = _replace(
 					_replace(json, serviceContext), stringUtilReplaceValues);
@@ -918,9 +928,11 @@ public class BundleSiteInitializer implements SiteInitializer {
 					_removeFirst(fileName, parentResourcePath), json);
 			}
 			else {
-				zipWriter.addEntry(
-					_removeFirst(fileName, parentResourcePath),
-					url.openStream());
+				try (InputStream inputStream = url.openStream()) {
+					zipWriter.addEntry(
+						_removeFirst(fileName, parentResourcePath),
+						inputStream);
+				}
 			}
 		}
 
@@ -975,7 +987,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 			if (StringUtil.endsWith(urlPath, "display-page-template.json") ||
 				StringUtil.endsWith(urlPath, "page-definition.json")) {
 
-				String json = StringUtil.read(url.openStream());
+				String json = URLUtil.toString(url);
 
 				json = _replace(
 					_replace(json, serviceContext), stringUtilReplaceValues);
@@ -1005,16 +1017,18 @@ public class BundleSiteInitializer implements SiteInitializer {
 					json);
 			}
 			else {
-				zipWriter.addEntry(
-					_removeFirst(
-						urlPath, "/site-initializer/layout-page-templates"),
-					url.openStream());
+				try (InputStream inputStream = url.openStream()) {
+					zipWriter.addEntry(
+						_removeFirst(
+							urlPath, "/site-initializer/layout-page-templates"),
+						inputStream);
+				}
 			}
 		}
 
 		_layoutsImporter.importFile(
 			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-			zipWriter.getFile(), LayoutsImportStrategy.OVERWRITE);
+			zipWriter.getFile(), LayoutsImportStrategy.OVERWRITE, true);
 	}
 
 	private void _addLayoutUtilityPageEntries(
@@ -1044,7 +1058,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 			String urlPath = url.getPath();
 
 			if (StringUtil.endsWith(urlPath, "page-definition.json")) {
-				String json = StringUtil.read(url.openStream());
+				String json = URLUtil.toString(url);
 
 				json = _replace(
 					_replace(json, serviceContext), stringUtilReplaceValues);
@@ -1075,17 +1089,19 @@ public class BundleSiteInitializer implements SiteInitializer {
 					json);
 			}
 			else {
-				zipWriter.addEntry(
-					_removeFirst(
-						urlPath,
-						"/site-initializer/layout-utility-page-entries"),
-					url.openStream());
+				try (InputStream inputStream = url.openStream()) {
+					zipWriter.addEntry(
+						_removeFirst(
+							urlPath,
+							"/site-initializer/layout-utility-page-entries"),
+						inputStream);
+				}
 			}
 		}
 
 		_layoutsImporter.importFile(
 			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-			zipWriter.getFile(), LayoutsImportStrategy.OVERWRITE);
+			zipWriter.getFile(), LayoutsImportStrategy.OVERWRITE, true);
 
 		_setDefaultLayoutUtilityPageEntries(serviceContext);
 	}
@@ -1450,6 +1466,20 @@ public class BundleSiteInitializer implements SiteInitializer {
 			Map<String, String> stringUtilReplaceValues)
 		throws Exception {
 
+		List<CET> cets = _cetManager.getCETs(
+			serviceContext.getCompanyId(), null, null,
+			Pagination.of(QueryUtil.ALL_POS, QueryUtil.ALL_POS), null);
+
+		for (CET cet : cets) {
+			stringUtilReplaceValues.put(
+				"CLIENT_EXTENSION_ENTRY_ERC:" + cet.getExternalReferenceCode(),
+				StringBundler.concat(
+					"com_liferay_client_extension_web_internal_portlet_",
+					"ClientExtensionEntryPortlet_", cet.getCompanyId(), "_",
+					CETUtil.normalizeExternalReferenceCodeForPortletId(
+						cet.getExternalReferenceCode())));
+		}
+
 		String json = SiteInitializerUtil.read(
 			"/site-initializer/client-extension-entries.json", _servletContext);
 
@@ -1514,15 +1544,14 @@ public class BundleSiteInitializer implements SiteInitializer {
 				).buildString());
 
 			stringUtilReplaceValues.put(
-				"CLIENT_EXTENSION_ENTRY_ID:" +
-					jsonObject.getString("clientExtensionEntryKey"),
-				_replace(
-					jsonObject.getString("widgetName"),
-					StringBundler.concat(
-						"[$CLIENT_EXTENSION_ENTRY_ID:",
-						jsonObject.getString("clientExtensionEntryKey"), "$]"),
-					serviceContext.getCompanyId() + StringPool.UNDERLINE +
-						jsonObject.getString("externalReferenceCode")));
+				"CLIENT_EXTENSION_ENTRY_ERC:" +
+					jsonObject.getString("externalReferenceCode"),
+				StringBundler.concat(
+					"com_liferay_client_extension_web_internal_portlet_",
+					"ClientExtensionEntryPortlet_",
+					serviceContext.getCompanyId(), "_",
+					CETUtil.normalizeExternalReferenceCodeForPortletId(
+						jsonObject.getString("externalReferenceCode"))));
 		}
 	}
 
@@ -1594,9 +1623,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 			URL url = enumeration.nextElement();
 
 			JSONObject jsonObject = _jsonFactory.createJSONObject(
-				_replace(
-					StringUtil.read(url.openStream()),
-					stringUtilReplaceValues));
+				_replace(URLUtil.toString(url), stringUtilReplaceValues));
 
 			long resourceClassNameId = _portal.getClassNameId(
 				jsonObject.getString(
@@ -2062,6 +2089,13 @@ public class BundleSiteInitializer implements SiteInitializer {
 
 			JSONObject jsonObject = _jsonFactory.createJSONObject(json);
 
+			String articleId = jsonObject.getString("articleId");
+
+			if (Validator.isNull(articleId)) {
+				articleId = FileUtil.stripExtension(
+					FileUtil.getShortFileName(resourcePath));
+			}
+
 			Map<Locale, String> titleMap = Collections.singletonMap(
 				LocaleUtil.getSiteDefault(), jsonObject.getString("name"));
 
@@ -2071,12 +2105,6 @@ public class BundleSiteInitializer implements SiteInitializer {
 				serviceContext.getScopeGroupId(),
 				_portal.getClassNameId(JournalArticle.class), ddmStructureKey,
 				true);
-
-			String ddmTemplateKey = jsonObject.getString("ddmTemplateKey");
-
-			_ddmTemplateLocalService.getTemplate(
-				serviceContext.getScopeGroupId(),
-				_portal.getClassNameId(DDMStructure.class), ddmTemplateKey);
 
 			Calendar calendar = CalendarFactoryUtil.getCalendar(
 				serviceContext.getTimeZone());
@@ -2092,22 +2120,21 @@ public class BundleSiteInitializer implements SiteInitializer {
 
 			JournalArticle journalArticle =
 				_journalArticleLocalService.fetchArticle(
-					serviceContext.getScopeGroupId(),
-					jsonObject.getString("articleId"));
+					serviceContext.getScopeGroupId(), articleId);
 
 			if (journalArticle == null) {
 				journalArticle = _journalArticleLocalService.addArticle(
 					null, serviceContext.getUserId(),
 					serviceContext.getScopeGroupId(), journalFolderId,
-					JournalArticleConstants.CLASS_NAME_ID_DEFAULT, 0,
-					jsonObject.getString("articleId"), false, 1, titleMap, null,
-					titleMap,
+					JournalArticleConstants.CLASS_NAME_ID_DEFAULT, 0, articleId,
+					false, 1, titleMap, null, titleMap,
 					_replace(
 						SiteInitializerUtil.read(
 							_replace(resourcePath, ".json", ".xml"),
 							_servletContext),
 						stringUtilReplaceValues),
-					ddmStructure.getStructureId(), ddmTemplateKey, null,
+					ddmStructure.getStructureId(),
+					jsonObject.getString("ddmTemplateKey"), null,
 					calendar.get(Calendar.MONTH),
 					calendar.get(Calendar.DAY_OF_MONTH),
 					calendar.get(Calendar.YEAR),
@@ -2120,14 +2147,15 @@ public class BundleSiteInitializer implements SiteInitializer {
 				journalArticle = _journalArticleLocalService.updateArticle(
 					serviceContext.getUserId(),
 					serviceContext.getScopeGroupId(), journalFolderId,
-					jsonObject.getString("articleId"),
-					journalArticle.getVersion(), titleMap, null, titleMap,
+					articleId, journalArticle.getVersion(), titleMap, null,
+					titleMap,
 					_replace(
 						SiteInitializerUtil.read(
 							_replace(resourcePath, ".json", ".xml"),
 							_servletContext),
 						stringUtilReplaceValues),
-					ddmTemplateKey, null, calendar.get(Calendar.MONTH),
+					jsonObject.getString("ddmTemplateKey"), null,
+					calendar.get(Calendar.MONTH),
 					calendar.get(Calendar.DAY_OF_MONTH),
 					calendar.get(Calendar.YEAR),
 					calendar.get(Calendar.HOUR_OF_DAY),
@@ -2522,7 +2550,8 @@ public class BundleSiteInitializer implements SiteInitializer {
 						_layoutsImporter.importPageElement(
 							draftLayout, layoutStructure,
 							layoutStructure.getMainItemId(),
-							jsonArray.getString(i), i, segmentsExperienceId);
+							jsonArray.getString(i), i, true,
+							segmentsExperienceId);
 					}
 				}
 			}
@@ -2761,7 +2790,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 				FileUtil.getShortFileName(
 					FileUtil.stripExtension(url.getPath())),
 				_replace(
-					_replace(StringUtil.read(url.openStream()), serviceContext),
+					_replace(URLUtil.toString(url), serviceContext),
 					stringUtilReplaceValues));
 		}
 
@@ -3642,7 +3671,9 @@ public class BundleSiteInitializer implements SiteInitializer {
 		return structuredContentFolder.getId();
 	}
 
-	private void _addOrUpdateSXPBlueprint(ServiceContext serviceContext)
+	private void _addOrUpdateSXPBlueprint(
+			ServiceContext serviceContext,
+			Map<String, String> stringUtilReplaceValues)
 		throws Exception {
 
 		OSBSiteInitializer osbSiteInitializer =
@@ -3653,7 +3684,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 		}
 
 		osbSiteInitializer.addOrUpdateSXPBlueprint(
-			serviceContext, _servletContext);
+			serviceContext, _servletContext, stringUtilReplaceValues);
 	}
 
 	private TaxonomyCategory _addOrUpdateTaxonomyCategoryTaxonomyCategory(
@@ -4135,9 +4166,11 @@ public class BundleSiteInitializer implements SiteInitializer {
 				continue;
 			}
 
-			zipWriter.addEntry(
-				_removeFirst(fileName, "/site-initializer/style-books/"),
-				url.openStream());
+			try (InputStream inputStream = url.openStream()) {
+				zipWriter.addEntry(
+					_removeFirst(fileName, "/site-initializer/style-books/"),
+					inputStream);
+			}
 		}
 
 		_styleBookEntryZipProcessor.importStyleBookEntries(
@@ -4168,6 +4201,9 @@ public class BundleSiteInitializer implements SiteInitializer {
 
 			String json = SiteInitializerUtil.read(
 				resourcePath, _servletContext);
+
+			json = _replace(
+				_replace(json, serviceContext), stringUtilReplaceValues);
 
 			TaxonomyCategory taxonomyCategory = TaxonomyCategory.toDTO(json);
 
@@ -4970,7 +5006,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 		if (url != null) {
 			_layoutSetLocalService.updateLogo(
 				serviceContext.getScopeGroupId(), privateLayout, true,
-				FileUtil.getBytes(url.openStream()));
+				URLUtil.toByteArray(url));
 		}
 
 		JSONObject settingsJSONObject = metadataJSONObject.getJSONObject(
@@ -5030,6 +5066,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 	private final AssetCategoryLocalService _assetCategoryLocalService;
 	private final AssetListEntryLocalService _assetListEntryLocalService;
 	private final Bundle _bundle;
+	private final CETManager _cetManager;
 	private final ClassLoader _classLoader;
 	private final Map<String, String> _classNameIdStringUtilReplaceValues;
 	private final ClientExtensionEntryLocalService

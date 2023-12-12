@@ -85,9 +85,15 @@ export declare type TAction =
 				objectFolders: ObjectFolder[];
 				rightSidebarType?: RightSidebarType;
 				selectedObjectFolder: ObjectFolder;
-				selectedObjectRelationshipEdgeId?: number;
+				selectedObjectRelationshipId?: number;
 			};
 			type: TYPES.UPDATE_MODEL_BUILDER_STRUCTURE;
+	  }
+	| {
+			payload: {
+				newDeleteObjectDefinition: DeletedObjectDefinition | null;
+			};
+			type: TYPES.SET_DELETE_OBJECT_DEFINITION;
 	  }
 	| {
 			payload: {
@@ -119,6 +125,19 @@ export declare type TAction =
 	  }
 	| {
 			payload: {
+				newObjectDefinitionNodePosition: {
+					x: number;
+					y: number;
+				};
+				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
+				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
+				updatedObjectDefinitionNodeId: number;
+				updatedObjectFolder: ObjectFolder;
+			};
+			type: TYPES.SET_SELECTED_OBJECT_DEFINITION_NODE_POSITION;
+	  }
+	| {
+			payload: {
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
 				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
 				selectedObjectDefinitionId: number;
@@ -129,11 +148,16 @@ export declare type TAction =
 	  }
 	| {
 			payload: {
-				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
 				selectedObjectRelationshipId: number;
 			};
 			type: TYPES.SET_SELECTED_OBJECT_RELATIONSHIP_EDGE;
+	  }
+	| {
+			payload: {
+				objectDefinitionExternalReferenceCode: string;
+				showAllObjectFields: boolean;
+			};
+			type: TYPES.SET_SHOW_ALL_OBJECT_FIELDS;
 	  }
 	| {
 			payload: {
@@ -143,8 +167,18 @@ export declare type TAction =
 	  }
 	| {
 			payload: {
+				updatedShowSidebars: boolean;
+			};
+			type: TYPES.SET_SHOW_SIDEBARS;
+	  }
+	| {
+			payload: {
 				currentObjectFolderName: string;
-				updatedObjectDefinitionNode: Partial<ObjectDefinition>;
+				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
+				objectDefinitionRelationshipEdges: Edge<
+					ObjectRelationshipEdgeData
+				>[];
+				updatedObjectDefinition: Partial<ObjectDefinition>;
 			};
 			type: TYPES.UPDATE_OBJECT_DEFINITION_NODE;
 	  }
@@ -158,9 +192,16 @@ export declare type TAction =
 				updatedObjectField: ObjectField;
 			};
 			type: TYPES.UPDATE_OBJECT_FIELD_NODE_ROW;
+	  }
+	| {
+			payload: {
+				modelBuilderModals: ModelBuilderModals;
+			};
+			type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS;
 	  };
 export declare type TState = {
 	baseResourceURL: string;
+	deleteObjectDefinition: DeletedObjectDefinition | null;
 	editObjectDefinitionURL: string;
 	elements: Elements<ObjectDefinitionNodeData | ObjectRelationshipEdgeData>;
 	filterOperators: TFilterOperators;
@@ -169,6 +210,7 @@ export declare type TState = {
 	forbiddenNames: string[];
 	isLoadingObjectFolder: boolean;
 	leftSidebarItems: LeftSidebarItem[];
+	modelBuilderModals: ModelBuilderModals;
 	objectDefinitionPermissionsURL: string;
 	objectDefinitions: ObjectDefinition[];
 	objectDefinitionsStorageTypes: LabelValueObject[];
@@ -179,9 +221,10 @@ export declare type TState = {
 	selectedObjectDefinitionNode: Node<ObjectDefinitionNodeData> | null;
 	selectedObjectField?: ObjectFieldNodeRow;
 	selectedObjectFolder: ObjectFolder;
-	selectedObjectRelationship?: Edge<ObjectRelationshipEdgeData>;
+	selectedObjectRelationship?: Edge<ObjectRelationshipEdgeData> | null;
 	showChangesSaved: boolean;
-	workflowStatusJSONArray: LabelValueObject[];
+	showSidebars: boolean;
+	workflowStatuses: LabelValueObject[];
 };
 export interface LeftSidebarItem {
 	hiddenObjectFolderObjectDefinitionNodes: boolean;

@@ -18,6 +18,7 @@ type FileRequest = {
 	appERC: string;
 	file: File | string;
 	index?: number;
+	isAppIcon: boolean;
 	requestFunction: Function;
 	title: string;
 };
@@ -79,28 +80,16 @@ export async function userAccountChecker(verifiedAccounts: string[]) {
 }
 
 export function getThumbnailByProductAttachment(
-	attachments: Partial<ProductAttachment>[]
+	images?: Partial<ProductAttachment | DeliveryProductAttachment>[]
 ): string | undefined {
-	if (!Array.isArray(attachments)) {
+	if (!Array.isArray(images)) {
 		return undefined;
 	}
 
-	const findThumbnailWithAppIcon = (
-		attachment: Partial<ProductAttachment>
-	): boolean => {
-		if (attachment.customFields === undefined) {
-			return false;
-		}
-		const customField = attachment.customFields?.find(
-			({customValue, name}) =>
-				name === 'App Icon' &&
-				customValue?.data?.[0].toLowerCase() === 'yes'
-		);
-
-		return !!customField;
-	};
-
-	const thumbnail = attachments.find(findThumbnailWithAppIcon);
+	const thumbnail =
+		images.find((images) => {
+			return (images.tags || []).indexOf('app icon') >= 0;
+		}) || images[0];
 
 	return thumbnail?.src;
 }
@@ -124,16 +113,30 @@ export function getValueFromSpecifications(
 	valueKey: string
 ) {
 	let value = '';
-	specifications.forEach((specification) => {
-		if (specification.specificationKey === valueKey) {
-			value = specification.value.en_US;
+	specifications?.forEach((specification) => {
+		if (specification?.specificationKey === valueKey) {
+			value = specification?.value?.en_US;
 		}
 	});
 
 	return value;
 }
 
-export function showAccountImage(url?: string) {
+export function getValueFromDeliverySpecifications(
+	specifications: DeliveryProductSpecification[],
+	valueKey: string
+) {
+	let value = '';
+	specifications?.forEach((specification) => {
+		if (specification?.specificationKey === valueKey) {
+			value = specification?.value;
+		}
+	});
+
+	return value;
+}
+
+export function getAccountImage(url?: string) {
 	return url?.includes('img_id=0') || !url ? accountPlaceholder : url;
 }
 
@@ -215,13 +218,16 @@ export async function submitFile({
 	appERC,
 	file: fileBase64,
 	index,
+	isAppIcon,
 	requestFunction,
 	title,
 }: FileRequest) {
 	const response = await requestFunction({
 		body: {
 			attachment: fileBase64,
+			galleryEnabled: isAppIcon ? false : true,
 			priority: index,
+			tags: isAppIcon ? ['app icon'] : [],
 			title: {en_US: title},
 		},
 		externalReferenceCode: appERC,
@@ -234,6 +240,7 @@ export async function submitBase64EncodedFile({
 	appERC,
 	file,
 	index,
+	isAppIcon,
 	requestFunction,
 	title,
 }: FileRequest) {
@@ -257,12 +264,19 @@ export async function submitBase64EncodedFile({
 				else if (result?.includes('image/jpeg')) {
 					result = result?.substring(23);
 				}
+				else if (
+					result?.includes('application/octet-stream') ||
+					result?.includes('application/java-archive')
+				) {
+					result = result?.substring(37);
+				}
 
 				if (result) {
 					const {id} = await submitFile({
 						appERC,
 						file: result,
 						index,
+						isAppIcon,
 						requestFunction,
 						title,
 					});

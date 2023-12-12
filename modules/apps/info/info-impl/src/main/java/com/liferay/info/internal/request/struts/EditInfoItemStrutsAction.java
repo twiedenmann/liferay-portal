@@ -13,7 +13,6 @@ import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.util.configuration.FragmentConfigurationField;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.info.exception.InfoFormException;
 import com.liferay.info.exception.InfoFormInvalidGroupException;
 import com.liferay.info.exception.InfoFormInvalidLayoutModeException;
 import com.liferay.info.exception.InfoFormPrincipalException;
@@ -44,6 +43,7 @@ import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItemUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.captcha.CaptchaException;
+import com.liferay.portal.kernel.exception.InfoFormException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
@@ -193,9 +193,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 				status = WorkflowConstants.STATUS_APPROVED;
 			}
 
-			if ((infoItemIdentifier != null) &&
-				FeatureFlagManagerUtil.isEnabled("LPS-183727")) {
-
+			if (infoItemIdentifier != null) {
 				InfoItemObjectProvider<Object> infoItemObjectProvider =
 					_infoItemServiceRegistry.getFirstInfoItemService(
 						InfoItemObjectProvider.class, className,
@@ -284,9 +282,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 			}
 
 			SessionErrors.add(
-				httpServletRequest,
-				String.valueOf(
-					infoFormValidationException.getFragmentEntryLinkId()),
+				httpServletRequest, InfoFormException.class,
 				infoFormValidationException);
 		}
 		catch (InfoFormValidationException infoFormValidationException) {

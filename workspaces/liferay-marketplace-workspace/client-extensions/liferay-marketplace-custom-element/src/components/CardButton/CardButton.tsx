@@ -22,7 +22,7 @@ export function CardButton({
 	title,
 }: {
 	description: string;
-	disabled: boolean;
+	disabled?: boolean;
 	icon?: ReactNode;
 	iconRight?: boolean;
 	onClick: (event: MouseEvent) => void;
@@ -36,7 +36,7 @@ export function CardButton({
 				'card-button--disabled': disabled,
 				'card-button--selected': selected,
 			})}
-			onClick={onClick}
+			onClick={disabled ? () => {} : onClick}
 		>
 			{step === StepType.PAYMENT ? (
 				<img

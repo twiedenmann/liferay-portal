@@ -441,9 +441,6 @@ public interface PropsKeys {
 	public static final String COMPANY_LOGIN_PREPOPULATE_DOMAIN =
 		"company.login.prepopulate.domain";
 
-	public static final String COMPANY_SECURITY_AUTH_REQUIRES_HTTPS =
-		"company.security.auth.requires.https";
-
 	public static final String COMPANY_SECURITY_AUTH_TYPE =
 		"company.security.auth.type";
 
@@ -547,6 +544,9 @@ public interface PropsKeys {
 
 	public static final String DATABASE_INDEXES_UPDATE_ON_STARTUP =
 		"database.indexes.update.on.startup";
+
+	public static final String DATABASE_MAX_PARAMETERS =
+		"database.max.parameters";
 
 	public static final String DATABASE_MYSQL_ENGINE = "database.mysql.engine";
 
@@ -833,9 +833,6 @@ public interface PropsKeys {
 
 	public static final String DL_FILE_ENTRY_PREVIEW_VIDEO_WIDTH =
 		"dl.file.entry.preview.video.width";
-
-	public static final String DL_FILE_ENTRY_PROCESSORS =
-		"dl.file.entry.processors";
 
 	public static final String
 		DL_FILE_ENTRY_RAW_METADATA_PROCESSOR_EXCLUDED_MIME_TYPES =
@@ -1579,9 +1576,6 @@ public interface PropsKeys {
 
 	public static final String MESSAGE_BOARDS_EXPIRE_BAN_INTERVAL =
 		"message.boards.expire.ban.interval";
-
-	public static final String MESSAGE_BOARDS_EXPIRE_BAN_JOB_INTERVAL =
-		"message.boards.expire.ban.job.interval";
 
 	public static final String MESSAGE_BOARDS_FLAGS_ENABLED =
 		"message.boards.flags.enabled";
@@ -2344,12 +2338,6 @@ public interface PropsKeys {
 
 	public static final String SESSION_TIMEOUT = "session.timeout";
 
-	public static final String SESSION_TIMEOUT_AUTO_EXTEND =
-		"session.timeout.auto.extend";
-
-	public static final String SESSION_TIMEOUT_AUTO_EXTEND_OFFSET =
-		"session.timeout.auto.extend.offset";
-
 	public static final String SESSION_TIMEOUT_REDIRECT_ON_EXPIRE =
 		"session.timeout.redirect.on.expire";
 
@@ -2543,33 +2531,6 @@ public interface PropsKeys {
 		"spring.infrastructure.configs";
 
 	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_COUNTRY_COUNTRY_ID =
-			"sql.data.com.liferay.portal.kernel.model.Country.country.id";
-
-	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_LISTTYPE_COMPANY_ADDRESS =
-			"sql.data.com.liferay.portal.kernel.model.ListType.company.address";
-
-	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_LISTTYPE_COMPANY_EMAIL_ADDRESS =
-			"sql.data.com.liferay.portal.kernel.model.ListType.company.email.address";
-
-	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_LISTTYPE_CONTACT_EMAIL_ADDRESS =
-			"sql.data.com.liferay.portal.kernel.model.ListType.contact.email.address";
-
-	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_LISTTYPE_ORGANIZATION_STATUS =
-			"sql.data.com.liferay.portal.kernel.model.ListType.organization.status";
-
-	public static final String
-		SQL_DATA_COM_LIFERAY_PORTAL_MODEL_REGION_REGION_ID =
-			"sql.data.com.liferay.portal.kernel.model.Region.region.id";
-
-	public static final String SQL_DATA_MAX_PARAMETERS =
-		"sql.data.max.parameters";
-
-	public static final String
 		STAGING_DRAFT_EXPORT_IMPORT_CONFIGURATION_CHECK_INTERVAL =
 			"staging.draft.export.import.configuration.check.interval";
 
@@ -2715,6 +2676,8 @@ public interface PropsKeys {
 
 	public static final String UPGRADE_LOG_CONTEXT_ENABLED =
 		"upgrade.log.context.enabled";
+
+	public static final String UPGRADE_REPORT_DIR = "upgrade.report.dir";
 
 	public static final String UPGRADE_REPORT_DL_STORAGE_SIZE_TIMEOUT =
 		"upgrade.report.dl.storage.size.timeout";
@@ -2944,6 +2907,9 @@ public interface PropsKeys {
 
 	public static final String WORKFLOW_EMAIL_FROM_NAME =
 		"workflow.email.from.name";
+
+	public static final String XML_RPC_MAX_PARAMETERS =
+		"xml.rpc.max.parameters";
 
 	public static final String XML_SECURITY_ENABLED = "xml.security.enabled";
 

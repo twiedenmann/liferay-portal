@@ -5,6 +5,8 @@
 
 package com.liferay.portal.search.elasticsearch7.internal;
 
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.StartupHelperUtil;
@@ -25,6 +27,7 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.version.Version;
 import com.liferay.portal.search.ccr.CrossClusterReplicationHelper;
+import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationObserver;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionManager;
 import com.liferay.portal.search.elasticsearch7.internal.index.IndexConfigurationDynamicUpdatesExecutor;
@@ -79,7 +82,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = "search.engine.impl=Elasticsearch", service = SearchEngine.class
 )
-public class ElasticsearchSearchEngine implements SearchEngine {
+public class ElasticsearchSearchEngine
+	implements ElasticsearchConfigurationObserver, SearchEngine {
 
 	@Override
 	public synchronized String backup(long companyId, String backupName)
@@ -113,6 +117,14 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 	}
 
 	@Override
+	public int compareTo(
+		ElasticsearchConfigurationObserver elasticsearchConfigurationObserver) {
+
+		return _elasticsearchConfigurationWrapper.compare(
+			this, elasticsearchConfigurationObserver);
+	}
+
+	@Override
 	public IndexSearcher getIndexSearcher() {
 		return _indexSearcher;
 	}
@@ -120,6 +132,11 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 	@Override
 	public IndexWriter getIndexWriter() {
 		return _indexWriter;
+	}
+
+	@Override
+	public int getPriority() {
+		return 4;
 	}
 
 	@Override
@@ -134,15 +151,16 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchConnectionManager.getRestHighLevelClient();
 
-		_putTimestampPipeline(restHighLevelClient);
-
-		_indexFactory.createIndices(restHighLevelClient.indices(), companyId);
+		boolean created = _indexFactory.createIndices(
+			restHighLevelClient.indices(), companyId);
 
 		_indexFactory.registerCompanyId(companyId);
 
 		_indexConfigurationDynamicUpdatesExecutor.execute(companyId);
 
-		_waitForYellowStatus();
+		if (created) {
+			_waitForYellowStatus();
+		}
 
 		CrossClusterReplicationHelper crossClusterReplicationHelper =
 			_crossClusterReplicationHelperSnapshot.get();
@@ -151,6 +169,11 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 			crossClusterReplicationHelper.follow(
 				_indexNameBuilder.getIndexName(companyId));
 		}
+	}
+
+	@Override
+	public void onElasticsearchConfigurationUpdate() {
+		_putTimestampPipeline();
 	}
 
 	@Override
@@ -224,15 +247,23 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 
 	@Activate
 	protected void activate(Map<String, Object> properties) {
-		_checkNodeVersions();
+		_elasticsearchConfigurationWrapper.register(this);
 
-		if (StartupHelperUtil.isDBNew()) {
-			for (long companyId : _getIndexedCompanyIds()) {
-				removeCompany(companyId);
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				ElasticsearchSearchEngine.class.getClassLoader())) {
+
+			_checkNodeVersions();
+
+			if (StartupHelperUtil.isDBNew()) {
+				for (long companyId : _getIndexedCompanyIds()) {
+					removeCompany(companyId);
+				}
 			}
-		}
 
-		initialize(CompanyConstants.SYSTEM);
+			_putTimestampPipeline();
+
+			initialize(CompanyConstants.SYSTEM);
+		}
 	}
 
 	protected void createBackupRepository() {
@@ -260,6 +291,10 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 	}
 
 	private void _checkNodeVersions() {
+		if (!_elasticsearchConfigurationWrapper.productionModeEnabled()) {
+			return;
+		}
+
 		String minimumVersionString =
 			_elasticsearchConfigurationWrapper.minimumRequiredNodeVersion();
 
@@ -341,9 +376,7 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 		return true;
 	}
 
-	private void _putTimestampPipeline(
-		RestHighLevelClient restHighLevelClient) {
-
+	private void _putTimestampPipeline() {
 		String source = JSONUtil.put(
 			"description", "Adds timestamp to documents"
 		).put(
@@ -362,6 +395,9 @@ public class ElasticsearchSearchEngine implements SearchEngine {
 			"timestamp",
 			new BytesArray(source.getBytes(StandardCharsets.UTF_8)),
 			XContentType.JSON);
+
+		RestHighLevelClient restHighLevelClient =
+			_elasticsearchConnectionManager.getRestHighLevelClient();
 
 		IngestClient ingestClient = restHighLevelClient.ingest();
 

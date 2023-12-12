@@ -33,12 +33,6 @@ public class PublicationsChangesTableFDSView extends BaseTableFDSView {
 			_fdsTableSchemaBuilderFactory.create();
 
 		return fdsTableSchemaBuilder.add(
-			"ownerName", "user",
-			fdsTableSchemaField -> fdsTableSchemaField.setSortable(true)
-		).add(
-			"siteName", "site",
-			fdsTableSchemaField -> fdsTableSchemaField.setSortable(true)
-		).add(
 			"title", "title",
 			fdsTableSchemaField -> fdsTableSchemaField.setActionId(
 				"view-change"
@@ -48,16 +42,24 @@ public class PublicationsChangesTableFDSView extends BaseTableFDSView {
 				true
 			)
 		).add(
+			"ownerName", "user",
+			fdsTableSchemaField -> fdsTableSchemaField.setSortable(true)
+		).add(
+			"siteName", "site",
+			fdsTableSchemaField -> fdsTableSchemaField.setSortable(true)
+		).add(
 			"typeName", "type",
 			fdsTableSchemaField -> fdsTableSchemaField.setSortable(true)
 		).add(
 			"status", "status",
-			fdsTableSchemaField ->
+			fdsTableSchemaField -> {
 				fdsTableSchemaField.setContentRendererModuleURL(
 					_npmResolver.resolveModuleName("change-tracking-web") +
-						"/publications/js/components/StatusRenderer")
+						"/publications/js/components/StatusRenderer");
+				fdsTableSchemaField.setSortable(true);
+			}
 		).add(
-			"changeType", "change-type",
+			"changeType", "changed",
 			fdsTableSchemaField -> fdsTableSchemaField.setSortable(true)
 		).add(
 			"dateModified", "last-modified",

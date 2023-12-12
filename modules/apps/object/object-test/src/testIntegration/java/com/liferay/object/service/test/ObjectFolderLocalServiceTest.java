@@ -13,7 +13,7 @@ import com.liferay.object.exception.ObjectFolderNameException;
 import com.liferay.object.model.ObjectFolder;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFolderLocalService;
-import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
+import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Company;
@@ -35,9 +35,9 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PortalInstances;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
-import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
@@ -143,11 +143,13 @@ public class ObjectFolderLocalServiceTest {
 
 	@Test
 	public void testDeleteCompanyObjectFolders() throws Exception {
-		String originalName = PrincipalThreadLocal.getName();
 		PermissionChecker originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
+		String originalName = PrincipalThreadLocal.getName();
 
 		Company company = CompanyTestUtil.addCompany();
+
+		PortalInstances.initCompany(company);
 
 		ObjectFolder objectFolder = null;
 
@@ -161,7 +163,6 @@ public class ObjectFolderLocalServiceTest {
 
 			PermissionThreadLocal.setPermissionChecker(
 				PermissionCheckerFactoryUtil.create(user));
-
 			PrincipalThreadLocal.setName(user.getUserId());
 
 			objectFolder = _addObjectFolder(user);
@@ -246,15 +247,14 @@ public class ObjectFolderLocalServiceTest {
 			() -> _objectFolderLocalService.updateObjectFolder(
 				_uncategorizedObjectFolder.getExternalReferenceCode(),
 				objectFolder1.getObjectFolderId(),
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				Collections.emptyList()));
+				LocalizedMapUtil.getLocalizedMap(
+					RandomTestUtil.randomString())));
 		AssertUtils.assertFailure(
 			ObjectFolderLabelException.class,
 			"Label is null for locale " + LocaleUtil.US.getDisplayName(),
 			() -> _objectFolderLocalService.updateObjectFolder(
 				RandomTestUtil.randomString(),
-				objectFolder1.getObjectFolderId(), null,
-				Collections.emptyList()));
+				objectFolder1.getObjectFolderId(), null));
 
 		_objectFolderLocalService.deleteObjectFolder(objectFolder1);
 
@@ -266,8 +266,7 @@ public class ObjectFolderLocalServiceTest {
 			RandomTestUtil.randomString());
 
 		objectFolder2 = _objectFolderLocalService.updateObjectFolder(
-			externalReferenceCode, objectFolder2.getObjectFolderId(), labelMap,
-			Collections.emptyList());
+			externalReferenceCode, objectFolder2.getObjectFolderId(), labelMap);
 
 		_assertObjectFolder(
 			externalReferenceCode, labelMap, objectFolder2.getName(),

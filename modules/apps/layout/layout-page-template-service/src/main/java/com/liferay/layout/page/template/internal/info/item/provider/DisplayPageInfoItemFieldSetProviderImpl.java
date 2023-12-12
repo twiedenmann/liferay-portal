@@ -29,7 +29,6 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -79,9 +78,7 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 			ThemeDisplay themeDisplay)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-195205") ||
-			(themeDisplay == null)) {
-
+		if (themeDisplay == null) {
 			return Collections.emptyList();
 		}
 
@@ -112,7 +109,7 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 				themeDisplay.getScopeGroupId(),
 				_portal.getClassNameId(infoItemReference.getClassName()),
 				GetterUtil.getLong(infoItemFormVariationKey),
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE);
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
 
 		for (LayoutPageTemplateEntry layoutPageTemplateEntry :
 				layoutPageTemplateEntries) {
@@ -236,7 +233,7 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 			_layoutPageTemplateEntryService.getLayoutPageTemplateEntries(
 				scopeGroupId, _portal.getClassNameId(itemClassName),
 				GetterUtil.getLong(infoItemFormVariationKey),
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE,
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 				WorkflowConstants.STATUS_APPROVED);
 
 		for (LayoutPageTemplateEntry layoutPageTemplateEntry :

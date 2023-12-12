@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {escapeHTML} from 'frontend-js-web';
+
 function attachListener(element, eventType, callback) {
 	element?.addEventListener(eventType, callback);
 
@@ -13,7 +15,12 @@ function attachListener(element, eventType, callback) {
 	};
 }
 
-export default function EditKBArticle({kbArticle, namespace, publishAction}) {
+export default function EditKBArticle({
+	kbArticle,
+	namespace,
+	publishAction,
+	schedulerEnabled,
+}) {
 	const contextualSidebarButton = document.getElementById(
 		`${namespace}contextualSidebarButton`
 	);
@@ -66,7 +73,7 @@ export default function EditKBArticle({kbArticle, namespace, publishAction}) {
 	let scheduleItem;
 	let scheduledButton;
 
-	if (Liferay.FeatureFlags['LPS-188060']) {
+	if (schedulerEnabled) {
 		publishButton = document.getElementById(`${namespace}publishItem`);
 
 		scheduledButton = document.getElementById(
@@ -93,7 +100,7 @@ export default function EditKBArticle({kbArticle, namespace, publishAction}) {
 				`<input id="${namespace}selectedFileName${i}"
 					name="${namespace}selectedFileName"
 					type="hidden"
-					value="${filesChecked[i].value}"
+					value="${escapeHTML(filesChecked[i].value)}"
 				/>`
 			);
 		}
@@ -126,7 +133,7 @@ export default function EditKBArticle({kbArticle, namespace, publishAction}) {
 			}
 		}
 
-		if (Liferay.FeatureFlags['LPS-188060']) {
+		if (schedulerEnabled) {
 			beforeSubmit();
 			submitForm(form);
 		}
@@ -144,7 +151,7 @@ export default function EditKBArticle({kbArticle, namespace, publishAction}) {
 		}),
 	];
 
-	if (Liferay.FeatureFlags['LPS-188060']) {
+	if (schedulerEnabled) {
 		eventHandlers.push(
 			attachListener(scheduleItem, 'click', openScheduleModal)
 		);

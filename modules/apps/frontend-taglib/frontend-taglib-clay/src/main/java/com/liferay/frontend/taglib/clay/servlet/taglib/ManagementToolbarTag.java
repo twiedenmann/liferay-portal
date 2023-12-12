@@ -257,6 +257,26 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		return _searchInputName;
 	}
 
+	public String getSearchResultsTitle() {
+		String searchResultsTitle = _searchResultsTitle;
+
+		if (searchResultsTitle == null) {
+			if (_managementToolbarDisplayContext != null) {
+				searchResultsTitle =
+					_managementToolbarDisplayContext.getSearchResultsTitle();
+			}
+
+			if (searchResultsTitle == null) {
+				searchResultsTitle =
+					ManagementToolbarDefaults.getSearchResultsTitle();
+			}
+		}
+
+		return LanguageUtil.get(
+			TagResourceBundleUtil.getResourceBundle(pageContext),
+			searchResultsTitle);
+	}
+
 	public String getSearchValue() {
 		if ((_searchValue == null) &&
 			(_managementToolbarDisplayContext != null)) {
@@ -510,6 +530,10 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		_searchInputName = searchInputName;
 	}
 
+	public void setSearchResultsTitle(String searchResultsTitle) {
+		_searchResultsTitle = searchResultsTitle;
+	}
+
 	public void setSearchValue(String searchValue) {
 		_searchValue = searchValue;
 	}
@@ -611,6 +635,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		_searchFormName = null;
 		_searchInputAutoFocus = null;
 		_searchInputName = null;
+		_searchResultsTitle = null;
 		_searchValue = null;
 		_selectable = null;
 		_selectAllURL = null;
@@ -673,6 +698,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		props.put("searchInputAutoFocus", isSearchInputAutoFocus());
 		props.put(
 			"searchInputName", _namespace(namespace, getSearchInputName()));
+		props.put("searchResultsTitle", getSearchResultsTitle());
 		props.put("searchValue", getSearchValue());
 		props.put("selectAllURL", getSelectAllURL());
 		props.put("selectable", isSelectable());
@@ -713,7 +739,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 
 		JspWriter jspWriter = pageContext.getOut();
 
-		Boolean active = !getCheckboxStatus().equals("unchecked");
+		Boolean active = !Objects.equals(getCheckboxStatus(), "unchecked");
 
 		jspWriter.write("<nav class=\"management-bar navbar navbar-expand-md");
 
@@ -1268,17 +1294,17 @@ public class ManagementToolbarTag extends BaseContainerTag {
 			jspWriter.write("\"><div class=\"tbar-section\"><span class=\"");
 			jspWriter.write("component-text text-truncate-inline\"><span");
 			jspWriter.write(" class=\"text-truncate\">");
+
+			String searchValueHTML =
+				"<strong>\"" + HtmlUtil.escape(searchValue) + "\"</strong>";
+
 			jspWriter.write(
 				LanguageUtil.format(
 					resourceBundle,
-					(getItemsTotal() == 1) ? "x-result-for" : "x-results-for",
-					new Object[] {getItemsTotal()}));
-
-			if (searchValue != null) {
-				jspWriter.write("<strong> \"");
-				jspWriter.write(HtmlUtil.escape(searchValue));
-				jspWriter.write("\"</strong>");
-			}
+					_getResultsLanguageKey(
+						ListUtil.isNotEmpty(filterLabelItems), getItemsTotal(),
+						searchValue),
+					new Object[] {getItemsTotal(), searchValueHTML}));
 
 			jspWriter.write("</span></span></div></li>");
 
@@ -1302,6 +1328,15 @@ public class ManagementToolbarTag extends BaseContainerTag {
 			linkTag.doTag(pageContext);
 
 			jspWriter.write("</div></li></ul></div></nav>");
+		}
+
+		String searchResultsTitle = getSearchResultsTitle();
+
+		if (isShowResultsBar() && Validator.isNotNull(searchResultsTitle)) {
+			jspWriter.write("<div class=\"c-mt-4 container-fluid ");
+			jspWriter.write("container-fluid-max-xl\"><h3>");
+			jspWriter.write(searchResultsTitle);
+			jspWriter.write("<h3></div>");
 		}
 
 		return SKIP_BODY;
@@ -1359,6 +1394,40 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		}
 
 		return searchData;
+	}
+
+	private String _getResultsLanguageKey(
+		boolean hasFilters, int itemsTotal, String searchValue) {
+
+		if (Validator.isNull(searchValue)) {
+			if (hasFilters) {
+				if (itemsTotal == 1) {
+					return "x-result-found-with-filters";
+				}
+
+				return "x-results-found-with-filters";
+			}
+
+			if (itemsTotal == 1) {
+				return "x-result-found";
+			}
+
+			return "x-results-found";
+		}
+
+		if (hasFilters) {
+			if (itemsTotal == 1) {
+				return "x-result-found-for-x-with-filters";
+			}
+
+			return "x-results-found-for-x-with-filters";
+		}
+
+		if (itemsTotal == 1) {
+			return "x-result-found-for-x";
+		}
+
+		return "x-results-found-for-x";
 	}
 
 	private String _namespace(String namespace, String prop) {
@@ -1421,6 +1490,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 	private String _searchFormName;
 	private Boolean _searchInputAutoFocus;
 	private String _searchInputName;
+	private String _searchResultsTitle;
 	private String _searchValue;
 	private Boolean _selectable;
 	private String _selectAllURL;

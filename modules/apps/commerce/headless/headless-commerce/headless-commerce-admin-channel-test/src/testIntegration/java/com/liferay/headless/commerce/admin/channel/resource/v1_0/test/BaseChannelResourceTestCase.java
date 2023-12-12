@@ -194,6 +194,95 @@ public abstract class BaseChannelResourceTestCase {
 	}
 
 	@Test
+	public void testGetAccountAddressChannelChannel() throws Exception {
+		Channel postChannel = testGetAccountAddressChannelChannel_addChannel();
+
+		Channel getChannel = channelResource.getAccountAddressChannelChannel(
+			testGetAccountAddressChannelChannel_getAccountAddressChannelId());
+
+		assertEquals(postChannel, getChannel);
+		assertValid(getChannel);
+	}
+
+	protected Long
+			testGetAccountAddressChannelChannel_getAccountAddressChannelId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Channel testGetAccountAddressChannelChannel_addChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountAddressChannelChannel() throws Exception {
+		Channel channel =
+			testGraphQLGetAccountAddressChannelChannel_addChannel();
+
+		Assert.assertTrue(
+			equals(
+				channel,
+				ChannelSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"accountAddressChannelChannel",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"accountAddressChannelId",
+											testGraphQLGetAccountAddressChannelChannel_getAccountAddressChannelId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/accountAddressChannelChannel"))));
+	}
+
+	protected Long
+			testGraphQLGetAccountAddressChannelChannel_getAccountAddressChannelId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAccountAddressChannelChannelNotFound()
+		throws Exception {
+
+		Long irrelevantAccountAddressChannelId = RandomTestUtil.randomLong();
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"accountAddressChannelChannel",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"accountAddressChannelId",
+									irrelevantAccountAddressChannelId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Channel testGraphQLGetAccountAddressChannelChannel_addChannel()
+		throws Exception {
+
+		return testGraphQLChannel_addChannel();
+	}
+
+	@Test
 	public void testGetChannelsPage() throws Exception {
 		Page<Channel> page = channelResource.getChannelsPage(
 			null, null, Pagination.of(1, 10), null);
@@ -301,10 +390,10 @@ public abstract class BaseChannelResourceTestCase {
 
 	@Test
 	public void testGetChannelsPageWithPagination() throws Exception {
-		Page<Channel> totalPage = channelResource.getChannelsPage(
+		Page<Channel> channelPage = channelResource.getChannelsPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(channelPage.getTotalCount());
 
 		Channel channel1 = testGetChannelsPage_addChannel(randomChannel());
 
@@ -330,7 +419,7 @@ public abstract class BaseChannelResourceTestCase {
 		Assert.assertEquals(channels2.toString(), 1, channels2.size());
 
 		Page<Channel> page3 = channelResource.getChannelsPage(
-			null, null, Pagination.of(1, totalCount + 3), null);
+			null, null, Pagination.of(1, (int)totalCount + 3), null);
 
 		assertContains(channel1, (List<Channel>)page3.getItems());
 		assertContains(channel2, (List<Channel>)page3.getItems());
@@ -442,22 +531,23 @@ public abstract class BaseChannelResourceTestCase {
 
 		channel2 = testGetChannelsPage_addChannel(channel2);
 
+		Page<Channel> page = channelResource.getChannelsPage(
+			null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<Channel> ascPage = channelResource.getChannelsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(channel1, channel2),
-				(List<Channel>)ascPage.getItems());
+			assertContains(channel1, (List<Channel>)ascPage.getItems());
+			assertContains(channel2, (List<Channel>)ascPage.getItems());
 
 			Page<Channel> descPage = channelResource.getChannelsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(channel2, channel1),
-				(List<Channel>)descPage.getItems());
+			assertContains(channel2, (List<Channel>)descPage.getItems());
+			assertContains(channel1, (List<Channel>)descPage.getItems());
 		}
 	}
 

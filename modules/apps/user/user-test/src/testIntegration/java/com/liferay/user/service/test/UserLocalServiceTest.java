@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.exception.PasswordExpiredException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RequiredRoleException;
 import com.liferay.portal.kernel.exception.UserLockoutException;
+import com.liferay.portal.kernel.exception.UserPasswordException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Company;
@@ -32,7 +33,6 @@ import com.liferay.portal.kernel.security.auth.Authenticator;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.security.pwd.PasswordEncryptor;
 import com.liferay.portal.kernel.security.pwd.PasswordEncryptorUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.PasswordPolicyLocalService;
@@ -531,6 +531,56 @@ public class UserLocalServiceTest {
 	}
 
 	@Test
+	public void testPasswordHistory() throws Exception {
+		User user = UserTestUtil.addUser();
+
+		PasswordPolicy passwordPolicy = user.getPasswordPolicy();
+
+		passwordPolicy.setHistory(true);
+		passwordPolicy.setHistoryCount(2);
+
+		_passwordPolicyLocalService.updatePasswordPolicy(passwordPolicy);
+
+		String password1 = "password1";
+		String password2 = "password2";
+
+		try {
+			ServiceContextThreadLocal.pushServiceContext(
+				ServiceContextTestUtil.getServiceContext(
+					user.getGroupId(), user.getUserId()));
+
+			user = _userLocalService.updatePassword(
+				user.getUserId(), password1, password1, false, false);
+
+			user = _userLocalService.updatePassword(
+				user.getUserId(), password2, password2, false, false);
+
+			Assert.assertEquals(
+				Authenticator.SUCCESS,
+				_userLocalService.authenticateByEmailAddress(
+					user.getCompanyId(), user.getEmailAddress(), password2,
+					null, null, null));
+
+			_userLocalService.updatePassword(
+				user.getUserId(), password1, password1, false, false);
+
+			Assert.assertEquals(
+				Authenticator.SUCCESS,
+				_userLocalService.authenticateByEmailAddress(
+					user.getCompanyId(), user.getEmailAddress(), password2,
+					null, null, null));
+		}
+		catch (PortalException portalException) {
+			Assert.assertEquals(
+				UserPasswordException.MustNotBeRecentlyUsed.class,
+				portalException.getClass());
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+	}
+
+	@Test
 	public void testSearch() throws Exception {
 		List<User> users = _userLocalService.search(
 			TestPropsValues.getCompanyId(), null,
@@ -772,17 +822,13 @@ public class UserLocalServiceTest {
 
 	@Test
 	public void testUpdatePasswordWithChangedAlgorithm() throws Exception {
-		PasswordEncryptor passwordEncryptor = ReflectionTestUtil.getFieldValue(
-			PasswordEncryptorUtil.class, "_passwordEncryptor");
-
 		String oldPasswordsEncryptionAlgorithmFieldValue =
 			ReflectionTestUtil.getFieldValue(
-				passwordEncryptor.getClass(),
-				"_PASSWORDS_ENCRYPTION_ALGORITHM");
+				PasswordEncryptorUtil.class, "_PASSWORDS_ENCRYPTION_ALGORITHM");
 
 		try {
 			ReflectionTestUtil.setFieldValue(
-				passwordEncryptor.getClass(), "_PASSWORDS_ENCRYPTION_ALGORITHM",
+				PasswordEncryptorUtil.class, "_PASSWORDS_ENCRYPTION_ALGORITHM",
 				"PBKDF2WithHmacSHA1/160/720000");
 
 			User user = UserTestUtil.addUser();
@@ -793,7 +839,7 @@ public class UserLocalServiceTest {
 				encryptedPassword.startsWith("{PBKDF2WithHmacSHA1}"));
 
 			ReflectionTestUtil.setFieldValue(
-				passwordEncryptor.getClass(), "_PASSWORDS_ENCRYPTION_ALGORITHM",
+				PasswordEncryptorUtil.class, "_PASSWORDS_ENCRYPTION_ALGORITHM",
 				"MD5");
 
 			String password = RandomTestUtil.randomString(
@@ -808,7 +854,7 @@ public class UserLocalServiceTest {
 		}
 		finally {
 			ReflectionTestUtil.setFieldValue(
-				passwordEncryptor.getClass(), "_PASSWORDS_ENCRYPTION_ALGORITHM",
+				PasswordEncryptorUtil.class, "_PASSWORDS_ENCRYPTION_ALGORITHM",
 				oldPasswordsEncryptionAlgorithmFieldValue);
 		}
 	}

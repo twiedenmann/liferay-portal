@@ -28,7 +28,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -243,22 +242,8 @@ public class UIItemsBuilder {
 	}
 
 	public DropdownItem createCopyDropdownItem() {
-		String mvcRenderCommand;
-
-		if (_fileShortcut != null) {
-			mvcRenderCommand = "/document_library/copy_file_shortcut";
-		}
-		else {
-			mvcRenderCommand = "/document_library/copy_file_entry";
-		}
-
 		return DropdownItemBuilder.setHref(
-			() -> {
-				PortletURL portletURL = _getControlPanelRenderURL(
-					mvcRenderCommand);
-
-				return portletURL.toString();
-			}
+			_getCopyEntryURL()
 		).setIcon(
 			"copy"
 		).setKey(
@@ -630,12 +615,6 @@ public class UIItemsBuilder {
 	}
 
 	public boolean isCopyActionAvailable() throws PortalException {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				_themeDisplay.getCompanyId(), "LPS-182512")) {
-
-			return false;
-		}
-
 		if (((_fileShortcut != null) &&
 			 !_fileShortcutDisplayContextHelper.isCopyActionAvailable()) ||
 			((_fileShortcut == null) &&
@@ -914,6 +893,46 @@ public class UIItemsBuilder {
 		}
 
 		return portletURL;
+	}
+
+	private PortletURL _getCopyEntryURL() {
+		return PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				_getLiferayPortletRequest(), _themeDisplay.getScopeGroup(),
+				DLPortletKeys.DOCUMENT_LIBRARY_ADMIN, 0, 0,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/document_library/copy_dl_objects"
+		).setRedirect(
+			_getCurrentURL()
+		).setParameter(
+			"dlObjectIds",
+			() -> {
+				if (_fileShortcut != null) {
+					return _fileShortcut.getFileShortcutId();
+				}
+
+				return _fileEntry.getFileEntryId();
+			}
+		).setParameter(
+			"sourceFolderId",
+			() -> {
+				if (_fileShortcut != null) {
+					return _fileShortcut.getFolderId();
+				}
+
+				return _fileEntry.getFolderId();
+			}
+		).setParameter(
+			"sourceRepositoryId",
+			() -> {
+				if (_fileShortcut != null) {
+					return _fileShortcut.getRepositoryId();
+				}
+
+				return _fileEntry.getRepositoryId();
+			}
+		).buildPortletURL();
 	}
 
 	private String _getCurrentURL() {

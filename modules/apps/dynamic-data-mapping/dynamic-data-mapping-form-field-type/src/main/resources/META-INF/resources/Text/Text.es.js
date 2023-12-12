@@ -279,7 +279,7 @@ const Autocomplete = ({
 	const itemListRef = useRef(null);
 
 	const escapeChars = (string) =>
-		string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+		string?.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
 
 	const filteredItems = options.filter(
 		(item) => item && item.match(escapeChars(value))
@@ -515,7 +515,16 @@ const Main = ({
 				name={name}
 				normalizeField={normalizeField}
 				onBlur={onBlur}
-				onChange={onChange}
+				onChange={(event) => {
+					if (
+						!event?.relatedTarget ||
+						(event?.realatedTarget &&
+							event?.relatedTarget?.dataset?.restoreTitle !==
+								'Duplicate')
+					) {
+						onChange(event);
+					}
+				}}
 				onFocus={onFocus}
 				onKeyDown={onKeyDown}
 				options={optionsMemo}

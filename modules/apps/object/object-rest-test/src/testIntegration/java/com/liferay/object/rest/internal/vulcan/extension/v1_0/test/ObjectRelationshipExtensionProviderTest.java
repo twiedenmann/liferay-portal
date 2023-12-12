@@ -85,12 +85,13 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		_objectRelationship =
 			ObjectRelationshipLocalServiceUtil.addObjectRelationship(
-				_user.getUserId(), _objectDefinition.getObjectDefinitionId(),
+				null, _user.getUserId(),
+				_objectDefinition.getObjectDefinitionId(),
 				userSystemObjectDefinition.getObjectDefinitionId(), 0,
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
-				ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
+				ObjectRelationshipConstants.TYPE_MANY_TO_MANY, null);
 
 		ObjectRelationshipLocalServiceUtil.
 			addObjectRelationshipMappingTableValues(
@@ -132,8 +133,8 @@ public class ObjectRelationshipExtensionProviderTest {
 
 		Map<String, Serializable> extendedProperties =
 			_extensionProvider.getExtendedProperties(
-				TestPropsValues.getCompanyId(), UserAccount.class.getName(),
-				userAccount);
+				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+				UserAccount.class.getName(), userAccount);
 
 		Assert.assertNull(extendedProperties);
 
@@ -141,8 +142,8 @@ public class ObjectRelationshipExtensionProviderTest {
 			_getNestedFieldsContext(RandomTestUtil.randomString()));
 
 		extendedProperties = _extensionProvider.getExtendedProperties(
-			TestPropsValues.getCompanyId(), UserAccount.class.getName(),
-			userAccount);
+			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			UserAccount.class.getName(), userAccount);
 
 		Assert.assertTrue(extendedProperties.isEmpty());
 
@@ -150,8 +151,8 @@ public class ObjectRelationshipExtensionProviderTest {
 			_getNestedFieldsContext(_objectRelationship.getName()));
 
 		extendedProperties = _extensionProvider.getExtendedProperties(
-			TestPropsValues.getCompanyId(), UserAccount.class.getName(),
-			userAccount);
+			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			UserAccount.class.getName(), userAccount);
 
 		Assert.assertEquals(
 			extendedProperties.toString(), 1, extendedProperties.size());

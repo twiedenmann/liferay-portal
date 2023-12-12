@@ -26,7 +26,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -665,12 +664,15 @@ public class GetEntryRenderDataMVCResourceCommand
 			);
 		}
 
-		if ((ctEntry.getModelClassNameId() ==
-				_classNameLocalService.getClassNameId(Layout.class)) &&
-			FeatureFlagManagerUtil.isEnabled(
-				themeDisplay.getCompanyId(), "LPS-187183")) {
+		if (ctEntry.getModelClassNameId() ==
+				_classNameLocalService.getClassNameId(Layout.class)) {
 
-			_getSegmentExperiences(ctEntry, httpServletRequest, jsonObject);
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						ctEntry.getCtCollectionId())) {
+
+				_getSegmentExperiences(ctEntry, httpServletRequest, jsonObject);
+			}
 		}
 
 		return jsonObject;
@@ -959,11 +961,7 @@ public class GetEntryRenderDataMVCResourceCommand
 				).put(
 					"segmentName",
 					() -> {
-						if (Objects.equals(
-								segmentsExperience.getSegmentsExperienceKey(),
-								SegmentsExperienceConstants.KEY_DEFAULT) &&
-							(segmentsExperience.getSegmentsEntryId() == 0)) {
-
+						if (segmentsExperience.getSegmentsEntryId() == 0) {
 							return _language.get(httpServletRequest, "anyone");
 						}
 

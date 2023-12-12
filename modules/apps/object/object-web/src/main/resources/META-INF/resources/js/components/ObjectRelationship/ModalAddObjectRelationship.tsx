@@ -14,7 +14,6 @@ import {defaultLanguageId} from '../../utils/constants';
 import {toCamelCase} from '../../utils/string';
 import {
 	ObjectRelationshipFormBase,
-	ObjectRelationshipType,
 	useObjectRelationshipForm,
 } from './ObjectRelationshipFormBase';
 import SelectObjectRelationship from './SelectObjectRelationship';
@@ -134,6 +133,7 @@ export function ModalAddObjectRelationship({
 
 						<ObjectRelationshipFormBase
 							baseResourceURL={baseResourceURL}
+							className="lfr-objects__modal-add-object-relationship-form-base"
 							errors={errors}
 							handleChange={handleChange}
 							hasDefinedObjectDefinitionTarget={
@@ -158,8 +158,7 @@ export function ModalAddObjectRelationship({
 						/>
 
 						{objectRelationshipParameterRequired &&
-							values.type ===
-								ObjectRelationshipType.ONE_TO_MANY && (
+							values.type === 'oneToMany' && (
 								<SelectObjectRelationship
 									error={errors.parameterObjectFieldName}
 									objectDefinitionExternalReferenceCode1={

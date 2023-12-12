@@ -58,7 +58,6 @@ import java.io.Writer;
 
 import java.sql.Timestamp;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
@@ -265,6 +264,10 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 			HashMapBuilder.<String, Object>put(
 				"apiURL", _getAPIURL(fdsEntryObjectEntry, httpServletRequest)
 			).put(
+				"creationMenu",
+				_getCreationMenuJSONObject(
+					fdsViewObjectDefinition, fdsViewObjectEntry)
+			).put(
 				"filters",
 				_getFiltersJSONArray(
 					fdsViewObjectDefinition, fdsViewObjectEntry,
@@ -327,6 +330,55 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 		return _interpolateURL(sb.toString(), httpServletRequest);
 	}
 
+	private JSONObject _getCreationMenuJSONObject(
+			ObjectDefinition fdsViewObjectDefinition,
+			ObjectEntry fdsViewObjectEntry)
+		throws Exception {
+
+		Set<ObjectEntry> objectEntries = new TreeSet<>(
+			new ObjectEntryComparator(
+				ListUtil.toList(
+					ListUtil.fromString(
+						MapUtil.getString(
+							fdsViewObjectEntry.getProperties(),
+							"fdsCreationActionsOrder"),
+						StringPool.COMMA),
+					Long::parseLong)));
+
+		objectEntries.addAll(
+			_getRelatedObjectEntries(
+				fdsViewObjectDefinition, fdsViewObjectEntry,
+				"fdsViewFDSCreationActionRelationship"));
+
+		return JSONUtil.put(
+			"primaryItems",
+			JSONUtil.toJSONArray(
+				objectEntries,
+				(ObjectEntry objectEntry) -> {
+					Map<String, Object> properties =
+						objectEntry.getProperties();
+
+					return JSONUtil.put(
+						"data",
+						JSONUtil.put(
+							"permissionKey", properties.get("permissionKey")
+						).put(
+							"size", properties.get("modalSize")
+						).put(
+							"title", properties.get("title")
+						)
+					).put(
+						"href", properties.get("url")
+					).put(
+						"icon", properties.get("icon")
+					).put(
+						"label", properties.get("label")
+					).put(
+						"target", properties.get("type")
+					);
+				}));
+	}
+
 	private JSONObject _getDateJSONObject(Object object) {
 		if (object == null) {
 			return null;
@@ -353,7 +405,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 			ObjectEntry fdsViewObjectEntry)
 		throws Exception {
 
-		Set<ObjectEntry> fdsFieldObjectEntries = new TreeSet<>(
+		Set<ObjectEntry> objectEntries = new TreeSet<>(
 			new ObjectEntryComparator(
 				ListUtil.toList(
 					ListUtil.fromString(
@@ -363,30 +415,29 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 						StringPool.COMMA),
 					Long::parseLong)));
 
-		fdsFieldObjectEntries.addAll(
+		objectEntries.addAll(
 			_getRelatedObjectEntries(
 				fdsViewObjectDefinition, fdsViewObjectEntry,
 				"fdsViewFDSFieldRelationship"));
 
 		return JSONUtil.toJSONArray(
-			fdsFieldObjectEntries,
-			(ObjectEntry fdsFieldObjectEntry) -> {
-				Map<String, Object> fdsFieldProperties =
-					fdsFieldObjectEntry.getProperties();
+			objectEntries,
+			(ObjectEntry objectEntry) -> {
+				Map<String, Object> properties = objectEntry.getProperties();
 
 				JSONObject jsonObject = JSONUtil.put(
 					"contentRenderer",
-					String.valueOf(fdsFieldProperties.get("renderer"))
+					String.valueOf(properties.get("renderer"))
 				).put(
-					"fieldName", String.valueOf(fdsFieldProperties.get("name"))
+					"fieldName", String.valueOf(properties.get("name"))
 				).put(
-					"label", _getValue("label", "name", fdsFieldProperties)
+					"label", _getValue("label", "name", properties)
 				).put(
-					"sortable", (boolean)fdsFieldProperties.get("sortable")
+					"sortable", (boolean)properties.get("sortable")
 				);
 
 				String rendererType = String.valueOf(
-					fdsFieldProperties.get("rendererType"));
+					properties.get("rendererType"));
 
 				if (!Objects.equals(rendererType, "clientExtension")) {
 					return jsonObject;
@@ -395,7 +446,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 				FDSCellRendererCET fdsCellRendererCET =
 					(FDSCellRendererCET)_cetManager.getCET(
 						fragmentEntryLink.getCompanyId(),
-						String.valueOf(fdsFieldProperties.get("renderer")));
+						String.valueOf(properties.get("renderer")));
 
 				return jsonObject.put(
 					"contentRendererClientExtension", true
@@ -412,7 +463,7 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 			HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		Set<ObjectEntry> fdsFilterObjectEntries = new TreeSet<>(
+		Set<ObjectEntry> objectEntries = new TreeSet<>(
 			new ObjectEntryComparator(
 				ListUtil.toList(
 					ListUtil.fromString(
@@ -422,24 +473,23 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 						StringPool.COMMA),
 					Long::parseLong)));
 
-		fdsFilterObjectEntries.addAll(
+		objectEntries.addAll(
 			_getRelatedObjectEntries(
 				fdsViewObjectDefinition, fdsViewObjectEntry,
 				"fdsViewFDSClientExtensionFilter"));
-		fdsFilterObjectEntries.addAll(
+		objectEntries.addAll(
 			_getRelatedObjectEntries(
 				fdsViewObjectDefinition, fdsViewObjectEntry,
 				"fdsViewFDSDateFilterRelationship"));
-		fdsFilterObjectEntries.addAll(
+		objectEntries.addAll(
 			_getRelatedObjectEntries(
 				fdsViewObjectDefinition, fdsViewObjectEntry,
 				"fdsViewFDSDynamicFilterRelationship"));
 
 		return JSONUtil.toJSONArray(
-			fdsFilterObjectEntries,
-			(ObjectEntry fdsFilterObjectEntry) -> {
-				Map<String, Object> properties =
-					fdsFilterObjectEntry.getProperties();
+			objectEntries,
+			(ObjectEntry objectEntry) -> {
+				Map<String, Object> properties = objectEntry.getProperties();
 
 				String type = MapUtil.getString(properties, "type");
 
@@ -520,15 +570,25 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 						"multiple", properties.get("multiple")
 					).put(
 						"preloadedData",
-						JSONUtil.put(
-							"exclude", false
-						).put(
-							"selectedItems",
-							_getSelectedItemsJSONArray(
-								listTypeEntries, themeDisplay.getLocale(),
-								MapUtil.getString(
-									properties, "preselectedValues"))
-						)
+						() -> {
+							JSONArray selectedItemsJSONArray =
+								_getSelectedItemsJSONArray(
+									listTypeEntries, themeDisplay.getLocale(),
+									MapUtil.getString(
+										properties, "preselectedValues"));
+
+							if (JSONUtil.isEmpty(selectedItemsJSONArray)) {
+								return null;
+							}
+
+							return JSONUtil.put(
+								"exclude",
+								() -> Boolean.FALSE.equals(
+									(Boolean)properties.get("include"))
+							).put(
+								"selectedItems", selectedItemsJSONArray
+							);
+						}
 					).put(
 						"type", "selection"
 					);
@@ -558,13 +618,13 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 					}
 
 					return JSONUtil.put(
+						"clientExtensionFilterURL", fdsFilterCET.getURL()
+					).put(
 						"entityFieldType", FDSEntityFieldTypes.STRING
 					).put(
 						"id", properties.get("fieldName")
 					).put(
 						"label", _getValue("label", "fieldName", properties)
-					).put(
-						"moduleURL", fdsFilterCET.getURL()
 					).put(
 						"type", "clientExtension"
 					);
@@ -579,26 +639,25 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 			ObjectEntry fdsViewObjectEntry)
 		throws Exception {
 
-		Set<ObjectEntry> fdsActionObjectEntries = new TreeSet<>(
+		Set<ObjectEntry> objectEntries = new TreeSet<>(
 			new ObjectEntryComparator(
 				ListUtil.toList(
 					ListUtil.fromString(
 						MapUtil.getString(
 							fdsViewObjectEntry.getProperties(),
-							"fdsActionsOrder"),
+							"fdsItemActionsOrder"),
 						StringPool.COMMA),
 					Long::parseLong)));
 
-		fdsActionObjectEntries.addAll(
+		objectEntries.addAll(
 			_getRelatedObjectEntries(
 				fdsViewObjectDefinition, fdsViewObjectEntry,
-				"fdsViewFDSActionRelationship"));
+				"fdsViewFDSItemActionRelationship"));
 
 		return JSONUtil.toJSONArray(
-			fdsActionObjectEntries,
-			(ObjectEntry fdsActionObjectEntry) -> {
-				Map<String, Object> properties =
-					fdsActionObjectEntry.getProperties();
+			objectEntries,
+			(ObjectEntry objectEntry) -> {
+				Map<String, Object> properties = objectEntry.getProperties();
 
 				return JSONUtil.put(
 					"data",
@@ -606,9 +665,15 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 						"confirmationMessage",
 						properties.get("confirmationMessage")
 					).put(
+						"errorMessage", properties.get("errorMessage")
+					).put(
+						"method", properties.get("method")
+					).put(
 						"permissionKey", properties.get("permissionKey")
 					).put(
 						"status", properties.get("confirmationMessageType")
+					).put(
+						"successMessage", properties.get("successMessage")
 					).put(
 						"title", properties.get("label")
 					)
@@ -724,30 +789,19 @@ public class FDSViewFragmentRenderer implements FragmentRenderer {
 			ObjectEntry fdsViewObjectEntry)
 		throws Exception {
 
-		List<ObjectEntry> fdsSortingObjectEntries = new ArrayList<>(
+		return JSONUtil.toJSONArray(
 			_getRelatedObjectEntries(
 				fdsViewObjectDefinition, fdsViewObjectEntry,
-				"fdsViewFDSSortRelationship"));
+				"fdsViewFDSSortRelationship"),
+			(ObjectEntry objectEntry) -> {
+				Map<String, Object> properties = objectEntry.getProperties();
 
-		if (ListUtil.isEmpty(fdsSortingObjectEntries)) {
-			return _jsonFactory.createJSONArray();
-		}
-
-		return JSONUtil.toJSONArray(
-			fdsSortingObjectEntries,
-			(ObjectEntry fdsSortingObjectEntry) -> _getSortsJSONObject(
-				fdsSortingObjectEntry));
-	}
-
-	private JSONObject _getSortsJSONObject(ObjectEntry fdsSortingObjectEntry) {
-		Map<String, Object> fdsSortingProperties =
-			fdsSortingObjectEntry.getProperties();
-
-		return JSONUtil.put(
-			"direction", fdsSortingProperties.get("sortingDirection")
-		).put(
-			"key", fdsSortingProperties.get("fieldName")
-		);
+				return JSONUtil.put(
+					"direction", properties.get("sortingDirection")
+				).put(
+					"key", properties.get("fieldName")
+				);
+			});
 	}
 
 	private String _getValue(

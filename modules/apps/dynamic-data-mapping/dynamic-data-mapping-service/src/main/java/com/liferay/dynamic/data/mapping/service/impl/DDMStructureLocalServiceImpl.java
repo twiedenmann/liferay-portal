@@ -68,7 +68,6 @@ import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
@@ -79,6 +78,7 @@ import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.search.DDMStructureIndexer;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
@@ -119,9 +119,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * Provides the local service for accessing, adding, deleting, and updating
@@ -1571,9 +1568,7 @@ public class DDMStructureLocalServiceImpl
 		structure.setUserId(userId);
 		structure.setParentStructureId(parentStructureId);
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-184255") &&
-			Validator.isNotNull(structureKey)) {
-
+		if (Validator.isNotNull(structureKey)) {
 			structureKey = StringUtil.toUpperCase(structureKey.trim());
 
 			_validateStructureKey(
@@ -1739,7 +1734,7 @@ public class DDMStructureLocalServiceImpl
 
 	private long[] _getAncestorSiteAndDepotGroupIds(long groupId) {
 		SiteConnectedGroupGroupProvider siteConnectedGroupGroupProvider =
-			_siteConnectedGroupGroupProvider;
+			_siteConnectedGroupGroupProviderSnapshot.get();
 
 		try {
 			if (siteConnectedGroupGroupProvider == null) {
@@ -2095,24 +2090,51 @@ public class DDMStructureLocalServiceImpl
 			_ddmStructureVersionLocalService.getLatestStructureVersion(
 				structure.getStructureId());
 
+		boolean updateVersion = false;
+
+		if (latestStructureVersion.getStatus() ==
+				WorkflowConstants.STATUS_DRAFT) {
+
+			updateVersion = true;
+		}
+
 		boolean majorVersion = GetterUtil.getBoolean(
 			serviceContext.getAttribute("majorVersion"));
 
 		String version = _getNextVersion(
 			latestStructureVersion.getVersion(), majorVersion);
 
-		structure.setVersion(version);
+		if (!updateVersion) {
+			structure.setVersionUserId(user.getUserId());
+			structure.setVersionUserName(user.getFullName());
+			structure.setVersion(version);
+		}
 
 		structure.setNameMap(nameMap, ddmForm.getDefaultLocale());
-		structure.setVersionUserId(user.getUserId());
-		structure.setVersionUserName(user.getFullName());
 		structure.setDescriptionMap(descriptionMap, ddmForm.getDefaultLocale());
 		structure.setDefinition(_serializeJSONDDMForm(ddmForm));
 
 		// Structure version
 
-		DDMStructureVersion structureVersion = _addStructureVersion(
-			user, structure, version, serviceContext);
+		DDMStructureVersion structureVersion;
+
+		if (updateVersion) {
+			latestStructureVersion.setDefinition(structure.getDefinition());
+			latestStructureVersion.setStatus(
+				GetterUtil.getInteger(
+					serviceContext.getAttribute("status"),
+					WorkflowConstants.STATUS_APPROVED));
+			latestStructureVersion.setStatusByUserId(user.getUserId());
+			latestStructureVersion.setStatusByUserName(user.getFullName());
+			latestStructureVersion.setStatusDate(structure.getModifiedDate());
+
+			structureVersion = _ddmStructureVersionPersistence.update(
+				latestStructureVersion);
+		}
+		else {
+			structureVersion = _addStructureVersion(
+				user, structure, version, serviceContext);
+		}
 
 		// Structure layout
 
@@ -2323,6 +2345,10 @@ public class DDMStructureLocalServiceImpl
 	private static final Pattern _callFunctionPattern = Pattern.compile(
 		"call\\(\\s*\'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-" +
 			"[0-9a-f]{12})\'\\s*,\\s*\'(.*)\'\\s*,\\s*\'(.*)\'\\s*\\)");
+	private static final Snapshot<SiteConnectedGroupGroupProvider>
+		_siteConnectedGroupGroupProviderSnapshot = new Snapshot<>(
+			DDMStructureLocalServiceImpl.class,
+			SiteConnectedGroupGroupProvider.class, null, true);
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
@@ -2401,18 +2427,7 @@ public class DDMStructureLocalServiceImpl
 
 	private ServiceTrackerMap<String, DDMStructureIndexer> _serviceTrackerMap;
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile SiteConnectedGroupGroupProvider
-		_siteConnectedGroupGroupProvider;
-
 	@Reference
 	private UserLocalService _userLocalService;
-
-	@Reference(target = "(ddm.form.deserializer.type=xsd)")
-	private DDMFormDeserializer _xsdDDMFormDeserializer;
 
 }

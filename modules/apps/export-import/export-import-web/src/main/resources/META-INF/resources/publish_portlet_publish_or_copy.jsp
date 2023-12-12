@@ -61,6 +61,12 @@ else {
 
 			<div class="sheet">
 				<div class="panel-group panel-group-flush">
+					<clay:alert
+						displayType="warning"
+						message="publish-small-incremental-changes-to-avoid-large-publishing-processes-that-can-take-a-long-time-to-execute"
+						symbol="page"
+						title="recommendation"
+					/>
 
 					<%
 					PortletDataHandler portletDataHandler = selPortlet.getPortletDataHandlerInstance();
@@ -175,7 +181,7 @@ else {
 											</div>
 
 											<div class="range-options">
-												<aui:input id="rangeLast" label='<%= LanguageUtil.get(request, "last") + StringPool.TRIPLE_PERIOD %>' name="range" type="radio" value="last" />
+												<aui:input helpMessage="export-last-range-help" id="rangeLast" label='<%= LanguageUtil.get(request, "last") + StringPool.TRIPLE_PERIOD %>' name="range" type="radio" value="last" />
 											</div>
 
 											<div class="range-options">

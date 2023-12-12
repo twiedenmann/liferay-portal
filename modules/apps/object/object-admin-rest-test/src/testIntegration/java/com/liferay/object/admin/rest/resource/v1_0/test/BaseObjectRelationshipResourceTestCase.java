@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -177,6 +178,7 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 
 		ObjectRelationship objectRelationship = randomObjectRelationship();
 
+		objectRelationship.setExternalReferenceCode(regex);
 		objectRelationship.setName(regex);
 		objectRelationship.setObjectDefinitionExternalReferenceCode1(regex);
 		objectRelationship.setObjectDefinitionExternalReferenceCode2(regex);
@@ -189,6 +191,8 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 
 		objectRelationship = ObjectRelationshipSerDes.toDTO(json);
 
+		Assert.assertEquals(
+			regex, objectRelationship.getExternalReferenceCode());
 		Assert.assertEquals(regex, objectRelationship.getName());
 		Assert.assertEquals(
 			regex,
@@ -217,7 +221,7 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 					externalReferenceCode, null, null, Pagination.of(1, 10),
 					null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			ObjectRelationship irrelevantObjectRelationship =
@@ -229,12 +233,12 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				objectRelationshipResource.
 					getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
 						irrelevantExternalReferenceCode, null, null,
-						Pagination.of(1, 2), null);
+						Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantObjectRelationship),
+			assertContains(
+				irrelevantObjectRelationship,
 				(List<ObjectRelationship>)page.getItems());
 			assertValid(
 				page,
@@ -256,11 +260,12 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 					externalReferenceCode, null, null, Pagination.of(1, 10),
 					null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(objectRelationship1, objectRelationship2),
-			(List<ObjectRelationship>)page.getItems());
+		assertContains(
+			objectRelationship1, (List<ObjectRelationship>)page.getItems());
+		assertContains(
+			objectRelationship2, (List<ObjectRelationship>)page.getItems());
 		assertValid(
 			page,
 			testGetObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage_getExpectedActions(
@@ -395,6 +400,14 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 		String externalReferenceCode =
 			testGetObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage_getExternalReferenceCode();
 
+		Page<ObjectRelationship> objectRelationshipPage =
+			objectRelationshipResource.
+				getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
+					externalReferenceCode, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			objectRelationshipPage.getTotalCount());
+
 		ObjectRelationship objectRelationship1 =
 			testGetObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage_addObjectRelationship(
 				externalReferenceCode, randomObjectRelationship());
@@ -410,22 +423,23 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 		Page<ObjectRelationship> page1 =
 			objectRelationshipResource.
 				getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
-					externalReferenceCode, null, null, Pagination.of(1, 2),
-					null);
+					externalReferenceCode, null, null,
+					Pagination.of(1, totalCount + 2), null);
 
 		List<ObjectRelationship> objectRelationships1 =
 			(List<ObjectRelationship>)page1.getItems();
 
 		Assert.assertEquals(
-			objectRelationships1.toString(), 2, objectRelationships1.size());
+			objectRelationships1.toString(), totalCount + 2,
+			objectRelationships1.size());
 
 		Page<ObjectRelationship> page2 =
 			objectRelationshipResource.
 				getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
-					externalReferenceCode, null, null, Pagination.of(2, 2),
-					null);
+					externalReferenceCode, null, null,
+					Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<ObjectRelationship> objectRelationships2 =
 			(List<ObjectRelationship>)page2.getItems();
@@ -436,13 +450,15 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 		Page<ObjectRelationship> page3 =
 			objectRelationshipResource.
 				getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
-					externalReferenceCode, null, null, Pagination.of(1, 3),
-					null);
+					externalReferenceCode, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				objectRelationship1, objectRelationship2, objectRelationship3),
-			(List<ObjectRelationship>)page3.getItems());
+		assertContains(
+			objectRelationship1, (List<ObjectRelationship>)page3.getItems());
+		assertContains(
+			objectRelationship2, (List<ObjectRelationship>)page3.getItems());
+		assertContains(
+			objectRelationship3, (List<ObjectRelationship>)page3.getItems());
 	}
 
 	@Test
@@ -572,25 +588,38 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 			testGetObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage_addObjectRelationship(
 				externalReferenceCode, objectRelationship2);
 
+		Page<ObjectRelationship> page =
+			objectRelationshipResource.
+				getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
+					externalReferenceCode, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ObjectRelationship> ascPage =
 				objectRelationshipResource.
 					getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
-						externalReferenceCode, null, null, Pagination.of(1, 2),
+						externalReferenceCode, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(objectRelationship1, objectRelationship2),
+			assertContains(
+				objectRelationship1,
+				(List<ObjectRelationship>)ascPage.getItems());
+			assertContains(
+				objectRelationship2,
 				(List<ObjectRelationship>)ascPage.getItems());
 
 			Page<ObjectRelationship> descPage =
 				objectRelationshipResource.
 					getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
-						externalReferenceCode, null, null, Pagination.of(1, 2),
+						externalReferenceCode, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(objectRelationship2, objectRelationship1),
+			assertContains(
+				objectRelationship2,
+				(List<ObjectRelationship>)descPage.getItems());
+			assertContains(
+				objectRelationship1,
 				(List<ObjectRelationship>)descPage.getItems());
 		}
 	}
@@ -658,7 +687,7 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				getObjectDefinitionObjectRelationshipsPage(
 					objectDefinitionId, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantObjectDefinitionId != null) {
 			ObjectRelationship irrelevantObjectRelationship =
@@ -670,12 +699,12 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				objectRelationshipResource.
 					getObjectDefinitionObjectRelationshipsPage(
 						irrelevantObjectDefinitionId, null, null,
-						Pagination.of(1, 2), null);
+						Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantObjectRelationship),
+			assertContains(
+				irrelevantObjectRelationship,
 				(List<ObjectRelationship>)page.getItems());
 			assertValid(
 				page,
@@ -696,11 +725,12 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				getObjectDefinitionObjectRelationshipsPage(
 					objectDefinitionId, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(objectRelationship1, objectRelationship2),
-			(List<ObjectRelationship>)page.getItems());
+		assertContains(
+			objectRelationship1, (List<ObjectRelationship>)page.getItems());
+		assertContains(
+			objectRelationship2, (List<ObjectRelationship>)page.getItems());
 		assertValid(
 			page,
 			testGetObjectDefinitionObjectRelationshipsPage_getExpectedActions(
@@ -845,6 +875,14 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 		Long objectDefinitionId =
 			testGetObjectDefinitionObjectRelationshipsPage_getObjectDefinitionId();
 
+		Page<ObjectRelationship> objectRelationshipPage =
+			objectRelationshipResource.
+				getObjectDefinitionObjectRelationshipsPage(
+					objectDefinitionId, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			objectRelationshipPage.getTotalCount());
+
 		ObjectRelationship objectRelationship1 =
 			testGetObjectDefinitionObjectRelationshipsPage_addObjectRelationship(
 				objectDefinitionId, randomObjectRelationship());
@@ -860,20 +898,23 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 		Page<ObjectRelationship> page1 =
 			objectRelationshipResource.
 				getObjectDefinitionObjectRelationshipsPage(
-					objectDefinitionId, null, null, Pagination.of(1, 2), null);
+					objectDefinitionId, null, null,
+					Pagination.of(1, totalCount + 2), null);
 
 		List<ObjectRelationship> objectRelationships1 =
 			(List<ObjectRelationship>)page1.getItems();
 
 		Assert.assertEquals(
-			objectRelationships1.toString(), 2, objectRelationships1.size());
+			objectRelationships1.toString(), totalCount + 2,
+			objectRelationships1.size());
 
 		Page<ObjectRelationship> page2 =
 			objectRelationshipResource.
 				getObjectDefinitionObjectRelationshipsPage(
-					objectDefinitionId, null, null, Pagination.of(2, 2), null);
+					objectDefinitionId, null, null,
+					Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<ObjectRelationship> objectRelationships2 =
 			(List<ObjectRelationship>)page2.getItems();
@@ -884,12 +925,15 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 		Page<ObjectRelationship> page3 =
 			objectRelationshipResource.
 				getObjectDefinitionObjectRelationshipsPage(
-					objectDefinitionId, null, null, Pagination.of(1, 3), null);
+					objectDefinitionId, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				objectRelationship1, objectRelationship2, objectRelationship3),
-			(List<ObjectRelationship>)page3.getItems());
+		assertContains(
+			objectRelationship1, (List<ObjectRelationship>)page3.getItems());
+		assertContains(
+			objectRelationship2, (List<ObjectRelationship>)page3.getItems());
+		assertContains(
+			objectRelationship3, (List<ObjectRelationship>)page3.getItems());
 	}
 
 	@Test
@@ -1018,25 +1062,38 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 			testGetObjectDefinitionObjectRelationshipsPage_addObjectRelationship(
 				objectDefinitionId, objectRelationship2);
 
+		Page<ObjectRelationship> page =
+			objectRelationshipResource.
+				getObjectDefinitionObjectRelationshipsPage(
+					objectDefinitionId, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ObjectRelationship> ascPage =
 				objectRelationshipResource.
 					getObjectDefinitionObjectRelationshipsPage(
-						objectDefinitionId, null, null, Pagination.of(1, 2),
+						objectDefinitionId, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(objectRelationship1, objectRelationship2),
+			assertContains(
+				objectRelationship1,
+				(List<ObjectRelationship>)ascPage.getItems());
+			assertContains(
+				objectRelationship2,
 				(List<ObjectRelationship>)ascPage.getItems());
 
 			Page<ObjectRelationship> descPage =
 				objectRelationshipResource.
 					getObjectDefinitionObjectRelationshipsPage(
-						objectDefinitionId, null, null, Pagination.of(1, 2),
+						objectDefinitionId, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(objectRelationship2, objectRelationship1),
+			assertContains(
+				objectRelationship2,
+				(List<ObjectRelationship>)descPage.getItems());
+			assertContains(
+				objectRelationship1,
 				(List<ObjectRelationship>)descPage.getItems());
 		}
 	}
@@ -1088,6 +1145,78 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 			postObjectDefinitionObjectRelationship(
 				testGetObjectDefinitionObjectRelationshipsPage_getObjectDefinitionId(),
 				objectRelationship);
+	}
+
+	@Test
+	public void testPutObjectRelationshipByExternalReferenceCode()
+		throws Exception {
+
+		ObjectRelationship postObjectRelationship =
+			testPutObjectRelationshipByExternalReferenceCode_addObjectRelationship();
+
+		ObjectRelationship randomObjectRelationship =
+			randomObjectRelationship();
+
+		ObjectRelationship putObjectRelationship =
+			objectRelationshipResource.
+				putObjectRelationshipByExternalReferenceCode(
+					postObjectRelationship.getExternalReferenceCode(),
+					randomObjectRelationship);
+
+		assertEquals(randomObjectRelationship, putObjectRelationship);
+		assertValid(putObjectRelationship);
+
+		ObjectRelationship getObjectRelationship =
+			testPutObjectRelationshipByExternalReferenceCode_getObjectRelationship(
+				putObjectRelationship.getExternalReferenceCode());
+
+		assertEquals(randomObjectRelationship, getObjectRelationship);
+		assertValid(getObjectRelationship);
+
+		ObjectRelationship newObjectRelationship =
+			testPutObjectRelationshipByExternalReferenceCode_createObjectRelationship();
+
+		putObjectRelationship =
+			objectRelationshipResource.
+				putObjectRelationshipByExternalReferenceCode(
+					newObjectRelationship.getExternalReferenceCode(),
+					newObjectRelationship);
+
+		assertEquals(newObjectRelationship, putObjectRelationship);
+		assertValid(putObjectRelationship);
+
+		getObjectRelationship =
+			testPutObjectRelationshipByExternalReferenceCode_getObjectRelationship(
+				putObjectRelationship.getExternalReferenceCode());
+
+		assertEquals(newObjectRelationship, getObjectRelationship);
+
+		Assert.assertEquals(
+			newObjectRelationship.getExternalReferenceCode(),
+			putObjectRelationship.getExternalReferenceCode());
+	}
+
+	protected ObjectRelationship
+		testPutObjectRelationshipByExternalReferenceCode_getObjectRelationship(
+			String externalReferenceCode) {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected ObjectRelationship
+			testPutObjectRelationshipByExternalReferenceCode_createObjectRelationship()
+		throws Exception {
+
+		return randomObjectRelationship();
+	}
+
+	protected ObjectRelationship
+			testPutObjectRelationshipByExternalReferenceCode_addObjectRelationship()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1393,6 +1522,16 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (objectRelationship.getExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("label", additionalAssertFieldName)) {
 				if (objectRelationship.getLabel() == null) {
 					valid = false;
@@ -1481,6 +1620,14 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 					"objectDefinitionSystem2", additionalAssertFieldName)) {
 
 				if (objectRelationship.getObjectDefinitionSystem2() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("objectField", additionalAssertFieldName)) {
+				if (objectRelationship.getObjectField() == null) {
 					valid = false;
 				}
 
@@ -1685,6 +1832,19 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectRelationship1.getExternalReferenceCode(),
+						objectRelationship2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("id", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						objectRelationship1.getId(),
@@ -1808,6 +1968,17 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				if (!Objects.deepEquals(
 						objectRelationship1.getObjectDefinitionSystem2(),
 						objectRelationship2.getObjectDefinitionSystem2())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("objectField", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						objectRelationship1.getObjectField(),
+						objectRelationship2.getObjectField())) {
 
 					return false;
 				}
@@ -1991,6 +2162,52 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 		if (entityFieldName.equals("edge")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("externalReferenceCode")) {
+			Object object = objectRelationship.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("id")) {
@@ -2209,6 +2426,11 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("objectField")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("parameterObjectFieldId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -2320,6 +2542,8 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 		return new ObjectRelationship() {
 			{
 				edge = RandomTestUtil.randomBoolean();
+				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				objectDefinitionExternalReferenceCode1 = StringUtil.toLowerCase(

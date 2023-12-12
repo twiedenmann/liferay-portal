@@ -170,6 +170,7 @@ export default function DatePicker({
 			localizedValue={localizedValue}
 			name={name}
 			readOnly={readOnly}
+			type="date"
 			{...otherProps}
 		>
 			<ClayTooltipProvider autoAlign>
@@ -178,14 +179,28 @@ export default function DatePicker({
 					{...getTooltipTitle({placeholder, value: formattedDate})}
 				>
 					<ClayDatePicker
-						accessibleProps={{
-							'aria-required': otherProps.required,
+						aria-required={otherProps.required}
+						ariaLabels={{
+							buttonChooseDate: `${Liferay.Language.get(
+								'select-date'
+							)}`,
+							buttonDot: `${Liferay.Language.get(
+								'select-current-date'
+							)}`,
+							buttonNextMonth: `${Liferay.Language.get(
+								'select-next-month'
+							)}`,
+							buttonPreviousMonth: `${Liferay.Language.get(
+								'select-previous-month'
+							)}`,
+							dialog: `${Liferay.Language.get('select-date')}`,
 						}}
 						dateFormat={clayFormat}
 						dir={dir}
 						disabled={readOnly}
 						expanded={expanded}
 						firstDayOfWeek={firstDayOfWeek}
+						id={name}
 						months={months}
 						onBlur={onBlur}
 						onChange={handleValueChange}

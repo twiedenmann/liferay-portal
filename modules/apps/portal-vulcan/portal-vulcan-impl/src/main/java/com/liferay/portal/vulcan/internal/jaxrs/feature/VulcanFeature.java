@@ -41,6 +41,10 @@ import com.liferay.portal.vulcan.internal.jaxrs.context.resolver.EntityExtension
 import com.liferay.portal.vulcan.internal.jaxrs.context.resolver.ObjectMapperContextResolver;
 import com.liferay.portal.vulcan.internal.jaxrs.context.resolver.XmlMapperContextResolver;
 import com.liferay.portal.vulcan.internal.jaxrs.dynamic.feature.StatusDynamicFeature;
+import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.DocumentFileExtensionExceptionMapper;
+import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.DocumentFileNameExceptionMapper;
+import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.DocumentFileSizeExceptionMapper;
+import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.DuplicateExternalReferenceCodeExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.ExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.IllegalArgumentExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.InvalidFilterExceptionMapper;
@@ -52,6 +56,7 @@ import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.NotAcceptableEx
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.NotFoundExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.PrincipalExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.UnrecognizedPropertyExceptionMapper;
+import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.UnsupportedOperationExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.ValidationExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.WebApplicationExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.message.body.JSONMessageBodyReader;
@@ -65,6 +70,7 @@ import com.liferay.portal.vulcan.internal.jaxrs.writer.interceptor.EntityExtensi
 import com.liferay.portal.vulcan.internal.jaxrs.writer.interceptor.NestedFieldsWriterInterceptor;
 import com.liferay.portal.vulcan.internal.jaxrs.writer.interceptor.PageEntityExtensionWriterInterceptor;
 import com.liferay.portal.vulcan.internal.param.converter.provider.DateParamConverterProvider;
+import com.liferay.portal.vulcan.pagination.provider.PaginationProvider;
 
 import javax.ws.rs.Priorities;
 import javax.ws.rs.core.Feature;
@@ -103,6 +109,9 @@ public class VulcanFeature implements Feature {
 		featureContext.register(CacheContainerResponseFilter.class);
 		featureContext.register(CTContainerRequestFilter.class);
 		featureContext.register(DateParamConverterProvider.class);
+		featureContext.register(DocumentFileExtensionExceptionMapper.class);
+		featureContext.register(DocumentFileNameExceptionMapper.class);
+		featureContext.register(DocumentFileSizeExceptionMapper.class);
 		featureContext.register(EntityExtensionContainerResponseFilter.class);
 		featureContext.register(EntityExtensionWriterInterceptor.class);
 		featureContext.register(ExceptionMapper.class);
@@ -123,12 +132,12 @@ public class VulcanFeature implements Feature {
 		featureContext.register(NotFoundExceptionMapper.class);
 		featureContext.register(ObjectMapperContextResolver.class);
 		featureContext.register(PageEntityExtensionWriterInterceptor.class);
-		featureContext.register(PaginationContextProvider.class);
 		featureContext.register(PrincipalExceptionMapper.class);
 		featureContext.register(RestrictFieldsQueryParamContextProvider.class);
 		featureContext.register(StatusDynamicFeature.class);
 		featureContext.register(TransactionContainerRequestFilter.class);
 		featureContext.register(UnrecognizedPropertyExceptionMapper.class);
+		featureContext.register(UnsupportedOperationExceptionMapper.class);
 		featureContext.register(ValidationExceptionMapper.class);
 		featureContext.register(WebApplicationExceptionMapper.class);
 		featureContext.register(XMLMessageBodyReader.class);
@@ -149,6 +158,8 @@ public class VulcanFeature implements Feature {
 				_vulcanBatchEngineExportTaskResourceFactory,
 				_vulcanBatchEngineImportTaskResourceFactory));
 		featureContext.register(
+			new DuplicateExternalReferenceCodeExceptionMapper(_language));
+		featureContext.register(
 			new EntityExtensionHandlerContextResolver(
 				_extensionProviderRegistry));
 		featureContext.register(new MultipartBodyMessageBodyReader());
@@ -159,6 +170,8 @@ public class VulcanFeature implements Feature {
 		featureContext.register(
 			_nestedFieldsWriterInterceptor, Priorities.USER - 10);
 
+		featureContext.register(
+			new PaginationContextProvider(_paginationProvider, _portal));
 		featureContext.register(
 			new SiteParamConverterProvider(
 				_depotEntryLocalService, _groupLocalService));
@@ -219,6 +232,9 @@ public class VulcanFeature implements Feature {
 	private Language _language;
 
 	private NestedFieldsWriterInterceptor _nestedFieldsWriterInterceptor;
+
+	@Reference
+	private PaginationProvider _paginationProvider;
 
 	@Reference
 	private Portal _portal;

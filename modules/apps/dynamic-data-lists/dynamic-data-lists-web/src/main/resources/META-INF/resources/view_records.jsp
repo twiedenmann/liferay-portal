@@ -45,6 +45,7 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 	disabled="<%= ddlViewRecordsDisplayContext.isDisabledManagementBar() %>"
 	filterDropdownItems="<%= ddlViewRecordsDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= ddlViewRecordsDisplayContext.getTotalItems() %>"
+	orderDropdownItems="<%= ddlViewRecordsDisplayContext.getOrderItemsDropdownItems() %>"
 	propsTransformer="js/ViewRecordsManagementToolbarPropsTransformer"
 	searchActionURL="<%= ddlViewRecordsDisplayContext.getSearchActionURL() %>"
 	searchContainerId="<%= ddlViewRecordsDisplayContext.getSearchContainerId() %>"
@@ -53,6 +54,8 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 	sortingOrder="<%= ddlViewRecordsDisplayContext.getOrderByType() %>"
 	sortingURL="<%= ddlViewRecordsDisplayContext.getSortingURL() %>"
 />
+
+<%@ include file="/deprecated_warning.jspf" %>
 
 <clay:container-fluid
 	cssClass="view-records-container"

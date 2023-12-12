@@ -13,19 +13,18 @@ import {
 	removeAllSpecialCharacters,
 } from '../../utils/string';
 import {DropDownItems} from '../ModelBuilder/types';
-import {DeletedObjectDefinition} from './ViewObjectDefinitions';
 
 type DeleteObjectDefinitionProps = {
 	baseResourceURL: string;
+	handleDeleteObjectDefinition: (value: DeletedObjectDefinition) => void;
 	handleShowDeleteObjectDefinitionModal: () => void;
 	objectDefinitionId: number;
 	objectDefinitionName: string;
-	setDeletedObjectDefinition: (value: DeletedObjectDefinition) => void;
-	status: string;
 };
 
 type ObjectDefinitionNodeActionsProps = {
 	baseResourceURL: string;
+	handleDeleteObjectDefinition: (value: DeletedObjectDefinition) => void;
 	handleShowDeleteObjectDefinitionModal: () => void;
 	handleShowEditObjectDefinitionExternalReferenceCodeModal: () => void;
 	handleShowRedirectObjectDefinitionModal: () => void;
@@ -34,7 +33,6 @@ type ObjectDefinitionNodeActionsProps = {
 	objectDefinitionId: number;
 	objectDefinitionName: string;
 	objectDefinitionPermissionsURL: string;
-	setDeletedObjectDefinition: (value: DeletedObjectDefinition) => void;
 	status: {
 		code: number;
 		label: string;
@@ -83,11 +81,10 @@ export async function deleteObjectDefinitionToast(
 
 export async function deleteObjectDefinition({
 	baseResourceURL,
+	handleDeleteObjectDefinition,
 	handleShowDeleteObjectDefinitionModal,
 	objectDefinitionId,
 	objectDefinitionName,
-	setDeletedObjectDefinition,
-	status,
 }: DeleteObjectDefinitionProps) {
 	const url = createResourceURL(baseResourceURL, {
 		objectDefinitionId,
@@ -95,12 +92,17 @@ export async function deleteObjectDefinition({
 			'/object_definitions/get_object_definition_delete_info',
 	}).href;
 
-	const {hasObjectRelationship, objectEntriesCount} = await API.fetchJSON<{
+	const {
+		hasObjectRelationship,
+		objectEntriesCount,
+		status,
+	} = await API.fetchJSON<{
 		hasObjectRelationship: boolean;
 		objectEntriesCount: number;
+		status: number;
 	}>(url);
 
-	if (status !== 'approved') {
+	if (status !== 0) {
 		await deleteObjectDefinitionToast(
 			objectDefinitionId,
 			objectDefinitionName
@@ -110,7 +112,7 @@ export async function deleteObjectDefinition({
 		return;
 	}
 
-	setDeletedObjectDefinition({
+	handleDeleteObjectDefinition({
 		...{id: objectDefinitionId, name: objectDefinitionName},
 		hasObjectRelationship,
 		objectEntriesCount,
@@ -119,7 +121,10 @@ export async function deleteObjectDefinition({
 	handleShowDeleteObjectDefinitionModal();
 }
 
-export async function deleteRelationship(id: number) {
+export async function deleteRelationship(
+	id: number,
+	reloadAfterDeletion?: boolean
+) {
 	try {
 		await API.deleteObjectRelationship(id);
 
@@ -128,17 +133,35 @@ export async function deleteRelationship(id: number) {
 				'relationship-was-deleted-successfully'
 			),
 		});
+
+		if (reloadAfterDeletion) {
+			setTimeout(() => window.location.reload(), 1500);
+		}
 	}
 	catch (error) {
-		Liferay.Util.openToast({
-			message: (error as Error).message,
-			type: 'danger',
+		const errorMessage = (error as Error).message;
+
+		openModal({
+			bodyHTML: `<p>${errorMessage}</p>`,
+			buttons: [
+				{
+					displayType: 'warning',
+					label: Liferay.Language.get('done'),
+					type: 'cancel',
+				},
+			],
+			center: true,
+			id: 'deleteRelationship',
+			size: 'md',
+			status: 'warning',
+			title: Liferay.Language.get('deletion-not-allowed'),
 		});
 	}
 }
 
 export function getObjectDefinitionNodeActions({
 	baseResourceURL,
+	handleDeleteObjectDefinition,
 	handleShowDeleteObjectDefinitionModal,
 	handleShowEditObjectDefinitionExternalReferenceCodeModal,
 	handleShowRedirectObjectDefinitionModal,
@@ -147,23 +170,19 @@ export function getObjectDefinitionNodeActions({
 	objectDefinitionId,
 	objectDefinitionName,
 	objectDefinitionPermissionsURL,
-	setDeletedObjectDefinition,
-	status,
 }: ObjectDefinitionNodeActionsProps) {
 	const PermissionUrl = formatActionURL(
 		objectDefinitionPermissionsURL,
 		objectDefinitionId
 	);
 
-	const handleClickDeleteObjectDefinition = (event: React.MouseEvent) => {
-		event.stopPropagation();
+	const handleClickDeleteObjectDefinition = () => {
 		deleteObjectDefinition({
 			baseResourceURL,
+			handleDeleteObjectDefinition,
 			handleShowDeleteObjectDefinitionModal,
 			objectDefinitionId,
 			objectDefinitionName,
-			setDeletedObjectDefinition,
-			status: status.label,
 		});
 	};
 
@@ -181,8 +200,7 @@ export function getObjectDefinitionNodeActions({
 				Liferay.Language.get('edit-in-x'),
 				Liferay.Language.get('page view')
 			),
-			onClick: (event: Event) => {
-				event.stopPropagation();
+			onClick: () => {
 				handleShowRedirectObjectDefinitionModal();
 			},
 			symbolRight: 'shortcut',
@@ -192,8 +210,7 @@ export function getObjectDefinitionNodeActions({
 				Liferay.Language.get('edit-x'),
 				Liferay.Language.get('erc')
 			),
-			onClick: (event: Event) => {
-				event.stopPropagation();
+			onClick: () => {
 				handleShowEditObjectDefinitionExternalReferenceCodeModal();
 			},
 			symbolLeft: 'info-panel-closed',
@@ -362,6 +379,7 @@ export async function getUpdatedModelBuilderStructurePayload(
 									} as ObjectFieldNodeRow)
 							),
 							selected: false,
+							showAllObjectFields: false,
 						});
 					}
 				});

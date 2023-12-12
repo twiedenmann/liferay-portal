@@ -52,6 +52,7 @@ import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.search.generic.WildcardQueryImpl;
+import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.OrgLaborLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.OrganizationService;
@@ -72,6 +73,7 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.util.DTOConverterUtil;
 import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
@@ -260,8 +262,8 @@ public class OrganizationResourceImpl extends BaseOrganizationResourceImpl {
 	@NestedField(parentClass = Organization.class, value = "childOrganizations")
 	@Override
 	public Page<Organization> getOrganizationChildOrganizationsPage(
-			String organizationId, Boolean flatten, String search,
-			Filter filter, Pagination pagination, Sort[] sorts)
+			@NestedFieldId(value = "id") String organizationId, Boolean flatten,
+			String search, Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return _getOrganizationsPage(
@@ -350,7 +352,10 @@ public class OrganizationResourceImpl extends BaseOrganizationResourceImpl {
 				_getDefaultParentOrganizationId(organization),
 				organization.getName(), OrganizationConstants.TYPE_ORGANIZATION,
 				_getRegionId(organization, countryId), countryId,
-				ListTypeConstants.ORGANIZATION_STATUS_DEFAULT,
+				_listTypeLocalService.getListTypeId(
+					contextCompany.getCompanyId(),
+					ListTypeConstants.ORGANIZATION_STATUS_DEFAULT,
+					ListTypeConstants.ORGANIZATION_STATUS),
 				organization.getComment(), false, _getAddresses(organization),
 				_getEmailAddresses(organization), _getOrgLabors(organization),
 				_getPhones(organization), _getWebsites(organization),
@@ -473,7 +478,11 @@ public class OrganizationResourceImpl extends BaseOrganizationResourceImpl {
 
 		long countryId = _getCountryId(organization);
 
-		long statusListTypeId = ListTypeConstants.ORGANIZATION_STATUS_DEFAULT;
+		long statusListTypeId = _listTypeLocalService.getListTypeId(
+			contextCompany.getCompanyId(),
+			ListTypeConstants.ORGANIZATION_STATUS_DEFAULT,
+			ListTypeConstants.ORGANIZATION_STATUS);
+
 		boolean site = false;
 
 		if (serviceBuilderOrganization != null) {
@@ -682,7 +691,7 @@ public class OrganizationResourceImpl extends BaseOrganizationResourceImpl {
 				emailAddresses,
 				emailAddress ->
 					ServiceBuilderEmailAddressUtil.toServiceBuilderEmailAddress(
-						emailAddress,
+						contextCompany.getCompanyId(), emailAddress,
 						ListTypeConstants.ORGANIZATION_EMAIL_ADDRESS)),
 			Objects::nonNull);
 	}
@@ -767,7 +776,8 @@ public class OrganizationResourceImpl extends BaseOrganizationResourceImpl {
 			transformToList(
 				telephones,
 				telephone -> ServiceBuilderPhoneUtil.toServiceBuilderPhone(
-					telephone, ListTypeConstants.ORGANIZATION_PHONE)),
+					contextCompany.getCompanyId(), telephone,
+					ListTypeConstants.ORGANIZATION_PHONE)),
 			Objects::nonNull);
 	}
 
@@ -811,6 +821,7 @@ public class OrganizationResourceImpl extends BaseOrganizationResourceImpl {
 			transformToList(
 				webUrls,
 				webUrl -> ServiceBuilderWebsiteUtil.toServiceBuilderWebsite(
+					contextCompany.getCompanyId(),
 					ListTypeConstants.ORGANIZATION_WEBSITE, webUrl)),
 			Objects::nonNull);
 	}
@@ -852,8 +863,8 @@ public class OrganizationResourceImpl extends BaseOrganizationResourceImpl {
 
 	private OrgLabor _toOrgLabor(Service service) {
 		long listTypeId = ServiceBuilderListTypeUtil.toServiceBuilderListTypeId(
-			"administrative", service.getServiceType(),
-			ListTypeConstants.ORGANIZATION_SERVICE);
+			contextCompany.getCompanyId(), "administrative",
+			service.getServiceType(), ListTypeConstants.ORGANIZATION_SERVICE);
 
 		if (listTypeId == -1) {
 			return null;
@@ -977,6 +988,9 @@ public class OrganizationResourceImpl extends BaseOrganizationResourceImpl {
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
+
+	@Reference
+	private ListTypeLocalService _listTypeLocalService;
 
 	@Reference
 	private OrganizationLocalService _organizationLocalService;

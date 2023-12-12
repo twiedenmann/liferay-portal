@@ -80,7 +80,6 @@ public class LayoutActionsDisplayContext {
 							dropdownItem.setLabel(
 								LanguageUtil.get(
 									_httpServletRequest, "configure"));
-							dropdownItem.setTarget("_blank");
 						}
 					).add(
 						dropdownItem -> {
@@ -199,6 +198,8 @@ public class LayoutActionsDisplayContext {
 			currentURL
 		).setBackURL(
 			currentURL
+		).setParameter(
+			"backURLTitle", layout.getName(_themeDisplay.getLocale())
 		).setParameter(
 			"groupId", layout.getGroupId()
 		).setParameter(
